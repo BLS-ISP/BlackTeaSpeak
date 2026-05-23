@@ -79,7 +79,7 @@ jobs:
   build-fedora:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: fedora:39
     steps:
       - name: Install Git (Required for Checkout)
         run: dnf install -y git curl sudo

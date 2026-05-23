@@ -49,8 +49,8 @@ jobs:
     container:
       image: debian:bookworm
     steps:
-      - name: Install Git and Zip
-        run: apt-get update && apt-get install -y git curl sudo zip build-essential pkg-config libssl-dev
+      - name: Install Git, Zip, and Build Tools
+        run: apt-get update && apt-get install -y git curl sudo zip build-essential pkg-config libssl-dev python3
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -91,10 +91,10 @@ jobs:
   build-fedora:
     runs-on: ubuntu-latest
     container:
-      image: fedora:latest
+      image: fedora:39
     steps:
       - name: Install Git and Zip
-        run: dnf install -y git curl sudo zip gcc gcc-c++ openssl-devel pkgconf-pkg-config
+        run: dnf install -y git curl sudo zip gcc gcc-c++ make openssl-devel pkgconf-pkg-config python3
 
       - name: Checkout code
         uses: actions/checkout@v4
