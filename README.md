@@ -42,3 +42,5 @@ npm run tauri dev
 
 ## Contributing
 BlackTeaSpeak is currently in the **INDEV** phase. All architectural flows, protocol packets, and schema interactions are documented in the `docs/` tree. Please consult the documentation before opening pull requests to ensure changes align with the overarching state machine design.
+
+Please Help me out i am Realy bad with UI/UX! definitly need some aditional developers.
