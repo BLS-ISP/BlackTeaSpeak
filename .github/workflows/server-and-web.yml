@@ -1,0 +1,133 @@
+name: Server and Web Client Build
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+    branches: [ "**" ]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Web Client
+        working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
+        run: |
+          npm install
+          npm run build
+
+      - name: Build Rust Server
+        working-directory: ./BlackTeaSpeak-Server
+        run: cargo build --release
+
+      - name: Package Release
+        run: |
+          mkdir server-release
+          mkdir server-release\BlackTeaWeb
+          xcopy /E /I BlackTeaSpeak-Server\BlackTeaWeb\dist server-release\BlackTeaWeb\dist
+          copy BlackTeaSpeak-Server\target\release\blackteaspeak_server.exe server-release\
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: BlackTeaSpeak-Server-Windows
+          path: server-release
+
+  build-debian:
+    runs-on: ubuntu-latest
+    container:
+      image: debian:bookworm
+    steps:
+      - name: Install Git and Zip
+        run: apt-get update && apt-get install -y git curl sudo zip
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Build Web Client
+        working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
+        run: |
+          npm install
+          npm run build
+
+      - name: Build Rust Server
+        working-directory: ./BlackTeaSpeak-Server
+        run: cargo build --release
+
+      - name: Package Release
+        run: |
+          mkdir -p server-release/BlackTeaWeb
+          cp -r BlackTeaSpeak-Server/BlackTeaWeb/dist server-release/BlackTeaWeb/
+          cp BlackTeaSpeak-Server/target/release/blackteaspeak_server server-release/
+          cd server-release && zip -r ../BlackTeaSpeak-Server-Debian.zip ./*
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: BlackTeaSpeak-Server-Debian
+          path: BlackTeaSpeak-Server-Debian.zip
+
+  build-fedora:
+    runs-on: ubuntu-latest
+    container:
+      image: fedora:latest
+    steps:
+      - name: Install Git and Zip
+        run: dnf install -y git curl sudo zip gcc
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Rust
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Build Web Client
+        working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
+        run: |
+          npm install
+          npm run build
+
+      - name: Build Rust Server
+        working-directory: ./BlackTeaSpeak-Server
+        run: cargo build --release
+
+      - name: Package Release
+        run: |
+          mkdir -p server-release/BlackTeaWeb
+          cp -r BlackTeaSpeak-Server/BlackTeaWeb/dist server-release/BlackTeaWeb/
+          cp BlackTeaSpeak-Server/target/release/blackteaspeak_server server-release/
+          cd server-release && zip -r ../BlackTeaSpeak-Server-Fedora.zip ./*
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: BlackTeaSpeak-Server-Fedora
+          path: BlackTeaSpeak-Server-Fedora.zip
