@@ -504,10 +504,10 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       )}
 
       {permissionTarget && (
-        <PermissionEditorModal
-          type={permissionTarget.type}
-          targetId={permissionTarget.targetId}
-          onClose={() => setPermissionTarget(null)}
+        <PermissionEditorModal 
+          targetType={permissionTarget.type} 
+          targetId={permissionTarget.targetId} 
+          onClose={() => setPermissionTarget(null)} 
         />
       )}
     </div>

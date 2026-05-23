@@ -82,21 +82,6 @@ export function GroupManagerModal({ onClose }: GroupManagerModalProps) {
     }
   };
 
-  const handleRenameServerGroup = (sgid: string, oldName: string) => {
-    const name = prompt("Enter new Server Group Name:", oldName);
-    if (name && name !== oldName) {
-      invoke('send_command', { command: `servergrouprename sgid=${sgid} name=${escapeTs3String(name)}` });
-      setTimeout(refreshGroups, 500);
-    }
-  };
-
-  const handleRenameChannelGroup = (cgid: string, oldName: string) => {
-    const name = prompt("Enter new Channel Group Name:", oldName);
-    if (name && name !== oldName) {
-      invoke('send_command', { command: `channelgrouprename cgid=${cgid} name=${escapeTs3String(name)}` });
-      setTimeout(refreshGroups, 500);
-    }
-  };
 
   return (
     <div className="modal-overlay">

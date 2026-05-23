@@ -8,11 +8,11 @@ interface ChannelTreeProps {
   onChannelDoubleClick: (channel: Channel) => void;
   onClientClick: (client: Client) => void;
   onChannelClick: (channel: Channel) => void;
-  onContextMenuAction: (action: string, type: 'channel' | 'client', target: any, extra?: any) => void;
+  onContextMenuAction: (action: string, type: 'channel' | 'client' | 'server', target: any, extra?: any) => void;
 }
 
 export function ChannelTree({ channels, clients, myClientId, onChannelDoubleClick, onClientClick, onChannelClick, onContextMenuAction }: ChannelTreeProps) {
-  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, type: 'channel' | 'client', target: any } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number, y: number, type: 'channel' | 'client' | 'server', target: any } | null>(null);
 
   useEffect(() => {
     const handleClick = () => setContextMenu(null);
@@ -20,7 +20,7 @@ export function ChannelTree({ channels, clients, myClientId, onChannelDoubleClic
     return () => window.removeEventListener('click', handleClick);
   }, []);
 
-  const handleContextMenu = (e: React.MouseEvent, type: 'channel' | 'client', target: any) => {
+  const handleContextMenu = (e: React.MouseEvent, type: 'channel' | 'client' | 'server', target: any) => {
     e.preventDefault();
     setContextMenu({ x: e.pageX, y: e.pageY, type, target });
   };

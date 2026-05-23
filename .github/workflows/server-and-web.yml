@@ -25,7 +25,7 @@ jobs:
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
           npm install
-          npm run build
+          npm run build-web
 
       - name: Build Rust Server
         working-directory: ./BlackTeaSpeak-Server
@@ -50,7 +50,7 @@ jobs:
       image: debian:bookworm
     steps:
       - name: Install Git and Zip
-        run: apt-get update && apt-get install -y git curl sudo zip
+        run: apt-get update && apt-get install -y git curl sudo zip build-essential pkg-config libssl-dev
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -69,7 +69,7 @@ jobs:
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
           npm install
-          npm run build
+          npm run build-web
 
       - name: Build Rust Server
         working-directory: ./BlackTeaSpeak-Server
@@ -94,7 +94,7 @@ jobs:
       image: fedora:latest
     steps:
       - name: Install Git and Zip
-        run: dnf install -y git curl sudo zip gcc
+        run: dnf install -y git curl sudo zip gcc gcc-c++ openssl-devel pkgconf-pkg-config
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -113,7 +113,7 @@ jobs:
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
           npm install
-          npm run build
+          npm run build-web
 
       - name: Build Rust Server
         working-directory: ./BlackTeaSpeak-Server

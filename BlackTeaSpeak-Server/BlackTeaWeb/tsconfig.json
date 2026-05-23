@@ -37,6 +37,7 @@
     "tools/",
     "vendor",
     "dist",
-    "declarations"
+    "declarations",
+    "tests/"
   ]
 }
