@@ -29,12 +29,17 @@ jobs:
         working-directory: ./BlackTeaSpeak-Client
         run: npm run tauri build > tauri-build.log 2>&1
 
-      - name: Upload Tauri Build Log
+      - name: Push Tauri Build Log
         if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tauri-build-log-windows
-          path: ./BlackTeaSpeak-Client/tauri-build.log
+        shell: bash
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git checkout -b tauri-logs-windows-${{ github.run_id }}
+          cp ./BlackTeaSpeak-Client/tauri-build.log ./tauri-build.log || true
+          git add tauri-build.log
+          git commit -m "Tauri log failure" || true
+          git push origin tauri-logs-windows-${{ github.run_id }} || true
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -75,12 +80,16 @@ jobs:
         working-directory: ./BlackTeaSpeak-Client/src-tauri
         run: cargo tauri build > tauri-build.log 2>&1
 
-      - name: Upload Tauri Build Log
+      - name: Push Tauri Build Log
         if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tauri-build-log-debian
-          path: ./BlackTeaSpeak-Client/src-tauri/tauri-build.log
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git checkout -b tauri-logs-debian-${{ github.run_id }}
+          cp ./BlackTeaSpeak-Client/src-tauri/tauri-build.log ./tauri-build.log || true
+          git add tauri-build.log
+          git commit -m "Tauri log failure" || true
+          git push origin tauri-logs-debian-${{ github.run_id }} || true
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -120,12 +129,16 @@ jobs:
         working-directory: ./BlackTeaSpeak-Client/src-tauri
         run: cargo tauri build > tauri-build.log 2>&1
 
-      - name: Upload Tauri Build Log
+      - name: Push Tauri Build Log
         if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: tauri-build-log-fedora
-          path: ./BlackTeaSpeak-Client/src-tauri/tauri-build.log
+        run: |
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git checkout -b tauri-logs-fedora-${{ github.run_id }}
+          cp ./BlackTeaSpeak-Client/src-tauri/tauri-build.log ./tauri-build.log || true
+          git add tauri-build.log
+          git commit -m "Tauri log failure" || true
+          git push origin tauri-logs-fedora-${{ github.run_id }} || true
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
