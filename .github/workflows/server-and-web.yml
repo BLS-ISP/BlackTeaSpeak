@@ -39,7 +39,7 @@ jobs:
           git config --global user.name "github-actions[bot]" || true
           git config --global user.email "github-actions[bot]@users.noreply.github.com" || true
           git checkout -b web-logs-windows-${{ github.run_id }} || true
-          git add ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
+          git add -f ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
           git commit -m "Upload build log" || true
           git push -u origin web-logs-windows-${{ github.run_id }} -f || true
 
@@ -94,7 +94,7 @@ jobs:
           git config --global user.name "github-actions[bot]" || true
           git config --global user.email "github-actions[bot]@users.noreply.github.com" || true
           git checkout -b web-logs-debian-${{ github.run_id }} || true
-          git add ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
+          git add -f ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
           git commit -m "Upload build log" || true
           git push -u origin web-logs-debian-${{ github.run_id }} -f || true
 
@@ -149,7 +149,7 @@ jobs:
           git config --global user.name "github-actions[bot]" || true
           git config --global user.email "github-actions[bot]@users.noreply.github.com" || true
           git checkout -b web-logs-fedora-${{ github.run_id }} || true
-          git add ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
+          git add -f ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
           git commit -m "Upload build log" || true
           git push -u origin web-logs-fedora-${{ github.run_id }} -f || true
 
