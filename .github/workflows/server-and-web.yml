@@ -27,8 +27,8 @@ jobs:
       - name: Build Web Client
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
-          npm install --legacy-peer-deps
-          npm run build-web > build-web.log 2>&1
+          npm install --legacy-peer-deps > build-web.log 2>&1
+          npm run build-web >> build-web.log 2>&1
 
       - name: Push Web Build Log
         if: failure()
@@ -84,8 +84,7 @@ jobs:
       - name: Build Web Client
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
-          npm install --legacy-peer-deps
-          npm run build-web > build-web.log 2>&1
+          (npm install --legacy-peer-deps && npm run build-web) > build-web.log 2>&1
 
       - name: Push Web Build Log
         if: failure()
@@ -140,8 +139,7 @@ jobs:
       - name: Build Web Client
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
-          npm install --legacy-peer-deps
-          npm run build-web > build-web.log 2>&1
+          (npm install --legacy-peer-deps && npm run build-web) > build-web.log 2>&1
 
       - name: Push Web Build Log
         if: failure()
