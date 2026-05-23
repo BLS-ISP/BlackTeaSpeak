@@ -1,0 +1,5 @@
+# Version: 1.5.6
+# TeaSpeak version: 1.5.6
+# Build version: 0
+
+{"build_name": "1.5.6", "build_version": "1.5.6", "build_index": 0}

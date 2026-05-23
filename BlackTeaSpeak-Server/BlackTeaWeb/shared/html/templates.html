@@ -1,0 +1,2173 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>BlackTeaSpeak Web client templates</title>
+    </head>
+    <body>
+        <div class="template-group-modals">
+            <script class="jsrender-template" id="tmpl_modal" type="text/html">
+                <div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content" style="{{if full_size}}flex-grow: 1{{/if}}">
+                            <div class="modal-header {{if header_class}}{{:header_class}}{{/if}}">
+                                <div class="container-icon">
+                                    <img src="img/modal_icon_old.png">
+                                </div>
+                                <node key="modal_header"></node>
+                                <div class="container-close">
+                                    <div class="button-modal-close icon_em client-close_button"></div>
+                                </div>
+                            </div>
+                            <div class="modal-body">
+                                <node key="modal_body"></node>
+                            </div>
+                            {{if modal_footer}}
+                            <div class="modal-footer">
+                                <node key="modal_footer"></node>
+                            </div>
+                            {{/if}}
+                        </div>
+                    </div>
+                </div>
+            </script>
+
+            <script class="jsrender-template" id="tmpl_modal_input" type="text/html">
+                <div class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div class="container-icon">
+                                    <img src="img/favicon/teacup.png">
+                                </div>
+                                <node key="modal_header"></node>
+                                <div class="container-close">
+                                    <div class="button-modal-close icon_em client-close_button"></div>
+                                </div>
+                            </div>
+                            <div class="modal-body modal-body-input modal-green">
+                                <node key="question"></node>
+                                <div class="form-group container-value {{if field_title}}with-title{{/if}}">
+                                    {{if field_title}}
+                                    <label for="input-modal-input" class="bmd-label-floating">{{>field_title}}</label>
+                                    {{/if}}
+                                    <!-- placeholder="ts.blackteaspeak.de" -->
+                                    <!-- aria-describedby="input-connect-address-help" -->
+                                    <input id="input-modal-input"
+                                           type="text"
+                                           class="form-control"
+                                           {{if field_placeholder}} placeholder="{{>field_placeholder}}" {{/if}}
+                                    autocomplete="off"
+                                    >
+                                    {{if error_message || field_label}}
+                                    <div class="container-help-feedback">
+                                        {{if error_message}}
+                                        <div class="invalid-feedback">{{>error_message}}</div>
+                                        {{/if}}
+                                        {{if field_label}}
+                                        <span class="bmd-help">{{>field_label}}</span>
+                                        {{/if}}
+                                    </div>
+                                    {{/if}}
+                                </div>
+                                <div class="buttons">
+                                    <button type="button" class="btn btn-warning button-cancel">{{tr "Cancel" /}}
+                                    </button>
+                                    <button type="button" class="btn btn-raised btn-success button-submit">{{tr "Ok"
+                                        /}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </script>
+        </div>
+
+        <!-- Template for the settings -->
+        <script class="jsrender-template" id="tmpl_settings" type="text/html">
+            <div class="inner-container">
+                <div class="left">
+                    <div class="entry group">{{tr "General Settings" /}}</div>
+                    <div class="entry" container="general-application">{{tr "Application" /}}</div>
+                    <div class="entry" container="general-language">{{tr "Language" /}}</div>
+                    <!-- <div class="entry" container="general-updates">{{tr "Updates" /}}</div> -->
+                    <div class="entry" container="general-chat">{{tr "Chat" /}}</div>
+                    <div class="entry" container="general-keymap">{{tr "Keymap" /}}</div>
+                    <div class="entry" container="general-notifications">{{tr "Notifications" /}}</div>
+
+                    <div class="entry group">{{tr "Audio" /}}</div>
+                    <div class="entry" container="audio-microphone">{{tr "Microphone" /}}</div>
+                    <div class="entry" container="audio-speaker">{{tr "Speaker" /}}</div>
+                    <div class="entry" container="audio-sounds">{{tr "Sounds" /}}</div>
+
+                    <div class="entry group">{{tr "Identity" /}}</div>
+                    <div class="entry" container="identity-profiles">{{tr "Profiles" /}}</div>
+                    <div class="entry" container="identity-forum">{{tr "TeaForo connection" /}}</div>
+                </div>
+                <div class="container-seperator vertical" seperator-id="seperator-settings"></div>
+                <div class="right">
+                    <div class="container general-application">
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-hostbanner-background">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr 'Disabled backrounds within the hostbanner' /}}</a>
+                        </label>
+                        <div class="container-font-size">
+                            <a>{{tr "Font size" /}}</a>
+                            <select class="input-boxed option-font-size">
+                                <option value="-1" style="display: none;">Custom</option>
+                                <option value="10">Extra Small (10px)</option>
+                                <option value="12">Small (12px)</option>
+                                <option value="14">Normal (14px)</option>
+                                <option value="16">Large (16px)</option>
+                                <option value="18">Extra Large (18px)</option>
+                            </select>
+                        </div>
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-all-permissions">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Show all permissions in permission editor. Even if their assignment don't make sense." /}}</a>
+                        </label>
+                    </div>
+                    <div class="container general-language">
+                        <div class="container-selected">
+                            <a>{{tr "Current language:" /}}</a>
+                            <div class="selected-language">
+                                <div class="country flag-de"></div>
+                                {{tr "German" /}}
+                            </div>
+                        </div>
+                        <div class="container-list">
+                            <div class="entries"></div>
+                            <div class="buttons">
+                                <div class="restart-note">
+                                    <button class="btn btn-danger button-restart">{{tr "Restart" /}}</button>
+                                    <a>{{tr "Attention: Changing the client language require a client restart!" /}}</a>
+                                </div>
+                                <div class="spacer"></div>
+                                <button class="btn btn-success button-add-repository">{{tr "Add repository" /}}</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container general-updates">{{tr "GU" /}}</div>
+                    <div class="container general-keymap"></div>
+                    <div class="container general-notifications"></div>
+                    <div class="container general-chat">
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-fixed-timestamps">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr 'Fixed chat timestamp (Disables "2 seconds ago"... etc)' /}}</a>
+                        </label>
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-colloquial-timestamps">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr 'Colloquial chat timestamp (Enables "Yesterday at ..." or "Today at ...")' /}}</a>
+                        </label>
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-instant-channel-switch">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Switch to channel chat on select" /}}</a>
+                        </label>
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-instant-client-switch">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Switch to client info on client select" /}}</a>
+                        </label>
+
+                        <!-- format -->
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-colored-emojies">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Colored emojies within chat" /}}</a>
+                        </label>
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-url-tagging">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Automatically detect valid URL's and tag them with [url]" /}}</a>
+                        </label>
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-support-markdown">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Enables markdown input support for chat. " /}}</a>
+                        </label>
+                        <label>
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-support-bbcode">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Enable the BBCode syntax for your chat." /}}</a>
+                        </label>
+                        <div class="container-icon-size">
+                            <div>{{tr "Chat-icon size:" /}}<a class="value">100%</a></div>
+                            <div class="container-slider">
+                                <div class="filler" style="width: 30%"></div>
+                                <div class="thumb container-tooltip" style="left: 30%">
+                                    <div class="tooltip">
+                                        <a>86%</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="container audio-microphone">
+                        {{include tmpl="tmpl_settings-microphone" /}}
+                    </div>
+                    <div class="container audio-speaker">
+                        <div class="left">
+                            <div class="header">
+                                <a>{{tr "Select your Speaker Device" /}}</a>
+                                <button class="btn btn-info button-update">{{tr "Update" /}}</button>
+                            </div>
+                            <div class="body">
+                                <div class="container-devices">
+                                </div>
+                                <div class="buttons">
+                                    <a class="container-error"></a>
+                                    <div class="spacer"></div>
+                                    <button class="btn btn-success button-test-sound">{{tr "Play test Sound" /}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="right">
+                            <div class="header">
+                                <a>{{tr "Speaker Settings" /}}</a>
+                            </div>
+                            <div class="body">
+                                <div class="container-volume-master">
+                                    <a>{{tr "Master Volume" /}} <span class="container-value"></span></a>
+                                    <div class="container-slider">
+                                        <div class="filler" style="width: 30%"></div>
+                                        <div class="thumb container-tooltip" style="left: 30%">
+                                            <div class="tooltip">
+                                                <a>86%</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="container-volume-soundpack">
+                                    <a>{{tr "Soundpack Volume" /}} <span class="container-value"></span></a>
+                                    <div class="container-slider">
+                                        <div class="filler" style="width: 30%"></div>
+                                        <div class="thumb container-tooltip" style="left: 30%">
+                                            <div class="tooltip">
+                                                <a>86%</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container audio-sounds">
+                        <div class="left">
+                            <div class="header">
+                                <a>{{tr "Sound list" /}}</a>
+                            </div>
+                            <div class="body">
+                                <div class="container-sounds">
+                                </div>
+                                <div class="container-filter">
+                                    <div class="form-group">
+                                        <label class="bmd-label-floating">{{tr "Search for a sound" /}}</label>
+                                        <input type="text" class="form-control input-sounds-filter">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="right">
+                            <div class="header">
+                                <a>{{tr "Sound settings" /}}</a>
+                            </div>
+                            <div class="body">
+                                <label>
+                                    <div class="checkbox">
+                                        <input type="checkbox" class="option-overlap-same">
+                                        <div class="mark"></div>
+                                    </div>
+                                    <a>{{tr "Overlap same sounds" /}}</a>
+                                </label>
+                                <label>
+                                    <div class="checkbox">
+                                        <input type="checkbox" class="option-mute-output">
+                                        <div class="mark"></div>
+                                    </div>
+                                    <a>{{tr "Mute sounds when output is muted" /}}</a>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="container identity-profiles">
+                        {{include tmpl="tmpl_settings-profiles" /}}
+                    </div>
+                    <div class="container identity-forum">
+                        <div class="fill">
+                            <div class="header">
+                                <a>{{tr "Forum connection" /}}</a>
+                                <div class="spacer"></div>
+                                <button class="btn btn-danger show-connected button-logout">{{tr "Logout" /}}</button>
+                            </div>
+                            <div class="body">
+                                <div class="container-connected show-connected">
+                                    <a>You're successfully connected with your forum account</a>
+                                    <div><a>Username: </a><a class="forum-username"></a></div>
+                                    <div><a>Premium: </a><a class="forum-premium"></a></div>
+                                </div>
+                                <div class="container-disconnected show-disconnected">
+                                    <a>{{tr "You're not connected with the forum." /}}</a>
+                                    <div class="container-login">
+                                        <a>{{tr "Login to the forum:" /}}</a>
+                                        <a class="container-error">Login to the forum failed.</a>
+                                        <div class="form-group">
+                                            <label class="bmd-label-floating">{{tr "Username" /}}</label>
+                                            <input class="form-control input-username">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="bmd-label-floating">{{tr "Password" /}}</label>
+                                            <input class="form-control input-password" type="password">
+                                        </div>
+                                        <div class="container-button">
+                                            <div class="g-recaptcha"></div>
+                                            <button class="btn btn-success button-login">{{tr "Login" /}}</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_settings-profiles" type="text/html">
+            <div class="container-settings-identity-profile">
+                <div class="left highlight-profile-list highlightable">
+                    <div class="header">
+                        <a>{{tr "Your Profiles" /}}</a>
+                        <button class="btn btn-info button-create">{{tr "Create new" /}}</button>
+                    </div>
+                    <div class="body">
+                        <div class="container-profiles">
+                            <div class="overlay overlay-error"><a class="error">error: error</a></div>
+                            <div class="overlay overlay-timeout">
+                                <a>{{tr "Timeout while loading" /}}</a><br>
+                                <button class="btn btn-blue button-reload-list">{{tr "Reload" /}}</button>
+                            </div>
+                            <div class="overlay overlay-empty">
+                                <a>{{tr "You've not profiles yet" /}}</a>
+                            </div>
+                        </div>
+                        <div class="buttons">
+                            <button class="btn btn-danger button-delete">{{tr "Delete selected" /}}</button>
+                            <div class="spacer"></div>
+                            <button class="btn btn-success button-set-default">{{tr "Select as Default" /}}
+                            </button>
+                        </div>
+                        <div class="buttons-small">
+                            <button class="btn btn-danger button-delete">{{tr "Delete" /}}</button>
+                            <div class="spacer"></div>
+                            <button class="btn btn-success button-set-default">{{tr "Default" /}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="right">
+                    <div class="header">
+                        <a>{{tr "Profile Settings" /}}</a>
+                        <div class="spacer"></div>
+                        <div class="container-avatar"></div>
+                        <button class="btn btn-info button-change-avatar">{{tr "Change Avatar" /}}</button>
+                        <!-- AVATAR -->
+                    </div>
+                    <div class="body">
+                        <div class="container-general highlight-profile-settings highlightable">
+                            <div class="form-group">
+                                <label>{{tr "Profile Name" /}}</label>
+                                <input class="form-control profile-name">
+                                <div class="invalid-feedback">{{tr "Profile name is invalid" /}}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>{{tr "Default Nickname" /}}</label>
+                                <input class="form-control profile-default-name"
+                                       placeholder="Another BlackTeaSpeak user">
+                            </div>
+                            <div class="form-group">
+                                <label>{{tr "Identity Type" /}}</label>
+                                <select class="form-control profile-identity-type">
+                                    <option value="error" style="display: none">error: error</option>
+                                    <option value="unset" style="display: none">{{tr "Unset" /}}</option>
+                                    <option value="teaforo">{{tr "Forum Account" /}}</option>
+                                    <option value="teamspeak">{{tr "TeamSpeak Identity" /}}</option>
+                                    <option value="nickname">{{tr "Nickname (Debug only!)" /}}</option>
+                                </select>
+                                <div class="invalid-feedback">{{tr "Invalid identity type" /}}</div>
+                            </div>
+                        </div>
+                        <div class="container-teamspeak">
+                            <div class="container-valid">
+                                <div class="form-group">
+                                    <label>{{tr "Unique-ID" /}}</label>
+                                    <input class="form-control unique-id" readonly>
+                                </div>
+                                <div class="container-level">
+                                    <div class="form-group">
+                                        <label>{{tr "Level" /}}</label>
+                                        <input class="form-control current-level" readonly>
+                                    </div>
+                                    <button class="btn button-improve">{{tr "Improve" /}}</button>
+                                </div>
+                            </div>
+                            <div class="container-invalid">
+                                {{tr "You have'nt generated/imported an identity." /}}<br>
+                                {{tr "Generate a new one or import one." /}}
+                            </div>
+                            <div class="buttons">
+                                <button class="btn btn-danger button-new">{{tr "Generate new" /}}</button>
+
+                                <div>
+                                    <button class="btn btn-danger button-import">{{tr "Import identity" /}}
+                                    </button>
+                                    <button class="btn btn-success button-export">{{tr "Export identity" /}}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="container-teaforo">
+                            <div class="container-valid">
+                                {{tr "You're using your forum account as identification" /}}
+                            </div>
+                            <div class="container-invalid">
+                                <a>{{tr "You can't use your forum account here because you're not connected with that forum account." /}}</a>
+                                <button class="btn btn-success button-setup">{{tr "Setup your connection" /}}
+                                </button>
+                            </div>
+                        </div>
+                        <div class="container-nickname">
+                            <div class="form-group">
+                                <label>{{tr "Nickname" /}}</label>
+                                <input class="form-control nickname">
+                                <div class="invalid-feedback">{{tr "Invalid nickname. Name must be at least 5 characters" /}}
+                                </div>
+                            </div>
+                            <div class="invalid-feedback"></div>
+                        </div>
+                        <div class="container-highlight-dummy highlight-identity-settings highlightable"></div>
+                    </div>
+                </div>
+                <div class="help-background"></div>
+                <div class="container-help-text window-resize-listener">
+                    <a class="help-text">Hello nice to see you. This is even working with new lines etc....</a>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_settings-sound_entry" type="text/html">
+            <div class="entry">
+                <div class="column sound-name">
+                    <div class="icon client-play button-playback"></div>
+                    {{>name}}
+                </div>
+                <div class="column sound-activated">
+                    <div class="switch">
+                        <label>
+                            <input type="checkbox" {{if activated}}checked{{/if}}>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_settings-teamspeak_import" type="text/html">
+            <div>
+                <div class="container-status"><a></a></div>
+                <fieldset class="">
+                    <div class="container-text">
+                        <label>
+                            <div class="radio-button">
+                                <input type="radio" name="type" value="text"/>
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Import from text" /}}</a>
+                        </label>
+                        <div class="form-group">
+                            <label>{{tr "Identity Data" /}}</label>
+                            <input class="form-control input-identity-text" placeholder="{{tr 'Please paste your identity data here' /}}"/>
+                        </div>
+                    </div>
+                    <div class="container-file">
+                        <label>
+                            <div class="radio-button">
+                                <input type="radio" name="type" value="file"/>
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Import from file" /}}</a>
+                        </label>
+                        <button class="btn btn-brown button-load-file">{{tr "Select file" /}}</button>
+                        <a class="current-file">{{tr "No file selected" /}}</a>
+                    </div>
+                </fieldset>
+                <input type="file" class="file-selector"/>
+                <div class="footer">
+                    <button class="btn btn-success button-import">{{tr "Import" /}}</button>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_settings-teamspeak_improve" type="text/html">
+            <div>
+                <div class="options">
+                    <div class="title">{{tr "Identity: "/}} {{>identity_name}}</div>
+                    <div class="row">
+                        <div class="form-group identity-unique-id">
+                            <label>{{tr "Unique ID:" /}}</label>
+                            <input class="form-control" value="" readonly>
+                        </div>
+                        <div class="form-group identity-level">
+                            <label>{{tr "Current level: " /}}</label>
+                            <input class="form-control" value="loading" readonly>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="form-group identity-target-level">
+                            <div class="bmd-label-static">
+                                <div class="container-tooltip">
+                                    <img src="img/icon_tooltip.svg"/>
+                                    <div class="tooltip">
+                                        <a>
+                                            {{tr "The number of threads used to improve your identity" /}}<br>
+                                            {{tr "The optimal value is equal to the amount of kernel threads." /}}
+                                        </a>
+                                    </div>
+                                </div>
+                                {{tr "Target level: " /}}
+                            </div>
+                            <input class="form-control" value="0" type="number" min="0" max="160">
+                        </div>
+                        <div class="form-group threads">
+                            <div class="bmd-label-static">
+                                <div class="container-tooltip">
+                                    <img src="img/icon_tooltip.svg"/>
+                                    <div class="tooltip">
+                                        <a>{{tr "A value of zero means unlimited. Improve until you abort" /}}</a>
+                                    </div>
+                                </div>
+                                {{tr "Threads: " /}}
+                            </div>
+                            <input class="form-control" value="2" type="number" min="1" max="32">
+                        </div>
+                    </div>
+                </div>
+                <div class="status">
+                    <div class="row">
+                        <div class="form-group hash-rate">
+                            <label>{{tr "Hashes/second:" /}}</label>
+                            <input class="form-control" value="0" readonly>
+                        </div>
+                        <div class="form-group time-elapsed">
+                            <label>{{tr "Elapsed time:" /}}</label>
+                            <input class="form-control" value="00:00" readonly>
+                        </div>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-danger btn-raised button-close">{{tr "Close" /}}</button>
+                    <button class="btn btn-success btn-raised button-start-stop">{{tr "Start" /}}</button>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="settings-profile-list-entry" type="text/html">
+            <div class="entry profile {{if id == 'default'}}default{{/if}}">
+                <div class="name">{{>profile_name}}</div>
+                <!-- <div class="button button-delete"><div class="icon client-delete"></div></div> -->
+                <div title="{{tr 'Profile is valid' /}}" class="icon client-delete status status-invalid"></div>
+                <div title="{{tr 'Profile is invalid' /}}" class="icon client-apply status status-valid"></div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="settings-translations-list-entry" type="text/html">
+            {{if type == "repository" }}
+            <div class="entry repository" repository="{{:id}}">
+                <div class="name">{{> name}}</div>
+                <div class="button button-delete">
+                    <div class="icon client-delete"></div>
+                </div>
+                <div class="button button-info">
+                    <div class="icon client-about"></div>
+                </div>
+            </div>
+            {{else type == "default" }}
+            <div class="entry default {{if selected}}selected{{/if}}">
+                <div class="country flag-gb" title="{{>fallback_country_name}}"></div>
+                <div class="name">{{tr "English (Default / Fallback)" /}}</div>
+            </div>
+            {{else}}
+            <div class="entry translation {{if selected}}selected{{/if}}" parent-repository="{{:id}}">
+                <div class="country flag-{{:country_code}}"
+                     title="{{>country_name}}"></div>
+                <div class="name">{{> name}}</div>
+                <div class="button button-info">
+                    <div class="icon client-about"></div>
+                </div>
+            </div>
+            {{/if}}
+        </script>
+
+        <script class="jsrender-template" id="settings-translations-list-entry-info" type="text/html">
+            <div class="entry-info-container">
+                {{if type == "repository" }}
+                <!--
+                        unique_id: string;
+                        url: string;
+                        name?: string;
+                        contact?: string;
+                        translations?: RepositoryTranslation[];
+                        load_timestamp?: number;
+                -->
+                <div class="property property-name">
+                    <div class="key">Name:</div>
+                    <div class="value">{{>name}}</div>
+                </div>
+                <div class="property property-url">
+                    <div class="key">URL:</div>
+                    <div class="value">{{>url}}</div>
+                </div>
+                <div class="property property-contact">
+                    <div class="key">Contact:</div>
+                    <div class="value">{{>contact}}</div>
+                </div>
+                <div class="property property-translations">
+                    <div class="key">Translations:</div>
+                    <div class="value">{{:translations.length}}</div>
+                </div>
+                {{else}}
+                <!--
+                    name: string;
+                    contributors: Contributor[];
+                -->
+                <div class="property property-name">
+                    <div class="key">Name:</div>
+                    <div class="value">{{>name}}</div>
+                </div>
+                <div class="property property-url">
+                    <div class="key">URL:</div>
+                    <div class="value">{{>url}}</div>
+                </div>
+                <div class="property property-repository">
+                    <div class="key">{{tr "Repository:" /}}</div>
+                    <div class="value">
+                        <p>{{>repository_name}}</p>
+                        <div class="button button-info">
+                            <div class="icon client-about"></div>
+                        </div>
+                    </div>
+                </div>
+                {{if !contributors }}
+                {{else contributors.length == 1}}
+                <div class="property property-contributor">
+                    <div class="key">Contributor:</div>
+                    <div class="value">
+                        {{>contributors[0].name}}
+                        {{if contributors[0].email}}
+                        &nbsp&lt;{{>contributors[0].email}}&gt;
+                        {{/if}}
+                    </div>
+                </div>
+                {{else}}
+                <div class="property property-contributors">
+                    <div class="key">Contributors:</div>
+                    <div class="value">
+                        {{for contributors}}
+                        <div class="contributor">
+                            {{>name}}
+                            {{if email}}
+                            &nbsp&lt;{{>email}}&gt;
+                            {{/if}}
+                        </div>
+                        {{/for}}
+                    </div>
+                </div>
+                {{/if}}
+                {{/if}}
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_change_latency" type="text/html">
+            <div> <!-- for the renderer -->
+                <div class="info">
+                    <div>{{tr "Change latency for client "/}} <node key="client"></node></div>
+                </div>
+                <div class="container-min">
+                    <div class="container-value">
+                        {{tr "Min buffer: "/}}
+                        <a class="value">20ms</a>
+                    </div>
+                    <div class="container-slider">
+                        <div class="filler" style="width: 30%"></div>
+                        <div class="thumb container-tooltip" style="left: 30%">
+                            <div class="tooltip">
+                                <a>86%</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container-max">
+                    <div class="container-value">
+                        {{tr "Max buffer: "/}}
+                        <a class="value">20ms</a>
+                    </div>
+                    <div class="container-slider">
+                        <div class="filler" style="width: 30%"></div>
+                        <div class="thumb container-tooltip" style="left: 30%">
+                            <div class="tooltip">
+                                <a>86%</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-blue button-reset">{{tr "Reset" /}}</button>
+                    {{if have_flush}}
+                    <button class="btn btn-blue button-flush">{{tr "Flush buffer" /}}</button>
+                    {{/if}}
+                    <div class="spacer"></div>
+                    <button class="btn btn-danger button-cancel">{{tr "Cancel" /}}</button>
+                    <button class="btn btn-success button-close">{{tr "Close" /}}</button>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_server_edit" type="text/html">
+            <div> <!-- Only for rendering -->
+                <div class="container-general">
+                    <div class="container-name-icon">
+                        <input type="text" class="input-boxed virtualserver_name" placeholder="{{tr 'Virtual Server name' /}}" value="{{>virtualserver_name}}"/>
+                        <div class="container-icon-select">
+                            <div class="button-select-icon icon-preview">
+                                <node key="server_icon"/>
+                            </div>
+                            <div class="container-dropdown">
+                                <div class="button">
+                                    <div class="arrow down"></div>
+                                </div>
+                                <div class="dropdown">
+                                    <div class="entry button-select-icon">{{tr "Edit icon" /}}</div>
+                                    <div class="entry button-icon-remove">{{tr "Remove icon" /}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container-password">
+                        <input class="input-boxed virtualserver_password" placeholder="{{tr 'Password' /}}" type="password"
+                               id="field_server_password_{{rnd '0~13377331'/}}" {{if virtualserver_flag_password}}
+                               value="WolverinDEV" {{/if}}/>
+                    </div>
+                    <div class="container-slots">
+                        <div class="input-boxed">
+                            <a class="prefix">{{tr "Slots:" /}}</a>
+                            <input type="number" class="virtualserver_maxclients" value="{{:virtualserver_maxclients}}">
+                            <div class="container-tooltip tooltip-slots-max">
+                                <img src="img/icon_tooltip.svg"/>
+                                <div class="tooltip">
+                                    <a>{{tr "Max amount of simultaneously connected clients." /}}</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-boxed">
+                            <a class="prefix">{{tr "Reserved slots:" /}}</a>
+                            <input type="number" class="virtualserver_reserved_slots" value="{{:virtualserver_reserved_slots}}">
+                            <div class="container-tooltip tooltip-slots-reserved">
+                                <img src="img/icon_tooltip.svg"/>
+                                <div class="tooltip">
+                                    <a>{{tr "Reserved server slots for admins." /}}</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container-welcome-message">
+                        <div class="toolbar">
+                            <div class="button button-bold">B</div>
+                            <div class="button button-italic">I</div>
+                            <div class="button button-underline">U</div>
+                            <label class="button button-color">
+                                <input type="color" value="#FF0000">
+                                <a class="rainbow-letter">C</a>
+                            </label>
+                        </div>
+                        <textarea class="input-boxed virtualserver_welcomemessage" placeholder="{{tr 'Welcome message' /}}">{{>virtualserver_welcomemessage}}</textarea>
+                    </div>
+                </div>
+
+                <div class="container-categories">
+                    <div class="categories">
+                        <div class="entry" container="container-host">{{tr "Host" /}}</div>
+                        <div class="entry" container="container-network">{{tr "Networking" /}}</div>
+                        <div class="entry" container="container-security">{{tr "Security" /}}</div>
+                        <div class="entry" container="container-messages">{{tr "Messages" /}}</div>
+                        <div class="entry" container="container-misc">{{tr "Misc" /}}</div>
+                    </div>
+                    <div class="bodies">
+                        <div class="body container-host">
+                            <div class="container-top container-host-message">
+                                <div class="header">{{tr "Host Message" /}}</div>
+                                <div class="content">
+                                    <div class="container-message">
+                                        <div class="container-title">
+                                            <a>{{tr "Message" /}}</a>
+                                        </div>
+                                        <textarea class="input-boxed virtualserver_hostmessage" placeholder="{{tr 'Enter a message...' /}}">{{>virtualserver_hostmessage}}</textarea>
+                                    </div>
+                                    <div class="container-mode">
+                                        <div class="container-title">
+                                            <a>{{tr "Message Mode" /}}</a>
+                                        </div>
+                                        <select class="input-boxed virtualserver_hostmessage_mode">
+                                            <option value="0" {{if virtualserver_hostmessage_mode == 0}}selected{{/if}}>{{tr "No message" /}}</option>
+                                            <option value="1" {{if virtualserver_hostmessage_mode == 1}}selected{{/if}}>{{tr "Show message in log" /}}</option>
+                                            <option value="2" {{if virtualserver_hostmessage_mode == 2}}selected{{/if}}>{{tr "Show message as modal" /}}</option>
+                                            <option value="3" {{if virtualserver_hostmessage_mode == 3}}selected{{/if}}>{{tr "Show message as modal and disconnect the client" /}}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container-bottom">
+                                <div class="container-left container-host-banner">
+                                    <div class="header">{{tr "Host Banner" /}}</div>
+                                    <div class="content">
+                                        <div class="container-url">
+                                            <a>{{tr "URL" /}}</a>
+                                            <div class="input-boxed">
+                                                <input class="virtualserver_hostbanner_url" value="{{>virtualserver_hostbanner_url}}">
+                                                <div class="container-tooltip tooltip-host-banner-url">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "URL which will be opened when the client clicks on the host banner" /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-gfx-url">
+                                            <a>{{tr "Image URL" /}}</a>
+                                            <div class="input-boxed">
+                                                <input class="virtualserver_hostbanner_gfx_url" value="{{>virtualserver_hostbanner_gfx_url}}">
+                                                <div class="container-tooltip tooltip-host-banner-gfx-url">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "URL of the image which will be displayed" /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-refresh">
+                                            <a>{{tr "Refresh Interval" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="0" class="virtualserver_hostbanner_gfx_interval" value="{{>virtualserver_hostbanner_gfx_interval}}">
+                                                <div class="container-tooltip tooltip-host-banner-gfx-refresh">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Time in seconds which determine in which interval the client reloads the hostbanner. A value of 0 means no reload." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-resize">
+                                            <a>{{tr "Resize Mode" /}}</a>
+                                            <div class="input-boxed">
+                                                <select class="virtualserver_hostbanner_mode">
+                                                    <option value="0" {{if virtualserver_hostbanner_mode == 0}}selected{{/if}}>{{tr "Do not adjust" /}}</option>
+                                                    <option value="1" {{if virtualserver_hostbanner_mode == 1}}selected{{/if}}>{{tr "Adjust but ignore ratio aspect" /}}</option>
+                                                    <option value="2" {{if virtualserver_hostbanner_mode == 2}}selected{{/if}}>{{tr "Adjust and keep ratio aspect" /}}</option>
+                                                </select>
+                                                <div class="container-tooltip tooltip-host-banner-gfx-refresh">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Time in seconds which determine in which interval the client reloads the hostbanner.<br>A value of 0 means no reload." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-gfx-preview">
+                                            <div class="container-title">
+                                                <a>{{tr "Image Preview" /}}</a>
+                                            </div>
+                                            <a class="container-image">
+                                                <img src="{{:virtualserver_hostbanner_gfx_url}}"
+                                                     alt="&nbsp;{{tr 'Hostbanner Preview' /}}"
+                                                     title="{{tr 'Hostbanner Preview' /}}"
+                                                     {{if !virtualserver_hostbanner_gfx_url}}style="display: none;"{{/if}}
+                                                >
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="container-right container-host-button">
+                                    <div class="header">{{tr "Host Button" /}}</div>
+                                    <div class="content">
+                                        <div class="container-url">
+                                            <a>{{tr "URL" /}}</a>
+                                            <div class="input-boxed">
+                                                <input class="virtualserver_hostbutton_url" value="{{:virtualserver_hostbutton_url}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "URL which will be opened when the client clicks on the host button" /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-tooltip-button">
+                                            <a>{{tr "Tooltip" /}}</a>
+                                            <div class="input-boxed">
+                                                <input class="virtualserver_hostbutton_tooltip" value="{{:virtualserver_hostbutton_tooltip}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Text for the tooltip on button hover" /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-gfx-url">
+                                            <a>{{tr "Icon URL" /}}</a>
+                                            <div class="input-boxed">
+                                                <input class="virtualserver_hostbutton_gfx_url" value="{{:virtualserver_hostbutton_gfx_url}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "URL of the image which will be displayed" /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-gfx-preview">
+                                            <div class="container-title">
+                                                <a>{{tr "Icon Preview" /}}</a>
+                                            </div>
+                                            <a class="container-image">
+                                                <img src="{{:virtualserver_hostbutton_gfx_url}}"
+                                                     alt="&nbsp;{{tr 'Hostbutton Preview' /}}"
+                                                     title="{{tr 'Hostbutton Preview' /}}"
+                                                     {{if !virtualserver_hostbutton_gfx_url}}style="display: none;"{{/if}}
+                                                >
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="body container-network">
+                            <div class="container-top container-binding">
+                                <div class="header">{{tr "Binding" /}}</div>
+                                <div class="content">
+                                    <div class="container-host">
+                                        <a>{{tr "Host" /}}</a>
+                                        <div class="input-boxed">
+                                            <input class="virtualserver_host" value="{{:virtualserver_host}}">
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>
+                                                        {{tr "A comma separated set of IP's where the server is listening on." /}}<br>
+                                                        {{tr "IPv4 and IPv6 is supported!" /}}<br>
+                                                        {{tr "Note: If you change this you need to restart the virtual server!" /}}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container-port">
+                                        <a>{{tr "Port" /}}</a>
+                                        <div class="input-boxed">
+                                            <input type="number" min="1" max="65535" class="virtualserver_port" value="{{:virtualserver_port}}">
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>
+                                                        {{tr "The port where the server should be listening to." /}}<br>
+                                                        {{tr "Note: If you change this you need to restart the virtual server!" /}}
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <label class="container-weblist">
+                                        <div class="checkbox">
+                                            <input type="checkbox" class="virtualserver_weblist_enabled" {{if virtualserver_weblist_enabled}}checked{{/if}}>
+                                            <div class="mark"></div>
+                                        </div>
+                                        <a>{{tr "Enable reporting to the TeamSpeak server list" /}}</a>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="container-bottom">
+                                <div class="container-left container-download">
+                                    <div class="header">{{tr "File Download" /}}</div>
+                                    <div class="content">
+                                        <div class="container-bandwidth">
+                                            <a>{{tr "Bandwidth limit" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="-1" class="virtualserver_max_download_total_bandwidth" value="{{:virtualserver_max_download_total_bandwidth}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Max bandwidth used by all file transfer clients." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <a class="unit">{{tr "Bytes/s" /}}</a>
+                                        </div>
+                                        <div class="container-quota">
+                                            <a>{{tr "Quota" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="0" class="virtualserver_download_quota" value="{{:virtualserver_download_quota}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>
+                                                            {{tr "Max amount of data in megabytes which could be downloaded." /}}<br>
+                                                            {{tr "The quota will be reset on every new month" /}}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <a class="unit">{{tr "MiB/mo" /}}</a>
+                                        </div>
+                                        <div class="container-used-quota">
+                                            <a>{{tr "Quota this month" /}}</a>
+                                            <div class="value virtualserver_month_bytes_downloaded">{{>virtualserver_month_bytes_downloaded}}</div>
+                                        </div>
+                                        <div class="container-used-quota">
+                                            <a>{{tr "Quota total" /}}</a>
+                                            <div class="value virtualserver_total_bytes_downloaded">{{>virtualserver_total_bytes_downloaded}}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="container-right container-upload">
+                                    <div class="header">{{tr "File Upload" /}}</div>
+                                    <div class="content">
+                                        <div class="container-bandwidth">
+                                            <a>{{tr "Bandwidth limit" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="-1" class="virtualserver_max_upload_total_bandwidth" value="{{:virtualserver_max_upload_total_bandwidth}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Max bandwidth used by all file transfer clients." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <a class="unit">{{tr "Bytes/s" /}}</a>
+                                        </div>
+                                        <div class="container-quota">
+                                            <a>{{tr "Quota" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="0" class="virtualserver_upload_quota" value="{{:virtualserver_upload_quota}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>
+                                                            {{tr "Max amount of data in megabytes which could be downloaded." /}}<br>
+                                                            {{tr "The quota will be reset on every new month" /}}
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <a class="unit">{{tr "MiB/mo" /}}</a>
+                                        </div>
+                                        <div class="container-used-quota">
+                                            <a>{{tr "Quota this month" /}}</a>
+                                            <div class="value virtualserver_month_bytes_uploaded">{{>virtualserver_month_bytes_uploaded}}</div>
+                                        </div>
+                                        <div class="container-used-quota">
+                                            <a>{{tr "Quota total" /}}</a>
+                                            <div class="value virtualserver_total_bytes_uploaded">{{>virtualserver_total_bytes_uploaded}}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="body container-security">
+                            <div class="container-top container-antiflood">
+                                <div class="header">{{tr "Anti Flood" /}}</div>
+                                <div class="content">
+                                    <div class="container-reduce">
+                                        <a>{{tr "Reduced points every ½ seconds." /}}</a>
+                                        <div class="input-boxed">
+                                            <input type="number" min="0" class="virtualserver_antiflood_points_tick_reduce" value="{{:virtualserver_antiflood_points_tick_reduce}}">
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>{{tr "Flood point count which will be reduced each server tick." /}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container-block-commands">
+                                        <a>{{tr "Points needed to block commands" /}}</a>
+                                        <div class="input-boxed">
+                                            <input type="number" min="0" class="virtualserver_antiflood_points_needed_command_block" value="{{:virtualserver_antiflood_points_needed_command_block}}">
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>{{tr "If the value has been reached, the users command will be rejected." /}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container-block-ip">
+                                        <a>{{tr "Points needed to ban IP" /}}</a>
+                                        <div class="input-boxed">
+                                            <input type="number" min="0" class="virtualserver_antiflood_points_needed_ip_block" value="{{:virtualserver_antiflood_points_needed_ip_block}}">
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>{{tr "If the value has been reached, the user will be temporally banned from the server." /}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container-bottom container-security">
+                                <div class="header">{{tr "Misc" /}}</div>
+                                <div class="content">
+                                    <div class="container-encryption">
+                                        <a>{{tr "Channel voice data encryption" /}}</a>
+                                        <div class="input-boxed">
+                                            <select class="virtualserver_codec_encryption_mode">
+                                                <option value="0" {{if virtualserver_codec_encryption_mode == 0}}selected{{/if}}>{{tr "Edit per channel individually" /}}</option>
+                                                <option value="1" {{if virtualserver_codec_encryption_mode == 1}}selected{{/if}}>{{tr "Globally disabled" /}}</option>
+                                                <option value="2" {{if virtualserver_codec_encryption_mode == 2}}selected{{/if}}>{{tr "Globally enabled (recommended)" /}}</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="container-security-level">
+                                        <a>{{tr "Needed Security Level" /}}</a>
+                                        <div class="input-boxed">
+                                            <input type="number" min="8" class="virtualserver_needed_identity_security_level" value="{{:virtualserver_needed_identity_security_level}}">
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>{{tr "Required security level to join the server. (Only applies to TeamSpeak identities)" /}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="container-security-level-description">
+                                        <a></a>
+                                        <div class="container-description">
+                                            <a>{{tr "Level &nbsp;<b>0 - 23</b> generated in seconds" /}}</a>
+                                            <a>{{tr "Level <b>24 - 29</b> generated in minutes" /}}</a>
+                                            <a>{{tr "Level <b>29 - 34</b> generated in hours" /}}</a>
+                                            <a>{{tr "Level <b>35 - 39</b> generated in days" /}}</a>
+                                            <a>{{tr "Level <b>40 - 43</b> generated in months" /}}</a>
+                                            <a>{{tr "Level <b>44 - 23</b> generated in years" /}}</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="body container-messages">
+                            <div class="container-top container-channel">
+                                <div class="header">{{tr "Channel" /}}</div>
+                                <div class="content">
+                                    <div class="container-topic">
+                                        <div class="container-title">
+                                            <a>{{tr "Topic" /}}</a>
+                                        </div>
+                                        <div class="input-boxed">
+                                            <input class="virtualserver_default_channel_topic" value="{{:virtualserver_default_channel_topic}}">
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>{{tr "The default server channel topic" /}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="container-description">
+                                        <div class="container-title">
+                                            <a>{{tr "Description" /}}</a>
+                                        </div>
+                                        <textarea class="input-boxed virtualserver_default_channel_description" placeholder="{{tr 'Enter a message...' /}}">{{>virtualserver_default_channel_description}}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container-bottom container-client">
+                                <div class="header">{{tr "Client" /}}</div>
+                                <div class="content">
+                                    <div class="container-description">
+                                        <a>{{tr "Description" /}}</a>
+                                        <div class="input-boxed">
+                                            <input class="virtualserver_default_client_description" value="{{:virtualserver_default_client_description}}">
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>{{tr "The default client description" /}}</a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="body container-misc">
+                            <div class="container-top container-default-groups">
+                                <div class="header">{{tr "Default groups" /}}</div>
+                                <div class="content">
+                                    <div class="container-default-group">
+                                        <a>{{tr "Server Group" /}}</a>
+                                        <select class="input-boxed virtualserver_default_server_group">
+                                        </select>
+                                    </div>
+                                    <div class="container-default-group">
+                                        <a>{{tr "Music Bot Group" /}}</a>
+                                        <select class="input-boxed virtualserver_default_music_group">
+                                        </select>
+                                    </div>
+                                    <div class="container-default-group">
+                                        <a>{{tr "Channel Admin Group" /}}</a>
+                                        <select class="input-boxed virtualserver_default_channel_admin_group">
+                                        </select>
+                                    </div>
+                                    <div class="container-default-group">
+                                        <a>{{tr "Channel Group" /}}</a>
+                                        <select class="input-boxed virtualserver_default_channel_group">
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="container-bottom">
+                                <div class="container-left container-complains">
+                                    <div class="header">{{tr "Complains" /}}</div>
+                                    <div class="content">
+                                        <div class="container-ban-threshold">
+                                            <a>{{tr "Complains until ban" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="0" class="virtualserver_complain_autoban_count" value="{{:virtualserver_complain_autoban_count}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Amount of complains against one user until he receives an automated ban." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-ban-time">
+                                            <a>{{tr "Autoban time" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="0" class="virtualserver_complain_autoban_time" value="{{:virtualserver_complain_autoban_time}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Amount of complains against one user until he receives an automated ban." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-cooldown">
+                                            <a>{{tr "Complain auto remove" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="0" class="virtualserver_complain_remove_time" value="{{:virtualserver_complain_remove_time}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Time in seconds after a complain expires." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="container-right container-others">
+                                    <div class="header">{{tr "Others" /}}</div>
+                                    <div class="content">
+                                        <div class="container-silence">
+                                            <a>{{tr "Clients before silence" /}}</a>
+                                            <div class="input-boxed">
+                                                <input type="number" min="0" class="virtualserver_min_clients_in_channel_before_forced_silence" value="{{:virtualserver_min_clients_in_channel_before_forced_silence}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Minimum clients within a channel to enforce silence." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-dim">
+                                            <a>{{tr "Priority speaker dim factor" /}}</a>
+                                            <div class="input-boxed">
+                                                <input min="-100" max="100" class="virtualserver_priority_speaker_dimm_modificator" value="{{:virtualserver_priority_speaker_dimm_modificator}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "Dim factor in '%' for priority speakers." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="container-gfx-url">
+                                            <a>{{tr "Default delete delay" /}}</a>
+                                            <div class="input-boxed">
+                                                <input class="virtualserver_channel_temp_delete_delay_default" value="{{:virtualserver_channel_temp_delete_delay_default}}">
+                                                <div class="container-tooltip">
+                                                    <img src="img/icon_tooltip.svg"/>
+                                                    <div class="tooltip">
+                                                        <a>{{tr "The default temporary channel delete delay." /}}</a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container-buttons">
+                    <button class="btn btn-danger button-cancel">{{tr "Cancel" /}}</button>
+                    <button class="btn btn-success button-save">{{tr "Save Changes" /}}</button>
+                </div>
+            </div>
+        </script>
+
+        <!-- General management templates -->
+        <script class="jsrender-template" id="tmpl_ban_list" type="text/html">
+        <div> <!-- required for jquery -->
+            <div class="left">
+                <div class="head">
+                    <div class="category category-add">
+                        <a>{{tr "Create" /}}</a>
+                        <div class="background"></div>
+                    </div>
+                    <div class="category category-edit">
+                        <a>{{tr "Edit" /}}</a>
+                        <div class="background"></div>
+                    </div>
+                </div>
+                <div class="body">
+                    <div class="container-add">
+                        <div class="container-no-permissions">
+                            <a>{{tr "You dont have permission to create bans" /}}</a>
+                        </div>
+                        <div class="group group-name">
+                            <a>{{tr "Name" /}}</a>
+                            <div class="input-boxed">
+                                <input placeholder="{{tr 'Username to ban' /}}" />
+                            </div>
+                        </div>
+                        <div class="group group-ip">
+                            <a>{{tr "IP" /}}</a>
+                            <div class="input-boxed">
+                                <input placeholder="{{tr 'IP to ban' /}}" />
+                            </div>
+                        </div>
+                        <!-- Currently not supported by BlackTeaSpeak
+                        <div class="group group-interpret">
+                            <a>{{tr "Interpret IP / Name as" /}}</a>
+                            <div class="input-boxed">
+                                <select class="ban-regex-type">
+                                    <option value="wildcard-4">{{tr "Wildcard IPv4" /}}</option>
+                                    <option value="wildcard-6">{{tr "Wildcard IPv6" /}}</option>
+                                    <option value="fixed" selected>{{tr "Fixed string" /}}</option>
+                                    <option value="regex">{{tr "Regular Expression" /}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        -->
+                        <div class="group group-unique-id">
+                            <a>{{tr "Unique ID" /}}</a>
+                            <div class="input-boxed">
+                                <input placeholder="{{tr 'Client unique id to ban' /}}" />
+                            </div>
+                        </div>
+                        <div class="group group-hwid">
+                            <a>{{tr "Hardware ID" /}}</a>
+                            <div class="input-boxed">
+                                <input placeholder="{{tr 'No Hardware ID given' /}}" />
+                                <div class="container-tooltip">
+                                    <img src="img/icon_tooltip.svg"/>
+                                    <div class="tooltip">
+                                        <p>
+                                            {{tr "The hardware id has different meanings, depends on the users agent<br>" +
+                                            "TeaClient: The hardware id will be generate out of some unique system id's<br>" +
+                                            "BlackTeaSpeak Web: The web client does not have a fixed hardware id, so it will be random<br>" +
+                                            "TeamSpeak 3 client: The hardware id will be a result of a random generate string within the system registry" /}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group group-reason">
+                            <a>{{tr "Reason" /}}</a>
+                            <textarea class="input-boxed" placeholder="{{tr 'No reason given' /}}"></textarea>
+                        </div>
+                        <div class="group group-duration">
+                            <a>{{tr "Duration" /}}</a>
+                            <div class="container-value">
+                                <div class="input-boxed value">
+                                    <input type="number" value="1" min="1" />
+                                    <div class="container-tooltip tooltip-max-time">
+                                        <img src="img/icon_tooltip.svg"/>
+                                        <div class="tooltip">
+                                            <a class="max">error: max duration</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <select class="input-boxed">
+                                    <option value="sec">{{tr "seconds"/}}</option>
+                                    <option value="min">{{tr "minutes"/}}</option>
+                                    <option value="hours">{{tr "hours"/}}</option>
+                                    <option value="days">{{tr "days"/}}</option>
+                                    <option value="perm">{{tr "permanent"/}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <label class="group-global">
+                            <div class="checkbox">
+                                <input type="checkbox">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Use this ban as a global ban" /}}</a>
+                        </label>
+                    </div>
+                    <div class="container-edit">
+                        <div class="group group-name">
+                            <a>{{tr "Name" /}}</a>
+                            <div class="input-boxed">
+                                <input placeholder="{{tr 'No username given' /}}" />
+                            </div>
+                        </div>
+                        <div class="group group-ip">
+                            <a>{{tr "IP" /}}</a>
+                            <div class="input-boxed">
+                                <input placeholder="{{tr 'No IP given' /}}" />
+                            </div>
+                        </div>
+                        <!-- Currently not supported by BlackTeaSpeak
+                        <div class="group group-interpret">
+                            <a>{{tr "Interpret IP / Name as" /}}</a>
+                            <div class="input-boxed">
+                                <select class="ban-regex-type">
+                                    <option value="wildcard-4">{{tr "Wildcard IPv4" /}}</option>
+                                    <option value="wildcard-6">{{tr "Wildcard IPv6" /}}</option>
+                                    <option value="fixed">{{tr "Fixed string" /}}</option>
+                                    <option value="regex">{{tr "Regular Expression" /}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        -->
+                        <div class="group group-unique-id">
+                            <a>{{tr "Unique ID" /}}</a>
+                            <div class="input-boxed">
+                                <input placeholder="{{tr 'No Unique ID given' /}}" />
+                            </div>
+                        </div>
+                        <div class="group group-hwid">
+                            <a>{{tr "Hardware ID" /}}</a>
+                            <div class="input-boxed">
+                                <input placeholder="{{tr 'No Hardware ID given' /}}" />
+                                <div class="container-tooltip">
+                                    <img src="img/icon_tooltip.svg"/>
+                                    <div class="tooltip">
+                                        <p>
+                                            {{tr "The hardware id has different meanings, depends on the users agent<br>" +
+                                            "TeaClient: The hardware id will be generate out of some unique system id's<br>" +
+                                            "BlackTeaSpeak Web: The web client does not have a fixed hardware id, so it will be random<br>" +
+                                            "TeamSpeak 3 client: The hardware id will be a result of a random generate string within the system registry" /}}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="group group-reason">
+                            <a>{{tr "Reason" /}}</a>
+                            <textarea class="input-boxed" placeholder="{{tr 'No reason given' /}}"></textarea>
+                        </div>
+                        <div class="group group-duration">
+                            <a>{{tr "Duration" /}}</a>
+                            <div class="container-value">
+                                <div class="input-boxed value">
+                                    <input type="number" value="1" min="1" />
+                                    <div class="container-tooltip tooltip-max-time">
+                                        <img src="img/icon_tooltip.svg"/>
+                                        <div class="tooltip">
+                                            <a class="detailed">error: details</a>
+                                            <a class="max">error: max duration</a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <select class="input-boxed">
+                                    <option value="sec">{{tr "seconds"/}}</option>
+                                    <option value="min">{{tr "minutes"/}}</option>
+                                    <option value="hours">{{tr "hours"/}}</option>
+                                    <option value="days">{{tr "days"/}}</option>
+                                    <option value="perm">{{tr "permanent"/}}</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="group-creator">
+                            <a class="key">{{tr "Creator" /}}</a>
+                            <div class="value">
+                                error: creator value
+                            </div>
+                        </div>
+                        <div class="group-enforcements">
+                            <a class="key">{{tr "Enforcements" /}}</a>
+                            <div class="value">
+                                <a>43</a>
+                                <button class="btn btn-yellow button-enforcement-list">{{tr "Show list" /}}</button>
+                            </div>
+                        </div>
+                        <label class="group-global">
+                            <div class="checkbox disabled">
+                                <input type="checkbox" disabled>
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "This ban is a global ban" /}}</a>
+                        </label>
+                    </div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-success button-apply">error: button apply</button>
+                </div>
+            </div>
+            <div class="container-seperator vertical" seperator-id="seperator-banlist">
+                <div class="top"></div>
+            </div>
+            <div class="right">
+                <div class="container-banlist">
+                    <div class="container-filter">
+                        <div class="form-group">
+                            <label class="bmd-label-floating">{{tr "Filter" /}}</label>
+                            <input class="form-control">
+                        </div>
+                    </div>
+                    <div class="container-list">
+                        <div class="entry header">
+                            <div class="column column-key">{{tr "Name/IP/UID/HWID" /}}</div>
+                            <div class="column column-reason">{{tr "Reason" /}}</div>
+                            <div class="column column-expires">{{tr "Expires" /}}</div>
+                            <div class="column column-delete">&nbsp;</div>
+                        </div>
+                        <div class="body">
+                            <div class="container-empty">
+                                <a>error: empty message</a>
+                            </div>
+                            <div class="container-error">
+                                <a>error: no permissions</a>
+                            </div>
+                            <!-- <div class="entry local"></div> -->
+                        </div>
+                    </div>
+                    <div class="container-options">
+                        <label class="container-option">
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-show-own">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Show only own bans" /}}</a>
+                        </label>
+                        <label class="container-option">
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-highlight-own">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Highlight own bans" /}}</a>
+                        </label>
+                        <button class="btn btn-success button-refresh-banlist">{{tr "Refresh" /}}</button>
+                    </div>
+                </div>
+                <div class="container-triggerlist">
+                    <div class="container-filter">
+                        <div class="form-group">
+                            <label class="bmd-label-floating">{{tr "Filter" /}}</label>
+                            <input class="form-control">
+                        </div>
+                        <div class="container-close">
+                            <!-- TODO -->
+                        </div>
+                    </div>
+                    <div class="container-list">
+                        <div class="entry header">
+                            <div class="column column-properties">{{tr "Properties" /}}</div>
+                            <div class="column column-timestamp">{{tr "Timestamp" /}}</div>
+                        </div>
+                        <div class="body">
+                            <div class="container-empty">
+                                <a>error: empty message</a>
+                            </div>
+                            <div class="container-error">
+                                <a>error: no permissions</a>
+                            </div>
+                            <!-- <div class="entry local"></div> -->
+                        </div>
+                    </div>
+                    <div class="container-options">
+                        <label class="container-option">
+                            <div class="checkbox">
+                                <input type="checkbox" class="option-highlight-cause">
+                                <div class="mark"></div>
+                            </div>
+                            <a>{{tr "Highlight cause" /}}</a>
+                        </label>
+                        <button class="btn btn-success button-refresh-triggerlist">{{tr "Refresh" /}}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_client_ban" type="text/html">
+            <div> <!-- for the renderer -->
+                <div class="container-info">
+                    <div class="container container-name">
+                        <div class="title">{{tr "Nickname" /}}</div>
+                        <div class="value">
+                            {{for entries}}
+                                {{>name}}<br>
+                            {{/for}}
+                        </div>
+                    </div>
+                    <div class="container container-unique-id">
+                        <div class="title">{{tr "Unique ID" /}}</div>
+                        <div class="value">
+                            {{for entries}}
+                                {{>unique_id}}<br>
+                            {{/for}}
+                        </div>
+                    </div>
+                </div>
+                <div class="container-duration">
+                    <a>{{tr "Duration" /}}</a>
+                    <div class="container-value">
+                        <div class="input-boxed value">
+                            <input type="number" value="1" min="1" />
+                            <div class="container-tooltip tooltip-max-time">
+                                <img src="img/icon_tooltip.svg"/>
+                                <div class="tooltip">
+                                    <a class="max">error: max duration</a>
+                                </div>
+                            </div>
+                        </div>
+                        <select class="input-boxed">
+                            <option value="sec">{{tr "seconds"/}}</option>
+                            <option value="min">{{tr "minutes"/}}</option>
+                            <option value="hours">{{tr "hours"/}}</option>
+                            <option value="days">{{tr "days"/}}</option>
+                            <option value="perm">{{tr "permanent"/}}</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="container-reason">
+                    <div class="toolbar">
+                        <div class="button button-bold">B</div>
+                        <div class="button button-italic">I</div>
+                        <div class="button button-underline">U</div>
+                        <label class="button button-color">
+                            <input type="color" value="#FF0000">
+                            <a class="rainbow-letter">C</a>
+                        </label>
+                    </div>
+                    <textarea class="input-boxed ban-reason" placeholder="{{tr 'Ban reason' /}}"></textarea>
+                </div>
+                <div class="container-criteria">
+                    <div class="criteria nickname">
+                        <a>{{tr "Nickname and Unique ID" /}}</a>
+                        <label class="checkbox">
+                            <input type="checkbox">
+                            <div class="mark"></div>
+                        </label>
+                    </div>
+                    <div class="criteria ip-address">
+                        <a>{{tr "IP-Address" /}}</a>
+                        <label class="checkbox">
+                            <input type="checkbox">
+                            <div class="mark"></div>
+                        </label>
+                    </div>
+                    <div class="criteria hardware-id">
+                        <a>{{tr "Hardware ID" /}}</a>
+                        <label class="checkbox">
+                            <input type="checkbox">
+                            <div class="mark"></div>
+                        </label>
+                    </div>
+                </div>
+                <div class="container-buttons">
+                    <button class="btn btn-danger button-cancel">{{tr "Cancel" /}}</button>
+                    <button class="btn btn-success button-apply">{{tr "Ok" /}}</button>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_query_create" type="text/html">
+            <div class="query-create">
+                <a>{{tr "Set the login name for your Server Query account." /}}</a>
+                <a>{{tr "You'll receive your password within the next step." /}}</a>
+                <div class="form-group row-name">
+                    <label>Name:</label>
+                    <input type="text" maxlength="64" minlength="3" class="form-control input-name">
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-danger button-close">{{tr "Close" /}}</button>
+                    <button class="btn btn-success btn-raised button-create">{{tr "Create" /}}</button>
+                </div>
+            </div>
+        </script>
+        <script class="jsrender-template" id="tmpl_query_created" type="text/html">
+            <div class="query-created">
+                <a>{{tr "Your server query credentials:" /}}</a>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>{{tr "Name:" /}}</label>
+                        <input class="form-control query_name" type="text" maxlength="64" minlength="3"
+                               value="{{>username}}">
+                    </div>
+                    <div class="btn_copy_name icon_x32 client-copy" title="{{tr 'Copy username' /}}"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>{{tr "Password:" /}}</label>
+                        <input class="form-control query_password" type="text" maxlength="64" minlength="3"
+                               value="{{>password}}">
+                    </div>
+                    <div class="btn_copy_password icon_x32 client-copy" title="{{tr 'Copy username' /}}"></div>
+                </div>
+                <div class="buttons">
+                    <button class="btn btn-primary button-close">{{tr "Close" /}}</button>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_query_manager" type="text/html">
+            <div class="container"> <!-- required for the seperator -->
+                <div class="left">
+                    <div class="title">
+                        <a>{{tr "Account list" /}}</a>
+                        <button class="btn btn-success button-create">{{tr "Create account" /}}</button>
+                    </div>
+                    <div class="container-list">
+                        <div class="container-entries">
+                            <div class="container-empty">
+                                error: empty
+                            </div>
+                            <div class="container-error">
+                                error: query list
+                            </div>
+                        </div>
+                        <div class="container-search">
+                            <button class="btn btn-blue button-update">{{tr "Refresh" /}}</button>
+                            <div class="form-group">
+                                <label class="bmd-label-floating">{{tr "Search for query" /}}</label>
+                                <input type="text" class="form-control filter-input">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="container-seperator vertical" seperator-id="seperator-query-manage"></div>
+                <div class="right">
+                    <div class="title">
+                        <a>{{tr "Account details" /}}</a>
+                        <button class="btn btn-danger button-delete">{{tr "Delete account" /}}</button>
+                    </div>
+                    <div class="container-details">
+                        <div class="detail login-name">
+                            <a class="title">{{tr "Login name" /}}</a>
+                            <a class="value">error: login name</a>
+                        </div>
+                        <div class="detail unique-id">
+                            <div class="title">
+                                <a>{{tr "Unique ID" /}}</a>
+                                <div class="button button-copy">
+                                    <div class="icon_em client-copy"></div>
+                                </div>
+                            </div>
+                            <a class="value">error: unique id</a>
+                        </div>
+                        <div class="detail bound-server">
+                            <a class="title">{{tr "Bound server ID" /}}</a>
+                            <a class="value">error: bound server</a>
+                        </div>
+
+                        <div class="spacer"></div>
+                        <div class="buttons">
+                            <button class="btn btn-blue button-change-password">{{tr "Change password" /}}</button>
+                            <button class="btn btn-blue button-rename">{{tr "Rename Account" /}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_avatar_list" type="text/html">
+            <div class="modal-avatar-list">
+                <div class="container-list">
+                    <div class="list-header">
+                        <div class="column column-username">{{tr "Username" /}}</div>
+                        <div class="column column-unique-id">{{tr "Unique ID" /}}</div>
+                        <div class="column column-size">{{tr "Size" /}}</div>
+                        <div class="column column-timestamp">{{tr "Date" /}}</div>
+                    </div>
+                    <div class="list-entries-container">
+                        <div class="list-entries">
+                        </div>
+                    </div>
+                </div>
+                <div class="container-info">
+                    <div class="container-data">
+                        <div class="form-group">
+                            <label class="bmd-label-static">{{tr "Username" /}}</label>
+                            <input class="form-control property-username" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label class="bmd-label-static">{{tr "Unique ID" /}}</label>
+                            <input class="form-control property-unique-id" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label class="bmd-label-static">{{tr "Avatar ID" /}}</label>
+                            <input class="form-control property-avatar-id" disabled>
+                        </div>
+                    </div>
+                    <div class="container-preview">
+                        <div class="container-image"></div>
+                        <div class="container-image-data">
+                            <a>{{tr "Image info:" /}}</a>
+                            <div class="form-group">
+                                <label class="bmd-label-static">{{tr "Bytes" /}}</label>
+                                <input class="form-control property-image-size" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label class="bmd-label-static">{{tr "Width" /}}</label>
+                                <input class="form-control property-image-width" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label class="bmd-label-static">{{tr "Height" /}}</label>
+                                <input class="form-control property-image-height" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label class="bmd-label-static">{{tr "Type" /}}</label>
+                                <input class="form-control property-image-type" disabled>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="container-buttons">
+                        <button class="btn btn-danger button-delete">{{tr "Delete" /}}</button>
+                        <button class="btn btn-success button-download">{{tr "Download" /}}</button>
+                    </div>
+                    <div class="disabled-overlay">
+                        <a>{{tr "Please select a user" /}}</a>
+                    </div>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_avatar_list-list_entry" type="text/html">
+            <div class="entry">
+                <div class="column column-username">{{>username}}</div>
+                <div class="column column-unique-id">{{>unique_id}}</div>
+                <div class="column column-size">{{>size}}</div>
+                <div class="column column-timestamp">{{>timestamp}}</div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_key_select" type="text/html">
+            <div> <!-- required for the renderer-->
+                <div class="body">
+                    <a>{{tr "Press any key which you want to use." /}}</a>
+                    <div class="container-select">
+                        <a>Current key:</a>
+                        <div class="container-key">
+                            <a></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="container-buttons">
+                    <button class="btn btn-danger button-cancel">{{tr "Cancel" /}}</button>
+                    <button class="btn btn-success button-save">{{tr "Save Key" /}}</button>
+                </div>
+            </div>
+        </script>
+
+        <script class="jsrender-template" id="tmpl_client_info" type="text/html">
+            <div> <!-- Important for the renderer -->
+                <div class="head">
+                    <div class="status-row">
+                        <div class="status-entry status-away">
+                            <div class="icon_em client-away"></div>
+                        </div>
+                        <div class="status-entry status-output-muted">
+                            <div class="icon_em client-output_muted"></div>
+                        </div>
+                        <div class="status-entry status-output-disabled">
+                            <div class="icon_em client-hardware_output_muted"></div>
+                        </div>
+                        <div class="status-entry status-input-muted">
+                            <div class="icon_em client-input_muted"></div>
+                        </div>
+                        <div class="status-entry status-input-disabled">
+                            <div class="icon_em client-hardware_input_muted"></div>
+                        </div>
+                    </div>
+                    <div class="container-away-message" title="{{tr 'Away message' /}}">
+                        <a>A verry long away message, because I want to tell a story. There was a child....A verry long away message, because I want to tell a story. There was a child....A verry long away message, because I want to tell a story. There was a child....A verry long away message, because I want to tell a story. There was a child....A verry long away message, because I want to tell a story. There was a child....A verry long away message, because I want to tell a story. There was a child....A verry long away message, because I want to tell a story. There was a child....A verry long away message, because I want to tell a story. There was a child....</a>
+                    </div>
+                </div>
+                <div class="body">
+                    <div class="container-avatar">
+                    </div>
+                    <div class="container-name"></div>
+                    <div class="container-description">
+                        <div class="client-description"></div>
+                    </div>
+
+                    <div class="container-categories">
+                        <div class="categories">
+                            <div class="entry" container="container-basic">{{tr "Basic Info" /}}</div>
+                            <div class="entry" container="container-groups">{{tr "Groups" /}}</div>
+                            <div class="entry" container="container-packets">{{tr "Packets" /}}</div>
+                        </div>
+                        <div class="bodies">
+                            <div class="body container-basic">
+                                <div class="left">
+                                    <div class="property property-unique-id">
+                                        <div class="title">
+                                            <a>{{tr "Unique ID" /}}</a>
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>{{tr "Database ID:" /}} <span class="value-dbid">error: database id</span></a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="value">
+                                            <a>error: unique id</a>
+                                            <div class="button button-copy">
+                                                <div class="icon_em client-copy"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="property property-teaforo">
+                                        <div class="title">
+                                            <a>{{tr "TeaForo Connection" /}}</a>
+                                        </div>
+                                        <div class="value">
+                                            <a>This will be a really long string...</a>
+                                        </div>
+                                    </div>
+                                    <div class="property property-version">
+                                        <div class="title">
+                                            <a>{{tr "Version" /}}</a>
+                                            <div class="container-tooltip">
+                                                <img src="img/icon_tooltip.svg"/>
+                                                <div class="tooltip">
+                                                    <a>{{tr "Build timestamp:" /}} <span class="value-timestamp">error: no timestamp</span></a>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="value">
+                                            <a>This will be a really long string...</a>
+                                        </div>
+                                    </div>
+                                    <div class="property property-country">
+                                        <div class="title">
+                                            <a>{{tr "Country" /}}</a>
+                                        </div>
+                                        <div class="value">
+                                            <a>This will be a really long string...</a>
+                                        </div>
+                                    </div>
+                                    <div class="property property-ip">
+                                        <div class="title">
+                                            <a>{{tr "IP Address" /}}</a>
+                                        </div>
+                                        <div class="value">
+                                            <a>error: IP</a>
+                                            <div class="button button-copy">
+                                                <div class="icon_em client-copy"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="spacer"></div>
+                                <div class="right">
+                                    <div class="property property-first-connected">
+                                        <div class="title">
+                                            <a>{{tr "First connected" /}}</a>
+                                        </div>
+                                        <div class="value">
+                                            <a>error: first connected</a>
+                                        </div>
+                                    </div>
+                                    <div class="property property-connect-count">
+                                        <div class="title">
+                                            <a>{{tr "Connect count" /}}</a>
+                                        </div>
+                                        <div class="value">
+                                            <a>error: connect count</a>
+                                        </div>
+                                    </div>
+                                    <div class="property property-online-since">
+                                        <div class="title">
+                                            <a>{{tr "Online since" /}}</a>
+                                        </div>
+                                        <div class="value">
+                                            <a>error: online since</a>
+                                        </div>
+                                    </div>
+                                    <div class="property property-idle-time">
+                                        <div class="title">
+                                            <a>{{tr "Idle time" /}}</a>
+                                        </div>
+                                        <div class="value">
+                                            <a>error: idle time</a>
+                                        </div>
+                                    </div>
+                                    <div class="property property-ping">
+                                        <div class="title">
+                                            <a>{{tr "Ping" /}}</a>
+                                        </div>
+                                        <div class="value">
+                                            <a>error: ping</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="body container-groups">
+                                <div class="left">
+                                    <!-- <div class="title">{{tr "Server Groups" /}}</div> -->
+                                    <div class="container">
+                                        <div class="entries">
+                                        </div>
+                                        <div class="container-default-groups">
+                                            <a>{{tr "Client has no own server group" /}}</a>
+                                        </div>
+                                    </div>
+                                    <div class="buttons">
+                                        <button class="btn btn-success button-group-add">{{tr "Manage client server groups" /}}</button>
+                                    </div>
+                                </div>
+                                <!--
+                                <div class="spacer"></div>
+                                <div class="right">
+                                    <div class="title">{{tr "Channel Groups" /}}</div>
+                                    <div class="container">
+                                    </div>
+                                </div>
+                                -->
+                            </div>
+                            <div class="body container-packets">
+                                <div class="left">
+                                    <div class="statistic statistic-packet-loss">
+                                        <div class="title">
+                                            <a>{{tr "Packetloss" /}}</a>
+                                        </div>
+                                        <div class="downstream">
+                                            <a>{{tr "Downstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                        <div class="upstream">
+                                            <a>{{tr "Upstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                    </div>
+                                    <div class="statistic statistic-transmitted-packets">
+                                        <div class="title">
+                                            <a>{{tr "Transmitted Packets" /}}</a>
+                                        </div>
+                                        <div class="downstream">
+                                            <a>{{tr "Downstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                        <div class="upstream">
+                                            <a>{{tr "Upstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                    </div>
+                                    <div class="statistic statistic-transmitted-bytes">
+                                        <div class="title">
+                                            <a>{{tr "Transmitted Bytes" /}}</a>
+                                        </div>
+                                        <div class="downstream">
+                                            <a>{{tr "Downstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                        <div class="upstream">
+                                            <a>{{tr "Upstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="spacer"></div>
+                                <div class="right">
+                                    <div class="statistic statistic-quota">
+                                        <div class="title">
+                                            <a>{{tr "Used/Max file transfer quota" /}}</a>
+                                        </div>
+                                        <div class="downstream">
+                                            <a>{{tr "Downstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                        <div class="upstream">
+                                            <a>{{tr "Upstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                    </div>
+                                    <div class="statistic statistic-bandwidth-second">
+                                        <div class="title">
+                                            <a>{{tr "Bandwidth last second" /}}</a>
+                                        </div>
+                                        <div class="downstream">
+                                            <a>{{tr "Downstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                        <div class="upstream">
+                                            <a>{{tr "Upstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                    </div>
+                                    <div class="statistic statistic-bandwidth-minute">
+                                        <div class="title">
+                                            <a>{{tr "Bandwidth last minute" /}}</a>
+                                        </div>
+                                        <div class="downstream">
+                                            <a>{{tr "Downstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                        <div class="upstream">
+                                            <a>{{tr "Upstream" /}}</a>
+                                            <a class="value"></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </script>
+    </body>
+</html>

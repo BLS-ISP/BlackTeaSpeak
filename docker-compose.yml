@@ -1,0 +1,35 @@
+services:
+  blackteaspeak-backend:
+    build:
+      context: .
+      dockerfile: BlackTeaSpeak-Server/Dockerfile
+    container_name: BlackTeaSpeak-Server
+    restart: unless-stopped
+    network_mode: host # Host mode is recommended for WebRTC UDP port allocation
+    environment:
+      - RUST_LOG=info
+    volumes:
+      # Mount the workspace data directory to persist SQL databases and TLS certs
+      - ./BlackTeaSpeak-Server/data:/workspace/BlackTeaSpeak-Server/data
+      # Mount the file transfer storage
+      - ./BlackTeaSpeak-Server/files:/workspace/BlackTeaSpeak-Server/files
+      # Mount the BlackTeaWeb frontend distribution
+      - ./BlackTeaSpeak-Server/BlackTeaWeb/dist:/workspace/BlackTeaSpeak-Server/BlackTeaWeb/dist
+      # Mount the legacy BlackTeaSpeak config/DBs if needed
+      - ./BlackTeaSpeak-1.5.6:/workspace/BlackTeaSpeak-1.5.6
+
+  # Coturn STUN/TURN server for WebRTC NAT traversal
+  coturn:
+    image: coturn/coturn:latest
+    container_name: coturn-stun
+    restart: unless-stopped
+    network_mode: host
+    command: >
+      -n --log-file=stdout
+      --min-port=50000 --max-port=50020
+      --listening-port=3478
+      --tls-listening-port=5349
+      --realm=blackteaweb.local
+      --no-stdout-log
+    volumes:
+      - ./coturn-data:/var/lib/coturn

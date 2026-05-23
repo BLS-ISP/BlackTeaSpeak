@@ -1,0 +1,48 @@
+import * as React from "react";
+import {useMemo} from "react";
+import {Translatable} from "tc-shared/ui/react-elements/i18n";
+import {server_connections} from "tc-shared/ConnectionManager";
+import {StatusController} from "tc-shared/ui/frames/footer/StatusController";
+import {ConnectionStatusEvents} from "tc-shared/ui/frames/footer/StatusDefinitions";
+import {Registry} from "tc-shared/events";
+import {StatusDetailRenderer, StatusEvents, StatusTextRenderer} from "tc-shared/ui/frames/footer/StatusRenderer";
+
+const cssStyle = require("./Renderer.scss");
+
+const VersionsRenderer = () => (
+    <React.Fragment>
+        <a className={cssStyle.version} key={"version"}>
+            <Translatable>Version:</Translatable> {__build.version}
+        </a>
+        <div className={cssStyle.source} key={"link"}>
+            <Translatable>Maintained by BlackTeaSpeak</Translatable>
+        </div>
+    </React.Fragment>
+);
+
+const RtcStatus = () => {
+    /* FIXME: Outsource this! */
+    const statusController = useMemo(() => new StatusController(new Registry<ConnectionStatusEvents>()), []);
+    statusController.setConnectionHandler(server_connections.getActiveConnectionHandler());
+
+    server_connections.events().reactUse("notify_active_handler_changed", event => {
+        statusController.setConnectionHandler(event.newHandler);
+    }, undefined, []);
+
+    return (
+        <StatusEvents.Provider value={statusController.getEvents()}>
+            <StatusTextRenderer />
+            <StatusDetailRenderer />
+        </StatusEvents.Provider>
+    )
+};
+
+
+export const FooterRenderer = () => {
+    return (
+        <div className={cssStyle.container}>
+            <VersionsRenderer />
+            <RtcStatus />
+        </div>
+    );
+};

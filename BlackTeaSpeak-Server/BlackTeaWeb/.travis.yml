@@ -1,0 +1,54 @@
+dist: bionic
+
+language: node_js
+node_js:
+  - "15"
+
+before_install:
+  - sudo apt-get update
+  - sudo apt-get -y install coreutils
+  - chmod +x ./scripts/travis/build.sh
+  - chmod +x ./scripts/travis/deploy_server.sh
+  - chmod +x ./scripts/travis/deploy_github.sh
+  - chmod +x ./scripts/travis/deploy_docker.sh
+
+stages:
+  - compile
+  # - test We've no tested defined yet
+
+jobs:
+  include:
+    - stage: compile
+      script: "./scripts/travis/build.sh --enable-release --enable-debug || travis_terminate 1;"
+
+deploy:
+  - provider: script
+    script: "bash  scripts/travis/deploy_server.sh development"
+    cleanup: false
+    skip_cleanup: true
+    on:
+      branch: develop
+#  - provider: script
+#    cleanup: false
+#    skip_cleanup: true
+#    script: "bash scripts/travis/deploy_docker.sh development"
+#    on:
+#      branch: develop
+  - provider: script
+    script: "bash scripts/travis/deploy_server.sh production"
+    cleanup: false
+    skip_cleanup: true
+    on:
+      branch: master
+  - provider: script
+    cleanup: false
+    skip_cleanup: true
+    script: "bash scripts/travis/deploy_github.sh"
+    on:
+      branch: master
+#  - provider: script
+#    cleanup: false
+#    skip_cleanup: true
+#    script: "bash  scripts/travis/deploy_docker.sh release"
+#    on:
+#      branch: master

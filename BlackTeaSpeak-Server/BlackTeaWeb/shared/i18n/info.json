@@ -1,0 +1,139 @@
+{
+  "translations": [
+    {
+      "key": "de_gt",
+      "country_code": "de",
+      "path": "de_google_translate.translation",
+
+      "name": "German translation, based on Google Translate",
+      "contributors": [
+        {
+          "name": "Google Translate, via script by Markus Hadenfeldt",
+          "email": "gtr.i18n.client@blackteaspeak.de"
+        },
+        {
+          "name": "Markus Hadenfeldt",
+          "email": "i18n.client@blackteaspeak.de"
+        }
+      ]
+    },
+    {
+      "key": "pl_gt",
+      "country_code": "pl",
+      "path": "pl_google_translate.translation",
+
+      "name": "Polish translation, based on Google Translate",
+      "contributors": [
+        {
+          "name": "Google Translate, via script by Markus Hadenfeldt",
+          "email": "gtr.i18n.client@blackteaspeak.de"
+        }
+      ]
+    },
+    {
+      "key": "tr_gt",
+      "country_code": "tr",
+      "path": "tr_translate.translation",
+
+      "name": "Türkçe / Turkish",
+      "contributors": [
+         {
+           "name": "Erdem Bekci", 
+           "email": "bekcierdem@gmail.com"
+         }
+      ]
+    },
+    {
+      "key": "fr_gt",
+      "country_code": "fr",
+      "path": "fr_google_translate.translation",
+
+      "name": "Auto translated messages for language fr",
+      "contributors": [
+        {
+          "name": "Google Translate, via script by Markus Hadenfeldt",
+          "email": "gtr.i18n.client@blackteaspeak.de"
+        }
+      ]
+    },
+    {
+      "key": "ru",
+      "country_code": "ru",
+      "path": "ru_translate_vafin.translation",
+
+      "name": "Русский",
+      "contributors": [
+        {
+          "name": "Google Translate, via script by Markus Hadenfeldt",
+          "email": "gtr.i18n.client@blackteaspeak.de"
+        },
+        {
+          "name": "Vafin",
+          "email": ""
+        }
+      ]
+    }, {
+      "key": "ru_gt",
+      "country_code": "ru",
+      "path": "ru_google_translate.translation",
+
+      "name": "Auto translated messages for language ru",
+      "contributors": [
+        {
+          "name": "Google Translate, via script by Markus Hadenfeldt",
+          "email": "gtr.i18n.client@blackteaspeak.de"
+        }
+      ]
+    }, {
+      "key": "es_gt",
+      "country_code": "es",
+      "path": "es_google_translate.translation",
+
+      "name": "Auto translated messages for language es (Spanish)",
+      "contributors": [
+        {
+          "name": "Google Translate, via script by Markus Hadenfeldt",
+          "email": "gtr.i18n.client@blackteaspeak.de"
+        }
+      ]
+    }, {
+      "key": "hu_gt",
+      "country_code": "hu",
+      "path": "hu_translate.translation",
+
+      "name": "Magyar (fordította: Ifj. Madarász László)",
+      "contributors": [
+            {
+                "name": "Ifj. Madarász László (Silverhost.hu csapata)",
+                "email": "info@silverhost.hu"
+            }
+      ]
+    }, {
+      "key": "pt_gt",
+      "country_code": "pt",
+      "path": "pt_translate.translation",
+
+      "name": "Portuguese / Português",
+      "contributors": [
+        {
+          "name": "Translated by yamano",
+          "email": "support@cyberlimbo.com"
+        }
+      ]
+    }, {
+      "key": "nl_gt",
+      "country_code": "nl",
+      "path": "nl_google_translate.translation",
+
+      "name": "Auto translated messages for language nl (Dutch)",
+      "contributors": [
+        {
+          "name": "Google Translate, via script by Markus Hadenfeldt",
+          "email": "gtr.i18n.client@blackteaspeak.de"
+        }
+      ]
+    }
+  ],
+  "name": "Default BlackTeaSpeak repository",
+  "contact": "i18n@blackteaspeak.de"
+}

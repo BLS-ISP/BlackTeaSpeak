@@ -1,0 +1,6 @@
+{
+  "source_files": [
+    "../app/**/*.ts"
+  ],
+  "target_file": "../declarations/exports.d.ts"
+}

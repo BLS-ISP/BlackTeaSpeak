@@ -1,0 +1,38 @@
+/* TSC config for the core files of the application, like the file manager and webpack */
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
+    "useUnknownInCatchVariables": false,
+    "noUncheckedSideEffectImports": false,
+    "sourceMap": true,
+    "lib": ["es6", "dom"],
+    "removeComments": false,
+    "esModuleInterop": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "webpack.config.ts",
+    "webpack-client.config.ts",
+    "webpack-web.config.ts",
+
+    "webpack/build-definitions.d.ts",
+    "webpack/HtmlWebpackInlineSource.ts",
+    "webpack/WatLoader.ts",
+    "webpack/ManifestPlugin.ts",
+    "tools/trgen/webpack/Loader.ts",
+
+    "babel.config.ts",
+    "postcss.config.ts",
+    "file.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "declarations"
+  ]
+}

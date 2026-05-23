@@ -1,0 +1,25 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
+    "useUnknownInCatchVariables": false,
+    "noUncheckedSideEffectImports": false,
+    "lib": ["es6"],
+
+    "typeRoots": [],
+    "types": [],
+
+    "esModuleInterop": true
+  },
+  "files": [
+    "./Definitions.ts",
+    "./generator/JsRenderer.ts",
+    "./generator/TypeScript.ts",
+    "./webpack/Loader.ts",
+    "./webpack/Plugin.ts",
+    "./webpack/Utils.ts"
+  ]
+}

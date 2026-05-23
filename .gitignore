@@ -1,0 +1,35 @@
+# Rust
+**/target*/
+**/*.rs.bk
+Cargo.lock
+
+# Embedded / Temp Repos
+**/temp_test/
+**/data/tsdeclarations/
+**/test_ecdh/
+**/tmp_dummy/
+
+# Node / JS
+node_modules/
+dist/
+build/
+.env
+
+# Tauri
+src-tauri/target/
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+
+# App Data
+blackteaspeak.db
+blackteaspeak.db-journal
+blackteaspeak.db-shm
+blackteaspeak.db-wal
+server_key.pem
+host_key.pem
+*.log

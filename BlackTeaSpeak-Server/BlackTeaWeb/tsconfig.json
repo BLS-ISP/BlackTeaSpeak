@@ -1,0 +1,42 @@
+/* General file with least possible errors. This is just for your IDE (PHP-Storm for example) */
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "target": "es6",
+    "module": "commonjs",
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
+    "useUnknownInCatchVariables": false,
+    "noUncheckedSideEffectImports": false,
+    "sourceMap": true,
+    "lib": ["ES2017", "dom", "dom.iterable"],
+    "removeComments": true, /* we dont really need them within the target files */
+    "jsx": "react",
+    "esModuleInterop": true,
+    "paths": {
+      "tc-shared/*": ["./shared/js/*"],
+      "tc-loader": ["./loader/exports/loader.d.ts"],
+      "tc-events": ["./vendor/TeaEventBus/src/index.ts"],
+      "tc-services": ["./vendor/TeaClientServices/src/index.ts"],
+
+      "svg-sprites/*": ["./shared/svg-sprites/*"],
+      "vendor/xbbcode/*": ["./vendor/xbbcode/src/*"]
+    }
+  },
+  "exclude": [
+    "node_modules",
+    "shared/js/workers",
+    "shared/declarations/**/*.d.ts",
+    "shared/generated",
+    "web/declarations/**/*.d.ts",
+    "web/generated/",
+    "web/environment/",
+    "loader/app/targets/certaccept.ts",
+    "tools/",
+    "vendor",
+    "dist",
+    "declarations"
+  ]
+}

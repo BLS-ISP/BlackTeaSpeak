@@ -1,0 +1,77 @@
+﻿@use "globals" as *;
+
+$separator_thickness: 5px;
+$small_device: 650px;
+$animation_length: .5s;
+
+html:root {
+	--app-background: rgba(24, 26, 31, 0.94);
+	--panel-border: rgba(255, 255, 255, 0.08);
+	--panel-shadow: 0 14px 30px rgba(0, 0, 0, 0.24);
+	--panel-shadow-strong: 0 18px 36px rgba(0, 0, 0, 0.28);
+	--panel-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+
+	--chat-background: rgba(32, 35, 40, 0.96);
+	--channel-tree-background: rgba(28, 31, 36, 0.96);
+	--server-log-background: rgba(26, 28, 33, 0.95);
+
+	--footer-background: rgba(19, 21, 25, 0.92);
+	--footer-text: #bcc1c8;
+
+	--channel-chat-seperator: rgba(255, 255, 255, 0.04);
+	--channel-chat-seperator-selected: rgba(191, 149, 92, 0.42);
+
+	--server-log-text: #9ea4ad;
+	--server-log-error: #d9846a;
+	--server-log-tree-entry: #ebedf1;
+
+	--hostbanner-background: rgba(42, 46, 54, 0.95);
+}
+
+:global {
+	/* Still in use for the global hang in point */
+	.app-container {
+		right: 0;
+		left: 0;
+		top: 0;
+
+		overflow: auto;
+		padding: 0;
+	}
+
+	$animation_seperator_length: .1s;
+	.container-seperator {
+		@include transition(all $animation_seperator_length ease-in-out);
+		background: var(--channel-chat-seperator);
+
+		flex-grow: 0;
+		flex-shrink: 0;
+
+		&.horizontal {
+			height: $separator_thickness;
+			width: 100%;
+
+			cursor: row-resize;
+		}
+
+		&.vertical {
+			width: $separator_thickness;
+			height: 100%;
+
+			cursor: col-resize;
+		}
+
+		&.seperator-selected {
+			@include transition(all $animation_seperator_length ease-in-out);
+			background-color: var(--channel-chat-seperator-selected);
+		}
+	}
+
+	html, body {
+		overflow: hidden;
+	}
+
+	body {
+		background: transparent!important;
+	}
+}

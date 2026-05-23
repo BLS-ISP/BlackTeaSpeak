@@ -1,0 +1,20 @@
+/* general web project config */
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
+    "useUnknownInCatchVariables": false,
+    "noUncheckedSideEffectImports": false,
+    "skipLibCheck": true,
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "sourceMap": true
+  },
+  "include": [
+    "../declarations/imports_*.d.ts",
+    "../js/**/*.ts"
+  ]
+}

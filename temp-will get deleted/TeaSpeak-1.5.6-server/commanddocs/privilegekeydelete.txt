@@ -1,0 +1,2 @@
+Description:
+  An alias for tokendelete

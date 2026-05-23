@@ -1,0 +1,16 @@
+/* packed web project config */
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "none",
+    "outFile": "../generated/client.js",
+    "allowJs": true,
+    "noUncheckedSideEffectImports": false,
+    "skipLibCheck": true
+  },
+  "include": [
+    "../declarations/imports_*.d.ts",
+    "../js/**/*.ts",
+    "../../shared/generated/shared.js"
+  ]
+}

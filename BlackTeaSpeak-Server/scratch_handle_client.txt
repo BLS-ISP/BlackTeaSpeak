@@ -1,0 +1,269 @@
+fn handle_client(
+    stream: TcpStream,
+    runtime: Arc<Mutex<BaselineRuntime>>,
+    tls_config: Arc<ServerConfig>,
+    file_transfers: Arc<FileTransferRegistry>,
+    sessions: SharedBlackTeaWebSessions,
+    query_bridge: Option<QueryNotificationBridge>,
+    connection_id: u64,
+) -> Result<()> {
+    let connection_ip = stream
+        .peer_addr()
+        .map(|peer_addr| peer_addr.ip().to_string())
+        .unwrap_or_default();
+    if blackteaweb_trace_enabled() {
+        match stream.peer_addr() {
+            Ok(peer_addr) => eprintln!("[blackteaweb:{connection_id}] accepted {peer_addr}"),
+            Err(error) => eprintln!(
+                "[blackteaweb:{connection_id}] accepted client with unknown peer address: {error:#}"
+            ),
+        }
+    }
+    stream
+        .set_nonblocking(false)
+        .context("failed to switch BlackTeaWeb client socket to blocking mode")?;
+    stream
+        .set_read_timeout(Some(Duration::from_millis(250)))
+        .context("failed to set BlackTeaWeb client read timeout")?;
+    stream
+        .set_write_timeout(Some(Duration::from_secs(30)))
+        .context("failed to set BlackTeaWeb client write timeout")?;
+
+    let tls_stream = StreamOwned::new(
+        ServerConnection::new(Arc::clone(&tls_config))
+            .context("failed to create TLS server connection")?,
+        stream,
+    );
+    let mut websocket =
+        accept(tls_stream).context("failed to accept BlackTeaWeb websocket connection")?;
+    let mut session = BlackTeaWebSessionHandler::new_with_connection_ip(connection_id, connection_ip);
+    session.set_file_transfers(file_transfers);
+    session.set_sessions(Arc::clone(&sessions));
+    let pending_frames = Arc::new(Mutex::new(Vec::new()));
+    let mut close_frame_received = false;
+    let mut ping_timeout_triggered = false;
+    let mut last_activity = Instant::now();
+
+    loop {
+        flush_pending_frames(&mut websocket, &pending_frames)?;
+        match websocket.read() {
+            Ok(Message::Text(text)) => {
+                last_activity = Instant::now();
+                trace_blackteaweb_frame(connection_id, "in", text.as_ref());
+                let before_presence = session.presence();
+                let mut outbound = {
+                    let mut runtime = runtime
+                        .lock()
+                        .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
+                    session.handle_text_frame(text.as_ref(), &mut runtime)?
+                };
+                let after_presence = session.presence();
+
+                if let Some(after_presence) = after_presence.as_ref() {
+                    let visible_channel_ids = {
+                        let runtime = runtime
+                            .lock()
+                            .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
+                        session.visible_channel_ids(&runtime)
+                    };
+                    let existing_peers = list_session_presences(
+                        &sessions,
+                        after_presence.server_id,
+                        Some(after_presence.client_id),
+                    )?
+                    .into_iter()
+                    .filter(|presence| visible_channel_ids.contains(&presence.channel_id))
+                    .collect::<Vec<_>>();
+                    if before_presence.is_none() && !existing_peers.is_empty() {
+                        insert_frames_before_error(
+                            &mut outbound,
+                            vec![command_frame(
+                                "notifycliententerview",
+                                existing_peers
+                                    .iter()
+                                    .map(|presence| presence_enter_view_row(presence, None, 2))
+                                    .collect(),
+                            )?],
+                        );
+                    }
+                    register_or_update_session(
+                        &sessions,
+                        after_presence.clone(),
+                        session
+                            .self_client_database_id()
+                            .expect("connected BlackTeaWeb session should expose a database id"),
+                        visible_channel_ids,
+                        Arc::clone(&pending_frames),
+                    )?;
+                }
+                session.sync_rtc_presence()?;
+
+                let mut direct_frames = Vec::new();
+                let peer_frames = derive_peer_frames(&before_presence, &after_presence)?;
+                if let Some(frame) = derive_direct_frame(&before_presence, &after_presence)? {
+                    direct_frames.push(frame);
+                }
+                if !peer_frames.is_empty() {
+                    broadcast_frames_for_presence_change(&sessions, &peer_frames)?;
+                }
+                let pending_permission_refreshes = session.drain_pending_permission_refreshes();
+                if !pending_permission_refreshes.is_empty() {
+                    let runtime = runtime
+                        .lock()
+                        .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
+                    broadcast_permission_refreshes(
+                        &sessions,
+                        &runtime,
+                        &pending_permission_refreshes,
+                    )?;
+                }
+                let pending_broadcasts = session.drain_pending_broadcasts();
+                if !pending_broadcasts.is_empty() {
+                    broadcast_queued_frames(&sessions, &pending_broadcasts)?;
+                }
+                let mut query_notifications =
+                    derive_query_notifications_from_presence(&before_presence, &after_presence);
+                query_notifications.extend(session.drain_pending_query_notifications());
+                if !query_notifications.is_empty() {
+                    if let Ok(rt) = runtime.lock() {
+                        for notif in &query_notifications {
+                            rt.broadcast_event(session.presence().unwrap().server_id, notif);
+                        }
+                    }
+                }
+                if !direct_frames.is_empty() {
+                    insert_frames_before_error(&mut outbound, direct_frames);
+                }
+                outbound.extend(drain_pending_frames(&pending_frames)?);
+
+                for message in outbound {
+                    trace_blackteaweb_frame(connection_id, "out", &message);
+                    websocket
+                        .send(Message::Text(message.into()))
+                        .context("failed to write BlackTeaWeb websocket frame")?;
+                }
+            }
+            Ok(Message::Ping(payload)) => {
+                last_activity = Instant::now();
+                if blackteaweb_trace_enabled() {
+                    eprintln!("[blackteaweb:{connection_id}] ping {} bytes", payload.len());
+                }
+                websocket
+                    .send(Message::Pong(payload))
+                    .context("failed to answer websocket ping")?;
+            }
+            Ok(Message::Close(frame)) => {
+                close_frame_received = true;
+                if blackteaweb_trace_enabled() {
+                    eprintln!("[blackteaweb:{connection_id}] close frame: {frame:?}");
+                }
+                break;
+            }
+            Ok(_) => {
+                last_activity = Instant::now();
+            }
+            Err(WebSocketError::ConnectionClosed | WebSocketError::AlreadyClosed) => {
+                if blackteaweb_trace_enabled() {
+                    eprintln!("[blackteaweb:{connection_id}] websocket closed");
+                }
+                break;
+            }
+            Err(WebSocketError::Io(error))
+                if matches!(
+                    error.kind(),
+                    io::ErrorKind::WouldBlock
+                        | io::ErrorKind::TimedOut
+                        | io::ErrorKind::Interrupted
+                ) =>
+            {
+                if last_activity.elapsed() >= TEAWEB_IDLE_TIMEOUT {
+                    ping_timeout_triggered = true;
+                    let _ = websocket.send(Message::Close(Some(CloseFrame {
+                        code: CloseCode::Normal,
+                        reason: TEAWEB_TIMEOUT_CLOSE_REASON.into(),
+                    })));
+                    break;
+                }
+                continue;
+            }
+            Err(error) => return Err(error).context("BlackTeaWeb websocket processing failed"),
+        }
+    }
+
+    let disconnect_kind = blackteaweb_disconnect_kind(close_frame_received, ping_timeout_triggered);
+    let (disconnect_reason_id, disconnect_reason_message) =
+        blackteaweb_disconnect_reason(disconnect_kind);
+
+    let disconnect_presence = session.presence();
+    unregister_session(&sessions, session.client_id)?;
+    session.remove_from_rtc()?;
+    {
+        let mut runtime = runtime
+            .lock()
+            .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
+        if let Some(disconnect_presence) = disconnect_presence
+                .as_ref()
+                .map(session_presence_from_blackteaweb_presence)
+        {
+            let notif = TransportNotification::ClientLeftView {
+                presence: disconnect_presence.clone(),
+                to_channel_id: None,
+                reason_id: disconnect_reason_id,
+                reason_message: disconnect_reason_message.to_string(),
+                invoker_id: 0,
+                invoker_name: String::new(),
+                invoker_uid: String::new(),
+                ban_time: None,
+            };
+            runtime.broadcast_event(disconnect_presence.server_id, &notif);
+        }
+        runtime.remove_session_client(session.client_id);
+    }
+    let disconnect_cleanup_notifications = {
+        let mut runtime = runtime
+            .lock()
+            .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
+        match disconnect_presence.as_ref() {
+            Some(presence) => query_bridge_cleanup_notifications(
+                presence.server_id,
+                runtime.cleanup_temporary_channels(presence.server_id, &[presence.channel_id]),
+                0,
+                "",
+                "",
+            ),
+            None => Vec::new(),
+        }
+    };
+    if !disconnect_cleanup_notifications.is_empty() {
+        if let Ok(rt) = runtime.lock() {
+            for notif in &disconnect_cleanup_notifications {
+                rt.broadcast_event(session.presence().unwrap().server_id, notif);
+            }
+        }
+        let runtime = runtime
+            .lock()
+            .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
+        let cleanup_frames = visibility_aware_transport_broadcasts(
+            &sessions,
+            &runtime,
+            Some(session.client_id),
+            &disconnect_cleanup_notifications,
+        )?;
+        broadcast_queued_frames(&sessions, &cleanup_frames)?;
+    }
+    if let Some(disconnect_presence) = disconnect_presence {
+        broadcast_frames_for_presence_change(
+            &sessions,
+            &[PresenceBroadcast::PeerLeft {
+                server_id: disconnect_presence.server_id,
+                exclude_client_id: Some(disconnect_presence.client_id),
+                presence: disconnect_presence,
+                to_channel_id: None,
+                reason_id: disconnect_reason_id,
+                reason_message: disconnect_reason_message.to_string(),
+            }],
+        )?;
+    }
+
+    Ok(())
+}

@@ -1,0 +1,32 @@
+#Generate the declarations by yourself with /scripts/build_declarations.sh
+declarations/*.d.ts
+
+#Ignore the generated mapped files
+css/static/**/*.css
+css/static/**/*.css.map
+
+css/**/*.js
+css/**/*.js.map
+
+js/**/*.js
+js/**/*.js.map
+
+js/**/*.css
+js/**/*.css.map
+
+loader/**/*.css
+loader/**/*.css.map
+
+loader/**/*.js
+loader/**/*.js.map
+
+popup/**/*.css
+popup/**/*.css.map
+
+popup/**/*.js
+popup/**/*.js.map
+
+generated/*
+
+/*.js
+/*.js.map

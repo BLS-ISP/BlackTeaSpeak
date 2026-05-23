@@ -1,0 +1,344 @@
+import * as Animation from "../animation";
+import {getUrlParameter} from "./Utils";
+import {LoaderPerformanceLogger} from "./Performance";
+
+export interface ApplicationLoader {
+    execute();
+}
+
+export interface Config {
+    loader_groups: boolean;
+    verbose: boolean;
+    error: boolean;
+
+    baseUrl: string;
+    abortAnimationOnFinish: boolean;
+}
+
+export let config: Config = {
+    loader_groups: false,
+    verbose: false,
+    error: true,
+    baseUrl: "./",
+    abortAnimationOnFinish: getUrlParameter("loader-abort") === "1"
+};
+
+export type Task = {
+    name: string,
+    priority: number, /* tasks with the same priority will be executed in sync */
+    function: (taskId?: number) => Promise<void>
+};
+
+type InternalTask = Task & { initiator: string }
+
+export enum Stage {
+    /*
+        loading loader required files (incl this)
+     */
+    INITIALIZING,
+
+    /*
+        setting up the loading process
+     */
+    SETUP,
+
+    /*
+        loading all style sheet files
+     */
+    STYLE,
+
+    /*
+        loading all javascript files
+     */
+    JAVASCRIPT,
+
+    /*
+        loading all template files
+     */
+    TEMPLATES,
+
+    /*
+        initializing static/global stuff
+     */
+    JAVASCRIPT_INITIALIZING,
+
+    /*
+        finalizing load process
+     */
+    FINALIZING,
+
+    /*
+        invoking main task
+     */
+    LOADED,
+
+    DONE
+}
+
+let currentStage: Stage | -1 | undefined = undefined;
+const tasks: {[key:number]: InternalTask[]} = {};
+
+function currentAnimationStage(): Stage {
+    return typeof currentStage === "undefined" || currentStage < Stage.INITIALIZING ? Stage.INITIALIZING : currentStage as Stage;
+}
+
+export type ModuleMapping = {
+    application: string,
+    modules: {
+        "id": string,
+        "context": string,
+        "resource": string
+    }[]
+};
+const module_mapping_: ModuleMapping[] = [];
+export function module_mapping() : ModuleMapping[] { return module_mapping_; }
+
+export function finished() {
+    return currentStage == Stage.DONE;
+}
+export function running() { return typeof(currentStage) !== "undefined"; }
+
+export function register_task(stage: Stage, task: Task) {
+    let callee = new Error().stack.split("\n")[2].replace(/^\s*at (Object\.\.\/)?/, "");
+    if(callee.match(/^.* \(([:\\/~_\-+0-9a-zA-Z.]+):([0-9]+):([0-9]+)\)$/)) {
+        callee = callee.replace(/^.* \(([:\\/~_\-+0-9a-zA-Z.]+):([0-9]+):([0-9]+)\)$/, "$1:$2:$3");
+    }
+    if(!task.function) {
+        debugger;
+        throw "tried to register a loader task without a function at " + callee;
+    }
+
+    if(currentStage > stage) {
+        if(config.error) {
+            console.warn("Register loading task, but it had already been finished. Executing task anyways! Registerer: %s", callee);
+        }
+
+        const promise = task.function();
+        if(!promise) {
+            console.error("Loading task %s (%s) hasn't returned a promise!", task.name, callee);
+            return;
+        }
+        promise.catch(error => {
+            if(config.error) {
+                console.error("Failed to execute delayed loader task!");
+                console.log(" - %s: %o", task.name, error);
+            }
+
+            critical_error(error);
+        });
+        return;
+    }
+
+    const task_array = tasks[stage] || [];
+    task_array.push(Object.assign({
+        initiator: callee
+    }, task));
+    tasks[stage] = task_array.sort((a, b) => a.priority - b.priority);
+}
+
+type RunningTask = {
+    taskId: number,
+    name: string,
+    promise: Promise<void> | undefined
+};
+let runningTasks: RunningTask[] = [];
+let runningTaskIdIndex = 1;
+
+export function setCurrentTaskName(taskId: number, name: string) {
+    const task = runningTasks.find(e => e.taskId === taskId);
+    if(!task) {
+        console.warn("Tried to set task name of unknown task %d", taskId);
+        return;
+    }
+
+    task.name = name;
+    Animation.updateState(currentAnimationStage(), runningTasks.map(e => e.name));
+}
+
+export async function execute(customLoadingAnimations: boolean) {
+    if(!await Animation.initialize(customLoadingAnimations)) {
+        return;
+    }
+
+    /* Cleanup <noscript> elements */
+    for(const element of document.getElementsByTagName("noscript")) {
+        element.remove();
+    }
+
+    const timestampBegin = Date.now();
+
+    let begin: number = 0;
+    let end: number = Date.now();
+    while(currentStage <= Stage.LOADED || typeof currentStage === "undefined") {
+
+        let pendingTasks: InternalTask[] = [];
+        while((tasks[currentStage] || []).length > 0) {
+            if(pendingTasks.length == 0 || pendingTasks[0].priority == tasks[currentStage][0].priority) {
+                pendingTasks.push(tasks[currentStage].pop());
+            } else {
+                break;
+            }
+        }
+
+        const errors: {
+            error: any,
+            task: InternalTask
+        }[] = [];
+
+        for(const task of pendingTasks) {
+            const rTask = {
+                taskId: ++runningTaskIdIndex,
+                name: task.name,
+                promise: undefined
+            } as RunningTask;
+
+           try {
+               if(config.verbose) {
+                   console.debug("Executing loader %s (%d)", task.name, task.priority);
+               }
+
+               runningTasks.push(rTask);
+               const promise = task.function(rTask.taskId);
+               if(!promise) {
+                   runningTasks.splice(runningTasks.indexOf(rTask), 1);
+                   console.error("Loading task %s hasn't returned a promise!", task.name);
+                   continue;
+               }
+
+               rTask.promise = promise.catch(error => {
+                   errors.push({
+                       task: task,
+                       error: error
+                   });
+
+                   return Promise.resolve();
+               }).then(() => {
+                   const index = runningTasks.indexOf(rTask);
+                   if(index === -1) {
+                       console.warn("Running task (%s) finished, but it has been unregistered already!", task.name);
+                       return;
+                   }
+                   runningTasks.splice(index, 1);
+               });
+           } catch(error) {
+               const index = runningTasks.indexOf(rTask);
+               if(index !== -1)
+                   runningTasks.splice(index, 1);
+
+               errors.push({
+                   task: task,
+                   error: error
+               });
+           }
+        }
+
+        if(runningTasks.length > 0) {
+            Animation.updateState(currentAnimationStage(), runningTasks.map(e => e.name));
+            await Promise.all(runningTasks.map(e => e.promise));
+        }
+
+        if(errors.length > 0) {
+           if(config.loader_groups)
+               console.groupEnd();
+
+           console.error("Failed to execute loader. The following tasks failed (%d):", errors.length);
+           for(const error of errors) {
+               console.error("  - %s (%s): %o", error.task.name, error.task.initiator, error.error);
+           }
+
+           throw "failed to process step " + Stage[currentStage];
+        }
+
+        if(pendingTasks.length == 0) {
+            if(typeof(currentStage) === "undefined") {
+                currentStage = -1;
+                if(config.verbose) console.debug("[loader] Booting app");
+            } else if(currentStage < Stage.INITIALIZING) {
+                if(config.loader_groups) console.groupEnd();
+                if(config.verbose) console.debug("[loader] Entering next state (%s). Last state took %dms", Stage[currentStage + 1], (end = Date.now()) - begin);
+            } else {
+                if(config.loader_groups) console.groupEnd();
+                if(config.verbose) console.debug("[loader] Finish invoke took %dms", (end = Date.now()) - begin);
+            }
+
+            begin = end;
+            currentStage += 1;
+
+            if(currentStage != Stage.DONE && config.loader_groups)
+                console.groupCollapsed("Executing loading stage %s", Stage[currentStage]);
+        }
+    }
+
+    if(config.verbose)
+        console.debug("[loader] finished loader. (Total time: %dms)", Date.now() - timestampBegin);
+
+    Animation.finalize(config.abortAnimationOnFinish);
+}
+
+export function execute_managed(customLoadingAnimations: boolean) {
+    execute(customLoadingAnimations).then(() => {
+        if(config.verbose) {
+            let message;
+            if(typeof(window.tr) !== "undefined")
+                message = tr("App loaded successfully!");
+            else
+                message = "App loaded successfully!";
+
+            if(typeof(window.log) !== "undefined") {
+                /* We're having our log module */
+                window.log.info(window.log.LogCategory.GENERAL, message);
+            } else {
+                console.log(message);
+            }
+        }
+    }).catch(error => {
+        console.error("App loading failed: %o", error);
+        critical_error("Failed to execute loader", "Lookup the console for more detail");
+    });
+}
+
+/* critical error handler */
+export type ErrorHandler = (message: string, detail: string) => void;
+let _callback_critical_error: ErrorHandler;
+let _callback_critical_called: boolean = false;
+export function critical_error(message: string, detail?: string) {
+    Animation.abort();
+
+    if(_callback_critical_called) {
+        console.warn("[CRITICAL] %s", message);
+        if(typeof(detail) === "string")
+            console.warn("[CRITICAL] %s", detail);
+        return;
+    }
+
+    _callback_critical_called = true;
+    if(_callback_critical_error) {
+        _callback_critical_error(message, detail);
+        return;
+    }
+
+    /* default handling */
+    let tag = document.getElementById("critical-load");
+
+    {
+        const error_tags = tag.getElementsByClassName("error");
+        error_tags[0].innerHTML = message;
+    }
+
+    if(typeof(detail) === "string") {
+        let node_detail = tag.getElementsByClassName("detail")[0];
+        node_detail.innerHTML = detail;
+    }
+
+    tag.classList.add("shown");
+}
+export function critical_error_handler(handler?: ErrorHandler, override?: boolean) : ErrorHandler {
+    if((typeof(handler) === "object" && handler !== _callback_critical_error) || override)
+        _callback_critical_error = handler;
+    return _callback_critical_error;
+}
+
+/* loaders */
+export type SourcePath = string;
+
+export let loaderPerformance = new LoaderPerformanceLogger();

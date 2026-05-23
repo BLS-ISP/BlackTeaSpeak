@@ -1,0 +1,344 @@
+﻿@use "../../../../css/static/globals" as *;
+
+.container {
+    @include user-select(none);
+
+    font-size: 1rem;
+
+    width: 60em;
+    min-width: 25em;
+    max-width: 100%;
+
+    flex-shrink: 1;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+
+    > * {
+        padding-left: 1.5em;
+        padding-right: 1.5em;
+    }
+}
+
+
+.connectContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
+    padding-top: .75em;
+
+    flex-shrink: 0;
+    flex-grow: 0;
+
+    border-left: 2px solid #0073d4;
+
+    .row {
+        position: relative;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: stretch;
+
+        .inputAddress, .inputNickname {
+            width: 35em;
+            min-width: 10em;
+            max-width: 100%;
+
+            flex-grow: 1;
+            flex-shrink: 1;
+
+            margin-right: 3em;
+        }
+
+        .inputPassword, .inputProfile {
+            width: 25em;
+            min-width: 15em;
+            max-width: 100%;
+
+            flex-grow: 0;
+            flex-shrink: 1;
+        }
+
+        .inputProfile {
+            display: flex;
+            flex-direction: row;
+            justify-content: stretch;
+
+            .input {
+                overflow: visible;
+                min-width: 0;
+
+                flex-shrink: 1;
+                flex-grow: 1;
+
+                .invalidFeedback {
+                    width: max-content;
+                }
+            }
+
+            .button {
+                height: 2em;
+
+                flex-grow: 0;
+                flex-shrink: 0;
+
+                align-self: flex-end;
+                margin-bottom: 1em;
+                margin-left: .5em;
+            }
+        }
+    }
+}
+
+.buttonContainer {
+    padding-top: 1em;
+    padding-bottom: 1.5em;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+
+    border-left: 2px solid #0073d4;
+
+    .buttonShowHistory {
+        .containerText {
+            display: inline-block;
+            min-width: 10em;
+            flex-shrink: 0;
+        }
+
+        .containerArrow {
+            display: inline-block;
+            margin-left: .5em;
+
+            :global(.arrow) {
+                border-color: #7a7a7a;
+            }
+
+            :global(.arrow.up) {
+                margin-bottom: -.25em;
+            }
+        }
+    }
+
+    .buttonsConnect {
+        padding-left: .5em;
+        margin-left: auto;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-end;
+
+        .button:not(:first-of-type) {
+            margin-left: .5em;
+        }
+    }
+}
+
+.historyContainer {
+    border-left: 2px solid #7a7a7a;
+    border-top: 1px solid #090909;
+
+    max-height: 0;
+    overflow: hidden;
+
+    @include transition(all .3s);
+
+    &.shown {
+        max-height: 30em;
+    }
+}
+
+.historyTable {
+    margin-top: 1em;
+    margin-bottom: 1em;
+
+    color: #7a7a7a;
+
+    width: 100em;
+    max-width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+
+    .head {
+        display: flex;
+        flex-direction: row;
+        justify-content: stretch;
+
+        flex-grow: 0;
+        flex-shrink: 0;
+
+        border: none;
+        border-bottom: 1px solid #161618;
+    }
+
+
+    .body {
+        flex-grow: 0;
+        flex-shrink: 1;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+
+        overflow: auto;
+
+        .row {
+            cursor: pointer;
+
+            flex-grow: 0;
+            flex-shrink: 0;
+
+            display: flex;
+            flex-direction: row;
+            justify-content: stretch;
+
+            &:hover {
+                background-color: #202022;
+            }
+
+            &.selected {
+                background-color: #131315;
+            }
+        }
+
+        .bodyEmpty {
+            height: 3em;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            font-size: 1.25em;
+            color: rgba(121, 121, 121, 0.5);
+        }
+    }
+
+    .column {
+        flex-grow: 1;
+        flex-shrink: 1;
+
+        overflow: hidden;
+        white-space: nowrap;
+
+        padding-right: .25em;
+        padding-left: .25em;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+
+        &:not(:last-of-type) {
+            border-right: 1px solid #161618;
+        }
+
+        > a {
+            max-width: 100%;
+            text-overflow: ellipsis;
+            overflow: hidden;
+
+            @include text-dotdotdot();
+        }
+    }
+
+    margin-left: -1.5em; /* the delete row */
+
+    .head {
+        margin-left: 1.5em; /* the delete row */
+
+        .column.delete {
+            display: none;
+        }
+    }
+
+    .column {
+        align-self: center;
+        .country, .iconContainer {
+            align-self: center;
+            margin-right: 0.25em;
+        }
+
+
+        @mixin fixed-column($name, $width) {
+            &.#{$name} {
+                flex-grow: 0;
+                flex-shrink: 0;
+
+                width: $width;
+            }
+        }
+
+        @include fixed-column(delete, 1.5em);
+        @include fixed-column(password, 5em);
+        @include fixed-column(country, 7em);
+        @include fixed-column(clients, 4em);
+        @include fixed-column(connections, 6.5em);
+
+        &.delete {
+            opacity: 0;
+            border-right: none;
+            border-bottom: none;
+
+            text-align: center;
+            @include transition(opacity .25s ease-in-out);
+        }
+
+        &.address {
+            flex-grow: 1;
+            flex-shrink: 1;
+
+            width: 40%;
+        }
+
+        &.name {
+            flex-grow: 1;
+            flex-shrink: 1;
+
+            width: 60%;
+        }
+    }
+
+    .row {
+        &:hover {
+            .delete {
+                opacity: 1;
+            }
+        }
+    }
+}
+
+@media all and (max-width: 55rem) {
+    .container {
+        padding: .5em!important;
+        padding-top: 0!important;
+
+
+    }
+
+    .connectContainer {
+        .inputAddress, .inputNickname {
+            margin-right: 1em!important;
+        }
+
+        .smallColumn {
+            flex-direction: column;
+
+            > div {
+                width: 100%!important;
+            }
+        }
+    }
+
+    .buttonContainer {
+        .buttonShowHistory {
+            display: none;
+        }
+    }
+
+    .historyContainer {
+        display: none;
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "translations": [ /* Array with all translation objects */
+        { /* translation object */
+            "key": { /* the key */
+                "message": "Show permission description", /* [required] identify the message */
+                "line": 374, /* [optional] only for specify the translation for a specific case (Not supported yet!) */
+                "character": 30, /* [optional] only for specify the translation for a specific case (Not supported yet!) */
+                "filename": "/home/wolverindev/TeaSpeak/TeaSpeak/Web-Client/shared/js/ui/modal/ModalPermissionEdit.ts" /* [optional] only for specify the translation for a specific case (Not supported yet!) */
+            },
+            "translated": "Berechtigungsbeschreibung anzeigen", /* [required] The actual translation */
+            "flags": [ /* [optional] some flags for this translation */
+                "google-translate", /* this translation has been made with google translator */
+                "verified" /* this translation has been verified by a native speaker */
+                "in-use-system" /* this translation is been used (detected by the system) */
+                "ui-visible" /* this translation will be visible for the user */
+            ]
+        }
+    ]
+}

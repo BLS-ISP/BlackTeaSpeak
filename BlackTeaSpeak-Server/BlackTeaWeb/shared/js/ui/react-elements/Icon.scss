@@ -1,0 +1,36 @@
+.container {
+    width: 1em;
+    height: 1em;
+
+    flex-shrink: 0;
+    flex-grow: 0;
+
+    align-self: center;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+
+    > img {
+        flex-grow: 1;
+    }
+}
+
+.iconLoading {
+    border: .2em solid #f3f3f3; /* Light grey */
+    border-top: .2em solid #3498db; /* Blue */
+    border-radius: 50%;
+    animation: loading_spin 2s linear infinite;
+
+    width: 1em;
+    height: 1em;
+}
+
+@keyframes loading_spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}

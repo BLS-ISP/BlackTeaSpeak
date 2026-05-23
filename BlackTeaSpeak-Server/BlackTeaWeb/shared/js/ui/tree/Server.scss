@@ -1,0 +1,44 @@
+.serverEntry {
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+    align-items: center;
+
+    position: relative;
+
+    cursor: pointer;
+    padding-left: 2px;
+    padding-right: 5px;
+
+    .server_type {
+        flex-grow: 0;
+        flex-shrink: 0;
+
+        margin-right: 2px;
+
+        z-index: 1;
+    }
+
+    .name {
+        flex-grow: 1;
+        flex-shrink: 1;
+
+        align-self: center;
+        color: var(--text-strong);
+
+        min-width: 0;
+        font-size: .95em;
+        font-weight: 600;
+        letter-spacing: .02em;
+
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .icon {
+        align-self: center;
+        margin-bottom: .1em;
+        margin-right: .1em;
+    }
+}

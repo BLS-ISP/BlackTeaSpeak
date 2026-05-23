@@ -1,0 +1,53 @@
+﻿@use "sass:math";
+
+@use "../../../css/static/globals" as *;
+
+$animation_time: $button_hover_animation_time;
+.container {
+    position: relative;
+    /* Don't use overflow hidden here since some container may require overflow */
+
+    &:hover {
+        .containerButton {
+            top: 1em;
+            opacity: 1;
+
+            @include transition(top ease-in-out $animation_time, opacity ease-in-out math.div($animation_time, 2) math.div($animation_time, 2));
+        }
+    }
+}
+
+.containerButton {
+    position: absolute;
+    z-index: 10;
+
+    opacity: 0;
+    top: -1em;
+
+    right: 1em;
+
+    @include transition(top ease-in-out $animation_time, opacity ease-in-out math.div($animation_time, 2));
+
+    &.disabled {
+        display: none;
+    }
+}
+
+.button {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    border-radius: 50%;
+    background-color: #0000004f;
+
+    padding: .6em;
+
+    cursor: pointer;
+
+    @include transition(all ease-in-out $animation_time);
+
+    &:hover {
+        background-color: #0000008f;
+    }
+}

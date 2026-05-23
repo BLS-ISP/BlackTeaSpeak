@@ -1,0 +1,36 @@
+﻿@use "../../../css/static/globals" as *;
+
+/* code hightliting */
+.inlineCode, .code {
+    display: block;
+    margin: 3px;
+
+    font-size: 80%;
+    border-radius: .2em;
+    font-family: Monaco, Menlo, Consolas, "Roboto Mono", "Andale Mono", "Ubuntu Mono", monospace;
+    box-decoration-break: clone;
+
+    &.inlineCode {
+        display: inline-block;
+
+        white-space: pre-wrap;
+        margin: 0 0 -0.1em;
+        vertical-align: bottom;
+
+        > :global(.hljs) {
+            padding: 0 .25em!important;
+        }
+    }
+    &.code {
+        word-wrap: normal;
+    }
+
+    code {
+        @include chat-scrollbar-horizontal();
+    }
+}
+
+/* fix tailing new line after code blocks */
+.code + br {
+    display: none;
+}

@@ -1,0 +1,195 @@
+﻿@use "../../../../css/static/globals" as *;
+
+html:root {
+    --chat-private-no-chats: #5a5a5a;
+    --chat-private-border: #313132;
+
+    --chat-private-unread-background: #a81414;
+    --chat-private-unread-shadow: rgba(0, 0, 0, 0.20);
+
+    --chat-private-name: #ccc;
+    --chat-private-timestamp: #555353;
+
+    --chat-private-close-background: #5a5a5a;
+
+    --chat-private-hovered-background: #393939;
+    --chat-private-selected-background: #2c2c2c;
+}
+
+.dividerContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+    height: 100%;
+}
+
+.divider {
+    width: 2px!important;
+    min-width: 2px!important;
+    max-width: 2px!important;
+}
+
+.conversationList {
+    user-select: none;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    @include chat-scrollbar-vertical();
+
+    width: 25%;
+    min-width: 100px;
+
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
+    .noChats, .loading {
+        position: absolute;
+
+        top: 0;
+        bottom: 0;
+        right: 0;
+        left: 0;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        text-align: center;
+
+        > div {
+            display: inline-block;
+            color: var(--chat-private-no-chats);
+        }
+    }
+}
+
+.conversationEntry {
+    position: relative;
+
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+
+    cursor: pointer;
+    border-bottom: 1px solid var(--chat-private-border);
+
+    .containerAvatar {
+        flex-grow: 0;
+        flex-shrink: 0;
+
+        position: relative;
+
+        display: inline-block;
+        margin: 5px 10px 5px 5px;
+
+        .avatar {
+            overflow: hidden;
+
+            width: 2em;
+            height: 2em;
+
+            border-radius: 50%;
+        }
+
+        .unread {
+            display: block;
+
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: var(--chat-private-unread-background);
+            width: 7px;
+            height: 7px;
+
+            border-radius: 50%;
+
+            -webkit-box-shadow: 0 0 1px 1px var(--chat-private-unread-shadow);
+            -moz-box-shadow: 0 0 1px 1px var(--chat-private-unread-shadow);
+            box-shadow: 0 0 1px 1px var(--chat-private-unread-shadow);
+        }
+    }
+
+    .info {
+        flex-grow: 1;
+        flex-shrink: 1;
+        min-width: 50px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+
+        > * {
+            flex-grow: 0;
+            flex-shrink: 0;
+
+            display: inline-block;
+            width: 100%;
+
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .name {
+            color: var(--chat-private-name);
+            font-weight: bold;
+
+            margin-bottom: -.4em;
+        }
+
+        .timestamp {
+            color: var(--chat-private-timestamp);
+
+            display: inline-block;
+            font-size: .66em;
+        }
+    }
+
+    .close {
+        font-size: 2em;
+
+        position: absolute;
+        right: 0;
+        top: 0;
+        bottom: 0;
+
+        opacity: 0.3;
+
+        width: .5em;
+        height: .5em;
+
+        &:hover {
+            opacity: 1;
+        }
+        @include transition(opacity $button_hover_animation_time ease-in-out);
+
+        &:before, &:after {
+            position: absolute;
+            left: .25em;
+            content: ' ';
+            height: .5em;
+            width: .05em;
+            background-color: var(--chat-private-close-background);
+        }
+
+        &:before {
+            transform: rotate(45deg);
+        }
+
+        &:after {
+            transform: rotate(-45deg);
+        }
+    }
+
+    &:hover {
+        background-color: var(--chat-private-hovered-background);
+    }
+
+    &.selected {
+        background-color: var(--chat-private-selected-background);
+    }
+    @include transition(background-color $button_hover_animation_time ease-in-out);
+}

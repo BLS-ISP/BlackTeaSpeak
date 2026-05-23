@@ -1,0 +1,693 @@
+import {
+    LocalVideoBroadcast,
+    LocalVideoBroadcastEvents,
+    LocalVideoBroadcastState,
+    VideoBroadcastConfig,
+    VideoBroadcastStatistics,
+    VideoBroadcastType,
+    VideoBroadcastViewer,
+    VideoClient,
+    VideoConnection,
+    VideoConnectionEvent,
+    VideoConnectionStatus
+} from "tc-shared/connection/VideoConnection";
+import {Registry} from "tc-shared/events";
+import {VideoSource} from "tc-shared/video/VideoSource";
+import {RTCBroadcastableTrackType, RTCConnection, RTCConnectionEvents, RTPConnectionState} from "../Connection";
+import {LogCategory, logError, logTrace, logWarn} from "tc-shared/log";
+import {Settings, settings} from "tc-shared/settings";
+import {RtpVideoClient} from "./VideoClient";
+import {tr} from "tc-shared/i18n/localize";
+import {ConnectionState} from "tc-shared/ConnectionHandler";
+import {ConnectionStatistics} from "tc-shared/connection/ConnectionBase";
+import * as _ from "lodash";
+
+class LocalRtpVideoBroadcast implements LocalVideoBroadcast {
+    private readonly handle: RtpVideoConnection;
+    private readonly type: VideoBroadcastType;
+    private readonly events: Registry<LocalVideoBroadcastEvents>;
+
+    private state: LocalVideoBroadcastState;
+    private currentSource: VideoSource;
+    private currentConfig: VideoBroadcastConfig;
+    private signaledConfig: VideoBroadcastConfig | undefined;
+    private broadcastStartId: number;
+
+    private localStartPromise: Promise<void>;
+    private subscribedClients: VideoBroadcastViewer[];
+
+    constructor(handle: RtpVideoConnection, type: VideoBroadcastType) {
+        this.handle = handle;
+        this.type = type;
+        this.broadcastStartId = 0;
+
+        this.subscribedClients = [];
+        this.events = new Registry<LocalVideoBroadcastEvents>();
+        this.state = { state: "stopped" };
+    }
+
+    destroy() {
+        this.events.destroy();
+    }
+
+    getEvents(): Registry<LocalVideoBroadcastEvents> {
+        return this.events;
+    }
+
+    getSource(): VideoSource | undefined {
+        return this.currentSource;
+    }
+
+    getState(): LocalVideoBroadcastState {
+        return this.state;
+    }
+
+    private setState(newState: LocalVideoBroadcastState) {
+        if(_.isEqual(this.state, newState)) {
+            return;
+        }
+
+        const oldState = this.state;
+        this.state = newState;
+        this.events.fire("notify_state_changed", { oldState: oldState, newState: newState });
+
+        if(this.subscribedClients.length > 0) {
+            switch (newState.state) {
+                case "broadcasting":
+                case "initializing":
+                    break;
+
+                case "failed":
+                case "stopped":
+                default:
+                    const clientIds = this.subscribedClients.map(client => client.clientId);
+                    this.subscribedClients = [];
+                    this.events.fire("notify_clients_left", { clientIds: clientIds });
+            }
+        }
+    }
+
+    getStatistics(): Promise<VideoBroadcastStatistics | undefined> {
+        return Promise.resolve(undefined);
+    }
+
+    getViewer(): VideoBroadcastViewer[] {
+        return this.subscribedClients;
+    }
+
+    async changeSource(source: VideoSource, constraints: VideoBroadcastConfig): Promise<void> {
+        let sourceRef = source.ref();
+        try {
+            if(this.currentSource !== source) {
+                logTrace(LogCategory.VIDEO, tr("Video broadcast %s source changed"), this.type);
+                const videoTracks = source.getStream().getVideoTracks();
+                if(videoTracks.length === 0) {
+                    throw tr("missing video stream track");
+                }
+
+                while(this.localStartPromise) {
+                    await this.localStartPromise;
+                }
+
+                if(this.state.state !== "broadcasting") {
+                    throw tr("not broadcasting anything");
+                }
+
+                /* Apply the constraints to the current source */
+                await this.doApplyLocalConstraints(constraints, source);
+
+                const startId = ++this.broadcastStartId;
+                let rtcBroadcastType: RTCBroadcastableTrackType = this.type === "camera" ? "video" : "video-screen";
+                try {
+                    await this.handle.getRTCConnection().setTrackSource(rtcBroadcastType, videoTracks[0]);
+                    await this.handle.getRTCConnection().configureVideoSender(this.type, videoTracks[0], constraints);
+                } catch (error) {
+                    if(this.broadcastStartId !== startId) {
+                        /* broadcast start has been canceled */
+                        return;
+                    }
+
+                    logError(LogCategory.WEBRTC, tr("Failed to change video track for broadcast %s: %o"), this.type, error);
+                    throw tr("failed to change video track");
+                }
+
+                this.setCurrentSource(sourceRef);
+            } else if(!_.isEqual(this.currentConfig, constraints)) {
+                logTrace(LogCategory.VIDEO, tr("Video broadcast %s constraints changed"), this.type);
+                await this.applyConstraints(constraints);
+            }
+        } finally {
+            sourceRef.deref();
+        }
+    }
+
+    private setCurrentSource(source: VideoSource | undefined) {
+        if(this.currentSource) {
+            this.currentSource.deref();
+            this.currentConfig = undefined;
+        }
+        this.currentSource = source?.ref();
+    }
+
+    async startBroadcasting(source: VideoSource, constraints: VideoBroadcastConfig): Promise<void> {
+        const sourceRef = source.ref();
+        while(this.localStartPromise) {
+            await this.localStartPromise;
+        }
+
+        const promise = this.doStartBroadcast(source, constraints);
+        this.localStartPromise = promise.catch(() => {});
+        this.localStartPromise.then(() => this.localStartPromise = undefined);
+        try {
+            await promise;
+        } finally {
+            sourceRef.deref();
+        }
+    }
+
+    private async doStartBroadcast(source: VideoSource, constraints: VideoBroadcastConfig) {
+        const videoTracks = source.getStream().getVideoTracks();
+        if(videoTracks.length === 0) {
+            throw tr("missing video stream track");
+        }
+        const startId = ++this.broadcastStartId;
+
+        this.setCurrentSource(source);
+        this.setState({ state: "initializing" });
+
+        if(this.broadcastStartId !== startId) {
+            /* broadcast start has been canceled */
+            return;
+        }
+
+        try {
+            await this.doApplyLocalConstraints(constraints, this.currentSource);
+        } catch (error) {
+            if(this.broadcastStartId !== startId) {
+                /* broadcast start has been canceled */
+                return;
+            }
+
+            logError(LogCategory.WEBRTC, tr("Failed to apply video constraints for broadcast %s: %o"), this.type, error);
+            this.stopBroadcasting(true, { state: "failed", reason: tr("Failed to apply video constraints") });
+            throw tr("Failed to apply video constraints");
+        }
+        if(this.broadcastStartId !== startId) {
+            /* broadcast start has been canceled */
+            return;
+        }
+
+        let rtcBroadcastType: RTCBroadcastableTrackType = this.type === "camera" ? "video" : "video-screen";
+
+        try {
+            await this.handle.getRTCConnection().setTrackSource(rtcBroadcastType, videoTracks[0]);
+            await this.handle.getRTCConnection().configureVideoSender(this.type, videoTracks[0], constraints);
+        } catch (error) {
+            if(this.broadcastStartId !== startId) {
+                /* broadcast start has been canceled */
+                return;
+            }
+
+            this.stopBroadcasting(true, { state: "failed", reason: tr("Failed to set track source") });
+            logError(LogCategory.WEBRTC, tr("Failed to setup video track for broadcast %s: %o"), this.type, error);
+            throw tr("failed to initialize video track");
+        }
+
+        if(this.broadcastStartId !== startId) {
+            /* broadcast start has been canceled */
+            return;
+        }
+
+        const config = Object.assign({}, this.currentConfig);
+        try {
+            await this.handle.getRTCConnection().startVideoBroadcast(this.type, config);
+        } catch (error) {
+            if(this.broadcastStartId !== startId) {
+                /* broadcast start has been canceled */
+                return;
+            }
+
+            this.stopBroadcasting(true, { state: "failed", reason: error });
+            throw error;
+        }
+
+        if(this.broadcastStartId !== startId) {
+            /* broadcast start has been canceled */
+            return;
+        }
+
+        /* TODO: Test if the config may has already be changed */
+        this.signaledConfig = config;
+        this.setState({ state: "broadcasting" });
+    }
+
+    async applyConstraints(constraints: VideoBroadcastConfig): Promise<void> {
+        await this.doApplyLocalConstraints(constraints, this.currentSource);
+        await this.handle.getRTCConnection().configureVideoSender(this.type, this.currentSource?.getStream().getVideoTracks()[0] || null, constraints);
+
+        if(this.signaledConfig?.keyframeInterval !== constraints.keyframeInterval ||
+            this.signaledConfig?.maxBandwidth !== constraints.maxBandwidth
+        ) {
+            try {
+                await this.handle.getRTCConnection().changeVideoBroadcastConfig(this.type, constraints);
+                this.signaledConfig = Object.assign({}, constraints);
+            } catch (error) {
+                /* Really rethrow it? */
+                throw error;
+            }
+        }
+    }
+
+    private async doApplyLocalConstraints(constraints: VideoBroadcastConfig, source: VideoSource): Promise<void> {
+        const capabilities = source.getCapabilities();
+        const track = source.getStream().getVideoTracks()[0];
+        const hintedTrack = track as (MediaStreamTrack & { contentHint?: string }) | undefined;
+        const videoConstraints: MediaTrackConstraints = {};
+
+        if(this.type === "screen" && hintedTrack) {
+            hintedTrack.contentHint = "motion";
+        }
+
+        if(constraints.dynamicQuality && capabilities) {
+            videoConstraints.width = {
+                min: capabilities.minWidth,
+                max: constraints.width,
+                ideal: constraints.width
+            };
+
+            videoConstraints.height = {
+                min: capabilities.minHeight,
+                max: constraints.height,
+                ideal: constraints.height
+            };
+        } else {
+            videoConstraints.width = constraints.width;
+            videoConstraints.height = constraints.height;
+        }
+
+        if(constraints.dynamicFrameRate && capabilities) {
+            videoConstraints.frameRate = {
+                min: capabilities.minFrameRate,
+                max: constraints.maxFrameRate,
+                ideal: constraints.maxFrameRate
+            };
+        } else {
+            videoConstraints.frameRate = constraints.maxFrameRate;
+        }
+
+        await track?.applyConstraints(videoConstraints);
+        this.currentConfig = constraints;
+    }
+
+    stopBroadcasting(skipRtcStop?: boolean, stopState?: LocalVideoBroadcastState) {
+        if(this.state.state === "stopped" && (!stopState || _.isEqual(stopState, this.state))) {
+            return;
+        }
+
+        this.broadcastStartId++;
+
+        (async () => {
+            while(this.localStartPromise) {
+                await this.localStartPromise;
+            }
+
+            let rtcBroadcastType: RTCBroadcastableTrackType = this.type === "camera" ? "video" : "video-screen";
+            if(!skipRtcStop && !(this.state.state === "failed" || this.state.state === "stopped")) {
+                this.handle.getRTCConnection().stopTrackBroadcast(rtcBroadcastType);
+            }
+
+            this.setCurrentSource(undefined);
+
+            try {
+                await this.handle.getRTCConnection().setTrackSource(rtcBroadcastType, null);
+            } catch (error) {
+                logWarn(LogCategory.VIDEO, tr("Failed to change the RTC video track to null: %o"), error);
+            }
+            this.setState(stopState || { state: "stopped" });
+        })();
+    }
+
+    /**
+     * Restart the broadcast after a channel switch.
+     */
+    restartBroadcast() {
+        (async () => {
+            while(this.localStartPromise) {
+                await this.localStartPromise;
+            }
+
+            if(this.state.state !== "broadcasting") {
+                return;
+            }
+
+            this.setState({ state: "initializing" });
+            const startId = ++this.broadcastStartId;
+
+            try {
+                const config = Object.assign({}, this.currentConfig);
+                await this.handle.getRTCConnection().startVideoBroadcast(this.type, config);
+                this.setState({ state: "broadcasting" });
+                this.signaledConfig = config;
+                /* TODO: Test if the config may has already be changed */
+            } catch (error) {
+                if(this.broadcastStartId !== startId) {
+                    /* broadcast start has been canceled */
+                    return;
+                }
+
+                this.stopBroadcasting(true, { state: "failed", reason: error });
+                throw error;
+            }
+        })();
+    }
+
+    getConstraints(): VideoBroadcastConfig | undefined {
+        return this.currentConfig;
+    }
+
+    handleClientJoined(client: VideoBroadcastViewer) {
+        const index = this.subscribedClients.findIndex(client_ => client_.clientId === client.clientId);
+        if(index === -1) {
+            this.subscribedClients.push(client);
+            this.events.fire("notify_clients_joined", { clients: [ client ] });
+        } else {
+            this.subscribedClients[index] = client;
+        }
+    }
+
+    handleClientLeave(clientId: number) {
+        const index = this.subscribedClients.findIndex(client => client.clientId === clientId);
+        if(index === -1) {
+            return;
+        }
+
+        this.subscribedClients.splice(index, 1);
+        this.events.fire("notify_clients_left", { clientIds: [ clientId ] });
+    }
+}
+
+export class RtpVideoConnection implements VideoConnection {
+    private readonly rtcConnection: RTCConnection;
+    private readonly events: Registry<VideoConnectionEvent>;
+    private readonly listener: (() => void)[];
+    private connectionState: VideoConnectionStatus;
+
+    private broadcasts: {[T in VideoBroadcastType]: LocalRtpVideoBroadcast} = {
+        camera: new LocalRtpVideoBroadcast(this, "camera"),
+        screen: new LocalRtpVideoBroadcast(this, "screen")
+    };
+    private registeredClients: {[key: number]: RtpVideoClient} = {};
+
+    constructor(rtcConnection: RTCConnection) {
+        this.rtcConnection = rtcConnection;
+        this.events = new Registry<VideoConnectionEvent>();
+        this.setConnectionState(VideoConnectionStatus.Disconnected);
+
+        this.listener = [];
+
+        /* We only have to listen for move events since if the client is leaving the broadcast will be terminated anyways */
+        this.listener.push(this.rtcConnection.getConnection().getCommandHandler().registerCommandHandler("notifyclientmoved", event => {
+            const localClient = this.rtcConnection.getConnection().client.getClient();
+            for(const data of event.arguments) {
+                const clientId = parseInt(data["clid"]);
+                if(clientId === localClient.clientId()) {
+                    Object.values(this.registeredClients).forEach(client => {
+                        client.setBroadcastId("screen", undefined);
+                        client.setBroadcastId("camera", undefined);
+                    });
+
+                    if(settings.getValue(Settings.KEY_STOP_VIDEO_ON_SWITCH)) {
+                        Object.values(this.broadcasts).forEach(broadcast => broadcast.stopBroadcasting());
+                    } else {
+                        /* The server stops broadcasting by default, we've to reenable it */
+                        Object.values(this.broadcasts).forEach(broadcast => broadcast.restartBroadcast());
+                    }
+                } else {
+                    /* On a channel switch, every client stops video sharing */
+                    const broadcast = this.registeredClients[clientId];
+                    broadcast?.setBroadcastId("screen", undefined);
+                    broadcast?.setBroadcastId("camera", undefined);
+                }
+            }
+        }));
+
+        this.listener.push(this.rtcConnection.getConnection().getCommandHandler().registerCommandHandler("notifybroadcastvideo", event => {
+            const assignedClients: { clientId: number, broadcastType: VideoBroadcastType }[] = [];
+            for(const data of event.arguments) {
+                if(!("bid" in data)) {
+                    continue;
+                }
+
+                const broadcastId = parseInt(data["bid"]);
+                const broadcastType = parseInt(data["bt"]);
+                const sourceClientId = parseInt(data["sclid"]);
+
+                if(!this.registeredClients[sourceClientId]) {
+                    logWarn(LogCategory.VIDEO, tr("Received video broadcast info about a not registered client (%d)"), sourceClientId);
+                    /* TODO: Cache the value! */
+                    continue;
+                }
+
+                let videoBroadcastType: VideoBroadcastType;
+                switch(broadcastType) {
+                    case 0x00:
+                        videoBroadcastType = "camera";
+                        break;
+
+                    case 0x01:
+                        videoBroadcastType = "screen";
+                        break;
+
+                    default:
+                        logWarn(LogCategory.VIDEO, tr("Received video broadcast info with an invalid video broadcast type: %d."), broadcastType);
+                        continue;
+                }
+
+                this.registeredClients[sourceClientId].setBroadcastId(videoBroadcastType, broadcastId);
+                assignedClients.push({ broadcastType: videoBroadcastType, clientId: sourceClientId });
+            }
+
+            const broadcastTypes: VideoBroadcastType[] = ["screen", "camera"];
+            Object.values(this.registeredClients).forEach(client => {
+                for(const type of broadcastTypes) {
+                    if(assignedClients.findIndex(assignment => assignment.broadcastType === type && assignment.clientId === client.getClientId()) !== -1) {
+                        continue;
+                    }
+
+                    client.setBroadcastId(type, undefined);
+                }
+            });
+        }));
+
+        this.listener.push(this.rtcConnection.getConnection().getCommandHandler().registerCommandHandler("notifystreamjoined", command => {
+            const streamId = command.getUInt("streamid");
+            const clientInfo: VideoBroadcastViewer = {
+                clientId: command.getUInt("clid"),
+                clientName: command.getString("clname"),
+                clientUniqueId: command.getString("cluid"),
+                clientDatabaseId: command.getUInt("cldbid")
+            };
+
+            if(clientInfo.clientId === this.rtcConnection.getConnection().client.getClientId()) {
+                /* Just our local video preview */
+                return;
+            }
+
+            const broadcastType = this.rtcConnection.getTrackTypeFromSsrc(streamId);
+            if(!broadcastType) {
+                logError(LogCategory.NETWORKING, tr("Received stream join notify for invalid stream (ssrc: %o)"), streamId);
+                return;
+            }
+
+            let broadcast: LocalRtpVideoBroadcast;
+            switch (broadcastType) {
+                case "video":
+                    broadcast = this.broadcasts["camera"];
+                    break;
+
+                case "video-screen":
+                    broadcast = this.broadcasts["screen"];
+                    break;
+
+                case "audio":
+                case "audio-whisper":
+                default:
+                    logError(LogCategory.NETWORKING, tr("Received stream join notify for invalid stream type: %s"), broadcastType);
+                    return;
+            }
+
+            broadcast.handleClientJoined(clientInfo);
+        }));
+
+        this.listener.push(this.rtcConnection.getConnection().getCommandHandler().registerCommandHandler("notifystreamleft", command => {
+            const streamId = command.getUInt("streamid");
+            const clientId = command.getUInt("clid");
+
+            const broadcastType = this.rtcConnection.getTrackTypeFromSsrc(streamId);
+            if(!broadcastType) {
+                logError(LogCategory.NETWORKING, tr("Received stream leave notify for invalid stream (ssrc: %o)"), streamId);
+                return;
+            }
+
+            let broadcast: LocalRtpVideoBroadcast;
+            switch (broadcastType) {
+                case "video":
+                    broadcast = this.broadcasts["camera"];
+                    break;
+
+                case "video-screen":
+                    broadcast = this.broadcasts["screen"];
+                    break;
+
+                case "audio":
+                case "audio-whisper":
+                default:
+                    logError(LogCategory.NETWORKING, tr("Received stream leave notify for invalid stream type: %s"), broadcastType);
+                    return;
+            }
+
+            broadcast.handleClientLeave(clientId);
+        }));
+
+        this.listener.push(this.rtcConnection.getConnection().events.on("notify_connection_state_changed", event => {
+            if(event.newState !== ConnectionState.CONNECTED) {
+                Object.values(this.broadcasts).forEach(broadcast => broadcast.stopBroadcasting(true));
+            }
+        }));
+
+        this.listener.push(this.rtcConnection.getEvents().on("notify_state_changed", event => this.handleRtcConnectionStateChanged(event)));
+
+        this.listener.push(this.rtcConnection.getEvents().on("notify_video_assignment_changed", event => {
+            if(event.info) {
+                switch (event.info.media) {
+                    case 2:
+                        this.handleVideoAssignmentChanged("camera", event);
+                        break;
+
+                    case 3:
+                        this.handleVideoAssignmentChanged("screen", event);
+                        break;
+
+                    default:
+                        logWarn(LogCategory.WEBRTC, tr("Received video track %o assignment for invalid media: %o"), event.track.getSsrc(), event.info);
+                        return;
+                }
+            } else {
+                /* track has been removed */
+                this.handleVideoAssignmentChanged("screen", event);
+                this.handleVideoAssignmentChanged("camera", event);
+            }
+        }));
+    }
+
+    private setConnectionState(state: VideoConnectionStatus) {
+        if(this.connectionState === state) { return; }
+        const oldState = this.connectionState;
+        this.connectionState = state;
+        this.events.fire("notify_status_changed", { oldState: oldState, newState: state });
+    }
+
+    destroy() {
+        this.listener.forEach(callback => callback());
+        this.listener.splice(0, this.listener.length);
+
+        this.events.destroy();
+    }
+
+    getRTCConnection() : RTCConnection {
+        return this.rtcConnection;
+    }
+
+    getEvents(): Registry<VideoConnectionEvent> {
+        return this.events;
+    }
+
+    getStatus(): VideoConnectionStatus {
+        return this.connectionState;
+    }
+
+    getRetryTimestamp(): number | 0 {
+        return this.rtcConnection.getRetryTimestamp();
+    }
+
+    getFailedMessage(): string {
+        return this.rtcConnection.getFailReason();
+    }
+
+    registerVideoClient(clientId: number) {
+        if(typeof this.registeredClients[clientId] !== "undefined") {
+            debugger;
+            throw tr("a video client with this id has already been registered");
+        }
+
+        return this.registeredClients[clientId] = new RtpVideoClient(this.rtcConnection, clientId);
+    }
+
+    registeredVideoClients(): VideoClient[] {
+        return Object.values(this.registeredClients);
+    }
+
+    unregisterVideoClient(client: VideoClient) {
+        const clientId = client.getClientId();
+        if(this.registeredClients[clientId] !== client) {
+            debugger;
+            return;
+        }
+
+        this.registeredClients[clientId].destroy();
+        delete this.registeredClients[clientId];
+    }
+
+    private handleRtcConnectionStateChanged(event: RTCConnectionEvents["notify_state_changed"]) {
+        switch (event.newState) {
+            case RTPConnectionState.CONNECTED:
+                this.setConnectionState(VideoConnectionStatus.Connected);
+                break;
+
+            case RTPConnectionState.CONNECTING:
+                this.setConnectionState(VideoConnectionStatus.Connecting);
+                break;
+
+            case RTPConnectionState.DISCONNECTED:
+                this.setConnectionState(VideoConnectionStatus.Disconnected);
+                break;
+
+            case RTPConnectionState.FAILED:
+                this.setConnectionState(VideoConnectionStatus.Failed);
+                break;
+
+            case RTPConnectionState.NOT_SUPPORTED:
+                this.setConnectionState(VideoConnectionStatus.Unsupported);
+                break;
+        }
+    }
+
+    private handleVideoAssignmentChanged(type: VideoBroadcastType, event: RTCConnectionEvents["notify_video_assignment_changed"]) {
+        const oldClient = Object.values(this.registeredClients).find(client => client.getRtpTrack(type) === event.track);
+        if(oldClient) {
+            oldClient.setRtpTrack(type, undefined);
+        }
+
+        if(event.info) {
+            const newClient = this.registeredClients[event.info.client_id];
+            if(newClient) {
+                newClient.setRtpTrack(type, event.track);
+            } else {
+                logWarn(LogCategory.VIDEO, tr("Received video track assignment for unknown video client (%o)."), event.info);
+            }
+        }
+    }
+
+    async getConnectionStats(): Promise<ConnectionStatistics> {
+        const stats = await this.rtcConnection.getConnectionStatistics();
+
+        return {
+            bytesReceived: stats.videoBytesReceived,
+            bytesSend: stats.videoBytesSent
+        };
+    }
+
+    getLocalBroadcast(channel: VideoBroadcastType): LocalVideoBroadcast {
+        return this.broadcasts[channel];
+    }
+}

@@ -1,0 +1,1745 @@
+[
+  {
+    "name": "unknown",
+    "id": 0,
+    "description": "May occur on error returns with no associated permission",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_help_view",
+    "id": 1,
+    "description": "Retrieve information about ServerQuery commands",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_version_view",
+    "id": 2,
+    "description": "Retrieve global server version (including platform and build number)",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_info_view",
+    "id": 3,
+    "description": "Retrieve global server information",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_virtualserver_list",
+    "id": 4,
+    "description": "List virtual servers stored in the database",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_binding_list",
+    "id": 5,
+    "description": "List active IP bindings on multi-homed machines",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_permission_list",
+    "id": 6,
+    "description": "List permissions available available on the server instance",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_permission_find",
+    "id": 7,
+    "description": "Search permission assignments by name or ID",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_create",
+    "id": 8,
+    "description": "Create virtual servers",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_delete",
+    "id": 9,
+    "description": "Delete virtual servers",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_start_any",
+    "id": 10,
+    "description": "Start any virtual server in the server instance",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_stop_any",
+    "id": 11,
+    "description": "Stop any virtual server in the server instance",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_change_machine_id",
+    "id": 12,
+    "description": "Change a virtual servers machine ID",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_change_template",
+    "id": 13,
+    "description": "Edit virtual server default template values",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverquery_login",
+    "id": 14,
+    "description": "Login to ServerQuery",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_textmessage_send",
+    "id": 15,
+    "description": "Send text messages to all virtual servers at once",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_log_view",
+    "id": 16,
+    "description": "Retrieve global server log",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_log_add",
+    "id": 17,
+    "description": "Write to global server log",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_stop",
+    "id": 18,
+    "description": "Shutdown the server process",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_modify_settings",
+    "id": 19,
+    "description": "Edit global settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_modify_querygroup",
+    "id": 20,
+    "description": "Edit global ServerQuery groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_serverinstance_modify_templates",
+    "id": 21,
+    "description": "Edit global template groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_select",
+    "id": 22,
+    "description": "Select a virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_info_view",
+    "id": 23,
+    "description": "Retrieve virtual server information",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_connectioninfo_view",
+    "id": 24,
+    "description": "Retrieve virtual server connection information",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channel_list",
+    "id": 25,
+    "description": "List channels on a virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channel_search",
+    "id": 26,
+    "description": "Search for channels on a virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_client_list",
+    "id": 27,
+    "description": "List clients online on a virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_client_search",
+    "id": 28,
+    "description": "Search for clients online on a virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_client_dblist",
+    "id": 29,
+    "description": "List client identities known by the virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_client_dbsearch",
+    "id": 30,
+    "description": "Search for client identities known by the virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_client_dbinfo",
+    "id": 31,
+    "description": "Retrieve client information",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_permission_find",
+    "id": 32,
+    "description": "Find permissions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_custom_search",
+    "id": 33,
+    "description": "Find custom fields",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_start",
+    "id": 34,
+    "description": "Start own virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_stop",
+    "id": 35,
+    "description": "Stop own virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_token_list",
+    "id": 36,
+    "description": "List privilege keys available",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_token_add",
+    "id": 37,
+    "description": "Create new privilege keys",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_token_use",
+    "id": 38,
+    "description": "Use a privilege keys to gain access to groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_token_delete",
+    "id": 39,
+    "description": "Delete a privilege key",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_log_view",
+    "id": 40,
+    "description": "Retrieve virtual server log",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_log_add",
+    "id": 41,
+    "description": "Write to virtual server log",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_join_ignore_password",
+    "id": 42,
+    "description": "Join virtual server ignoring its password",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_notify_register",
+    "id": 43,
+    "description": "Register for server notifications",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_notify_unregister",
+    "id": 44,
+    "description": "Unregister from server notifications",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_snapshot_create",
+    "id": 45,
+    "description": "Create server snapshots",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_snapshot_deploy",
+    "id": 46,
+    "description": "Deploy server snapshots",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_permission_reset",
+    "id": 47,
+    "description": "Reset the server permission settings to default values",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_name",
+    "id": 48,
+    "description": "Modify server name",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_welcomemessage",
+    "id": 49,
+    "description": "Modify welcome message",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_maxclients",
+    "id": 50,
+    "description": "Modify servers max clients",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_reserved_slots",
+    "id": 51,
+    "description": "Modify reserved slots",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_password",
+    "id": 52,
+    "description": "Modify server password",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_default_servergroup",
+    "id": 53,
+    "description": "Modify default Server Group",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_default_channelgroup",
+    "id": 54,
+    "description": "Modify default Channel Group",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_default_channeladmingroup",
+    "id": 55,
+    "description": "Modify default Channel Admin Group",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_channel_forced_silence",
+    "id": 56,
+    "description": "Modify channel force silence value",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_complain",
+    "id": 57,
+    "description": "Modify individual complain settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_antiflood",
+    "id": 58,
+    "description": "Modify individual antiflood settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_ft_settings",
+    "id": 59,
+    "description": "Modify file transfer settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_ft_quotas",
+    "id": 60,
+    "description": "Modify file transfer quotas",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_hostmessage",
+    "id": 61,
+    "description": "Modify individual hostmessage settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_hostbanner",
+    "id": 62,
+    "description": "Modify individual hostbanner settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_hostbutton",
+    "id": 63,
+    "description": "Modify individual hostbutton settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_port",
+    "id": 64,
+    "description": "Modify server port",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_autostart",
+    "id": 65,
+    "description": "Modify server autostart",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_needed_identity_security_level",
+    "id": 66,
+    "description": "Modify required identity security level",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_priority_speaker_dimm_modificator",
+    "id": 67,
+    "description": "Modify priority speaker dimm modificator",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_log_settings",
+    "id": 68,
+    "description": "Modify log settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_min_client_version",
+    "id": 69,
+    "description": "Modify min client version",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_icon_id",
+    "id": 70,
+    "description": "Modify server icon",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_weblist",
+    "id": 71,
+    "description": "Modify web server list reporting settings",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_codec_encryption_mode",
+    "id": 72,
+    "description": "Modify codec encryption mode",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_temporary_passwords",
+    "id": 73,
+    "description": "Modify temporary serverpasswords",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_temporary_passwords_own",
+    "id": 74,
+    "description": "Modify own temporary serverpasswords",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_channel_temp_delete_delay_default",
+    "id": 75,
+    "description": "Modify default temporary channel delete delay",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_nickname",
+    "id": 76,
+    "description": "Modify server nicknames",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_modify_integrations",
+    "id": 77,
+    "description": "Modify integrations",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_min_depth",
+    "id": 78,
+    "description": "Min channel creation depth in hierarchy",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_max_depth",
+    "id": 79,
+    "description": "Max channel creation depth in hierarchy",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_group_inheritance_end",
+    "id": 80,
+    "description": "Stop inheritance of channel group permissions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_permission_modify_power",
+    "id": 81,
+    "description": "Modify channel permission power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_needed_permission_modify_power",
+    "id": 82,
+    "description": "Needed modify channel permission power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_info_view",
+    "id": 83,
+    "description": "Retrieve channel information",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_child",
+    "id": 84,
+    "description": "Create sub-channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_permanent",
+    "id": 85,
+    "description": "Create permanent channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_semi_permanent",
+    "id": 86,
+    "description": "Create semi-permanent channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_temporary",
+    "id": 87,
+    "description": "Create temporary channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_private",
+    "id": 88,
+    "description": "Create private channel",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_with_topic",
+    "id": 89,
+    "description": "Create channels with a topic",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_with_description",
+    "id": 90,
+    "description": "Create channels with a description",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_with_password",
+    "id": 91,
+    "description": "Create password protected channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_modify_with_codec_speex8",
+    "id": 92,
+    "description": "Create channels using Speex Narrowband (8 kHz) codecs",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_modify_with_codec_speex16",
+    "id": 93,
+    "description": "Create channels using Speex Wideband (16 kHz) codecs",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_modify_with_codec_speex32",
+    "id": 94,
+    "description": "Create channels using Speex Ultra-Wideband (32 kHz) codecs",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_modify_with_codec_celtmono48",
+    "id": 95,
+    "description": "Create channels using the CELT Mono (48 kHz) codec",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_modify_with_codec_opusvoice",
+    "id": 96,
+    "description": "Create channels using OPUS (voice) codec",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_modify_with_codec_opusmusic",
+    "id": 97,
+    "description": "Create channels using OPUS (music) codec",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_create_modify_with_codec_maxquality",
+    "id": 98,
+    "description": "Create channels with custom codec quality",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_create_modify_with_codec_latency_factor_min",
+    "id": 99,
+    "description": "Create channels with minimal custom codec latency factor",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_with_maxclients",
+    "id": 100,
+    "description": "Create channels with custom max clients",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_with_maxfamilyclients",
+    "id": 101,
+    "description": "Create channels with custom max family clients",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_with_sortorder",
+    "id": 102,
+    "description": "Create channels with custom sort order",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_with_default",
+    "id": 103,
+    "description": "Create default channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_with_needed_talk_power",
+    "id": 104,
+    "description": "Create channels with needed talk power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_create_modify_with_force_password",
+    "id": 105,
+    "description": "Create new channels only with password",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_create_modify_with_temp_delete_delay",
+    "id": 106,
+    "description": "Max delete delay for temporary channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_parent",
+    "id": 107,
+    "description": "Move channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_make_default",
+    "id": 108,
+    "description": "Make channel default",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_make_permanent",
+    "id": 109,
+    "description": "Make channel permanent",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_make_semi_permanent",
+    "id": 110,
+    "description": "Make channel semi-permanent",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_make_temporary",
+    "id": 111,
+    "description": "Make channel temporary",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_name",
+    "id": 112,
+    "description": "Modify channel name",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_topic",
+    "id": 113,
+    "description": "Modify channel topic",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_description",
+    "id": 114,
+    "description": "Modify channel description",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_password",
+    "id": 115,
+    "description": "Modify channel password",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_codec",
+    "id": 116,
+    "description": "Modify channel codec",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_codec_quality",
+    "id": 117,
+    "description": "Modify channel codec quality",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_codec_latency_factor",
+    "id": 118,
+    "description": "Modify channel codec latency factor",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_maxclients",
+    "id": 119,
+    "description": "Modify channels max clients",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_maxfamilyclients",
+    "id": 120,
+    "description": "Modify channels max family clients",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_sortorder",
+    "id": 121,
+    "description": "Modify channel sort order",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_needed_talk_power",
+    "id": 122,
+    "description": "Change needed channel talk power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_modify_power",
+    "id": 123,
+    "description": "Channel modify power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_needed_modify_power",
+    "id": 124,
+    "description": "Needed channel modify power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_make_codec_encrypted",
+    "id": 125,
+    "description": "Make channel codec encrypted",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_modify_temp_delete_delay",
+    "id": 126,
+    "description": "Modify temporary channel delete delay",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_delete_permanent",
+    "id": 127,
+    "description": "Delete permanent channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_delete_semi_permanent",
+    "id": 128,
+    "description": "Delete semi-permanent channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_delete_temporary",
+    "id": 129,
+    "description": "Delete temporary channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_delete_flag_force",
+    "id": 130,
+    "description": "Force channel delete",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_delete_power",
+    "id": 131,
+    "description": "Delete channel power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_needed_delete_power",
+    "id": 132,
+    "description": "Needed delete channel power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_join_permanent",
+    "id": 133,
+    "description": "Join permanent channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_join_semi_permanent",
+    "id": 134,
+    "description": "Join semi-permanent channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_join_temporary",
+    "id": 135,
+    "description": "Join temporary channels",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_join_ignore_password",
+    "id": 136,
+    "description": "Join channel ignoring its password",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_channel_join_ignore_maxclients",
+    "id": 137,
+    "description": "Ignore channels max clients limit",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_join_power",
+    "id": 138,
+    "description": "Channel join power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_needed_join_power",
+    "id": 139,
+    "description": "Needed channel join power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_subscribe_power",
+    "id": 140,
+    "description": "Channel subscribe power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_needed_subscribe_power",
+    "id": 141,
+    "description": "Needed channel subscribe power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_description_view_power",
+    "id": 142,
+    "description": "Channel description view power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_channel_needed_description_view_power",
+    "id": 143,
+    "description": "Needed channel needed description view power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_icon_id",
+    "id": 144,
+    "description": "Group icon identifier",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_max_icon_filesize",
+    "id": 145,
+    "description": "Max icon filesize in bytes",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_icon_manage",
+    "id": 146,
+    "description": "Enables icon management",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_group_is_permanent",
+    "id": 147,
+    "description": "Group is permanent",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_auto_update_type",
+    "id": 148,
+    "description": "Group auto-update type",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_auto_update_max_value",
+    "id": 149,
+    "description": "Group auto-update max value",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_sort_id",
+    "id": 150,
+    "description": "Group sort id",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_show_name_in_tree",
+    "id": 151,
+    "description": "Show group name in tree depending on selected mode",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_servergroup_list",
+    "id": 152,
+    "description": "List server groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_servergroup_permission_list",
+    "id": 153,
+    "description": "List server group permissions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_servergroup_client_list",
+    "id": 154,
+    "description": "List clients from a server group",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channelgroup_list",
+    "id": 155,
+    "description": "List channel groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channelgroup_permission_list",
+    "id": 156,
+    "description": "List channel group permissions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channelgroup_client_list",
+    "id": 157,
+    "description": "List clients from a channel group",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_client_permission_list",
+    "id": 158,
+    "description": "List client permissions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channel_permission_list",
+    "id": 159,
+    "description": "List channel permissions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channelclient_permission_list",
+    "id": 160,
+    "description": "List channel client permissions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_servergroup_create",
+    "id": 161,
+    "description": "Create server groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channelgroup_create",
+    "id": 162,
+    "description": "Create channel groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_modify_power",
+    "id": 163,
+    "description": "Group modify power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_needed_modify_power",
+    "id": 164,
+    "description": "Needed group modify power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_member_add_power",
+    "id": 165,
+    "description": "Group member add power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_needed_member_add_power",
+    "id": 166,
+    "description": "Needed group member add power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_member_remove_power",
+    "id": 167,
+    "description": "Group member delete power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_group_needed_member_remove_power",
+    "id": 168,
+    "description": "Needed group member delete power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_permission_modify_power",
+    "id": 169,
+    "description": "Permission modify power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_permission_modify_power_ignore",
+    "id": 170,
+    "description": "Ignore needed permission modify power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_servergroup_delete",
+    "id": 171,
+    "description": "Delete server groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_virtualserver_channelgroup_delete",
+    "id": 172,
+    "description": "Delete channel groups",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_permission_modify_power",
+    "id": 173,
+    "description": "Client permission modify power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_permission_modify_power",
+    "id": 174,
+    "description": "Needed client permission modify power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_max_clones_uid",
+    "id": 175,
+    "description": "Max additional connections per client identity",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_max_idletime",
+    "id": 176,
+    "description": "Max idle time in seconds",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_max_avatar_filesize",
+    "id": 177,
+    "description": "Max avatar filesize in bytes",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_max_channel_subscriptions",
+    "id": 178,
+    "description": "Max channel subscriptions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_is_priority_speaker",
+    "id": 179,
+    "description": "Client is priority speaker",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_skip_channelgroup_permissions",
+    "id": 180,
+    "description": "Ignore channel group permissions",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_force_push_to_talk",
+    "id": 181,
+    "description": "Force Push-To-Talk capture mode",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_ignore_bans",
+    "id": 182,
+    "description": "Ignore bans",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_ignore_antiflood",
+    "id": 183,
+    "description": "Ignore antiflood measurements",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_issue_client_query_command",
+    "id": 184,
+    "description": "Issue query commands from client",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_use_reserved_slot",
+    "id": 185,
+    "description": "Use an reserved slot",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_use_channel_commander",
+    "id": 186,
+    "description": "Use channel commander",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_request_talker",
+    "id": 187,
+    "description": "Allow to request talk power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_avatar_delete_other",
+    "id": 188,
+    "description": "Allow deletion of avatars from other clients",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_is_sticky",
+    "id": 189,
+    "description": "Client will be sticked to current channel",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_ignore_sticky",
+    "id": 190,
+    "description": "Client ignores sticky flag",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_info_view",
+    "id": 191,
+    "description": "Retrieve client information",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_permissionoverview_view",
+    "id": 192,
+    "description": "Retrieve client permissions overview",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_permissionoverview_own",
+    "id": 193,
+    "description": "Retrieve clients own permissions overview",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_remoteaddress_view",
+    "id": 194,
+    "description": "View client IP address and port",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_serverquery_view_power",
+    "id": 195,
+    "description": "ServerQuery view power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_serverquery_view_power",
+    "id": 196,
+    "description": "Needed ServerQuery view power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_custom_info_view",
+    "id": 197,
+    "description": "View custom fields",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_kick_from_server_power",
+    "id": 198,
+    "description": "Client kick power from server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_kick_from_server_power",
+    "id": 199,
+    "description": "Needed client kick power from server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_kick_from_channel_power",
+    "id": 200,
+    "description": "Client kick power from channel",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_kick_from_channel_power",
+    "id": 201,
+    "description": "Needed client kick power from channel",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_ban_power",
+    "id": 202,
+    "description": "Client ban power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_ban_power",
+    "id": 203,
+    "description": "Needed client ban power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_move_power",
+    "id": 204,
+    "description": "Client move power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_move_power",
+    "id": 205,
+    "description": "Needed client move power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_complain_power",
+    "id": 206,
+    "description": "Complain power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_complain_power",
+    "id": 207,
+    "description": "Needed complain power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_complain_list",
+    "id": 208,
+    "description": "Show complain list",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_complain_delete_own",
+    "id": 209,
+    "description": "Delete own complains",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_complain_delete",
+    "id": 210,
+    "description": "Delete complains",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_ban_list",
+    "id": 211,
+    "description": "Show banlist",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_ban_create",
+    "id": 212,
+    "description": "Add a ban",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_ban_delete_own",
+    "id": 213,
+    "description": "Delete own bans",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_ban_delete",
+    "id": 214,
+    "description": "Delete bans",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_ban_max_bantime",
+    "id": 215,
+    "description": "Max bantime",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_private_textmessage_power",
+    "id": 216,
+    "description": "Client private message power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_private_textmessage_power",
+    "id": 217,
+    "description": "Needed client private message power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_server_textmessage_send",
+    "id": 218,
+    "description": "Send text messages to virtual server",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_channel_textmessage_send",
+    "id": 219,
+    "description": "Send text messages to channel",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_offline_textmessage_send",
+    "id": 220,
+    "description": "Send offline messages to clients",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_talk_power",
+    "id": 221,
+    "description": "Client talk power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_talk_power",
+    "id": 222,
+    "description": "Needed client talk power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_poke_power",
+    "id": 223,
+    "description": "Client poke power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_poke_power",
+    "id": 224,
+    "description": "Needed client poke power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_set_flag_talker",
+    "id": 225,
+    "description": "Set the talker flag for clients and allow them to speak",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_whisper_power",
+    "id": 226,
+    "description": "Client whisper power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_client_needed_whisper_power",
+    "id": 227,
+    "description": "Client needed whisper power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_modify_description",
+    "id": 228,
+    "description": "Edit a clients description",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_modify_own_description",
+    "id": 229,
+    "description": "Allow client to edit own description",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_modify_dbproperties",
+    "id": 230,
+    "description": "Edit a clients properties in the database",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_delete_dbproperties",
+    "id": 231,
+    "description": "Delete a clients properties in the database",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_client_create_modify_serverquery_login",
+    "id": 232,
+    "description": "Create or modify own ServerQuery account",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_ft_ignore_password",
+    "id": 233,
+    "description": "Browse files without channel password",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "b_ft_transfer_list",
+    "id": 234,
+    "description": "Retrieve list of running filetransfers",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_file_upload_power",
+    "id": 235,
+    "description": "File upload power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_needed_file_upload_power",
+    "id": 236,
+    "description": "Needed file upload power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_file_download_power",
+    "id": 237,
+    "description": "File download power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_needed_file_download_power",
+    "id": 238,
+    "description": "Needed file download power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_file_delete_power",
+    "id": 239,
+    "description": "File delete power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_needed_file_delete_power",
+    "id": 240,
+    "description": "Needed file delete power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_file_rename_power",
+    "id": 241,
+    "description": "File rename power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_needed_file_rename_power",
+    "id": 242,
+    "description": "Needed file rename power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_file_browse_power",
+    "id": 243,
+    "description": "File browse power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_needed_file_browse_power",
+    "id": 244,
+    "description": "Needed file browse power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_directory_create_power",
+    "id": 245,
+    "description": "Create directory power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_needed_directory_create_power",
+    "id": 246,
+    "description": "Needed create directory power",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_quota_mb_download_per_client",
+    "id": 247,
+    "description": "Download quota per client in MByte",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "i_ft_quota_mb_upload_per_client",
+    "id": 248,
+    "description": "Upload quota per client in MByte",
+    "idSource": "tsdeclarations/Permissions.csv",
+    "descriptionSource": "tsdeclarations/Permissions.csv"
+  }
+]

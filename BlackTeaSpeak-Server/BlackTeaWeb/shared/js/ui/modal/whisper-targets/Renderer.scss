@@ -1,0 +1,110 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-width: 34rem;
+    max-width: 42rem;
+}
+
+.hero {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 1rem 1.2rem;
+    border-radius: .7rem;
+    background: linear-gradient(135deg, rgba(65, 132, 255, .16), rgba(70, 190, 170, .14));
+}
+
+.heroIcon {
+    width: 3rem;
+    height: 3rem;
+    min-width: 3rem;
+    border-radius: .85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, .14);
+}
+
+.icon {
+    width: 1.5rem;
+    height: 1.5rem;
+}
+
+.heroBody {
+    display: flex;
+    flex-direction: column;
+    gap: .35rem;
+}
+
+.heroBody h1 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.heroBody p {
+    margin: 0;
+    opacity: .85;
+}
+
+.voiceState {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    width: fit-content;
+    padding: .3rem .6rem;
+    border-radius: 999px;
+    font-size: .85rem;
+    background: rgba(255, 255, 255, .1);
+}
+
+.connected {
+    background: rgba(54, 179, 126, .2);
+}
+
+.failed,
+.disconnected,
+.unsupported_server,
+.unsupported_client {
+    background: rgba(214, 72, 72, .18);
+}
+
+.activeCard,
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: .55rem;
+    padding: .95rem 1.1rem;
+    border-radius: .7rem;
+    background: rgba(255, 255, 255, .04);
+}
+
+.cardLabel,
+.section h2 {
+    margin: 0;
+    font-size: .95rem;
+    font-weight: 600;
+    opacity: .9;
+}
+
+.cardValue {
+    line-height: 1.45;
+}
+
+.emptyState {
+    opacity: .72;
+    line-height: 1.4;
+}
+
+.errorBox {
+    padding: .75rem .95rem;
+    border-radius: .6rem;
+    background: rgba(214, 72, 72, .16);
+    color: inherit;
+}
+
+.footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: .6rem;
+}

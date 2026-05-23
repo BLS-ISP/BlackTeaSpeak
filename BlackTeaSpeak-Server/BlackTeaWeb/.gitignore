@@ -1,0 +1,36 @@
+# Global ignorings
+.idea/
+node_modules/
+.sass-cache/
+
+/auth/certs/
+/auth/js/auth.js.map
+
+/.idea/
+
+/vendor/emoji-picker/**/*.js
+/vendor/emoji-picker/**/*.js.map
+!/vendor/emoji-picker/webpack.config.js
+
+# Some build output
+/dist/
+/dist-package/
+/declarations/
+/travis-build/
+
+# Don't add the created packages to git
+/BlackTeaSpeakUI.tar.gz
+/BlackTeaWeb-*.zip
+/auto-build
+
+/todo.txt
+/tmp/
+
+# All our config files are .ts files
+/*.js
+/*.js.map
+
+/webpack/*.js
+/webpack/*.js.map
+
+/files_*.pem

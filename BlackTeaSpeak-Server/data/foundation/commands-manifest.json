@@ -1,0 +1,3338 @@
+[
+  {
+    "name": "banadd",
+    "category": "Query",
+    "docPath": "commanddocs/banadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "banadd [ip={regexp}] [name={regexp}] [uid={clientUID}]",
+      "[time={timeInSeconds}] [banreason={text}]"
+    ],
+    "permissions": [
+      "b_client_ban_create"
+    ],
+    "description": "Adds a new ban rule on the selected virtual server. All parameters are   optional but at least one of the following must be set: ip, name, or uid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "banadd ip=1.2.3.4 banreason=just\\s4\\sfun",
+      "banid=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "banclient",
+    "category": "Query",
+    "docPath": "commanddocs/banclient.txt",
+    "binaryOffset": null,
+    "usage": [
+      "banclient clid={clientID} [time={timeInSeconds}] [banreason={text}] [-no-nickname] [-no-hardware-id] [-no-ip]"
+    ],
+    "permissions": [
+      "i_client_ban_power",
+      "i_client_needed_ban_power"
+    ],
+    "description": "Bans the client specified with ID clid from the server. Please note that this   will create two separate ban rules for the targeted clients IP address and   his unique identifier.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "banclient clid=4 time=3600",
+      "banid=2",
+      "banid=3",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "bandel",
+    "category": "Query",
+    "docPath": "commanddocs/bandel.txt",
+    "binaryOffset": null,
+    "usage": [
+      "bandel banid={banID}"
+    ],
+    "permissions": [
+      "b_client_ban_delete",
+      "b_client_ban_delete_own"
+    ],
+    "description": "Deletes the ban rule with ID banid from the server.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "bandel banid=3",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "bandelall",
+    "category": "Query",
+    "docPath": "commanddocs/bandelall.txt",
+    "binaryOffset": null,
+    "usage": [
+      "bandelall"
+    ],
+    "permissions": [
+      "b_client_ban_delete"
+    ],
+    "description": "Deletes all active ban rules from the server.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "bandelall",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "banlist",
+    "category": "Query",
+    "docPath": "commanddocs/banlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "banlist"
+    ],
+    "permissions": [
+      "b_client_ban_list",
+      "b_client_remoteaddress_view"
+    ],
+    "description": "Displays a list of active bans on the selected virtual server.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "banlist",
+      "banid=7 ip=1.2.3.4 created=1259444002242 invokername=WolverinDEV invokercldbid=56 invokeruid=oHhi9WzXLNEFQOwAu4JYKGU+C+c= reason enforcements=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "bantriggerlist",
+    "category": "Query",
+    "docPath": "commanddocs/bantriggerlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "bantriggerlist"
+    ],
+    "permissions": [
+      "b_client_ban_trigger_list"
+    ],
+    "description": "Displays a list of trigger events for a ban entry",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "bantriggerlist banid=1",
+      "banid=1 serverid=1 client_unique_identifier=xxjnc14LmvTk+Lyrm8OOeo4tOqw= client_hardware_identifier=a282e3dc4cb8583c6d8e3466f38c1970 client_nickname=WolverinDEV connection_client_ip=127.0.0.1 timestamp=0|client_unique_identifier=xxjnc14LmvTk+Lyrm8OOeo4tOqw= client_hardware_identifier=a282e3dc4cb8583c6d8e3466f38c1970 client_nickname=WolverinDEV connection_client_ip=127.0.0.1 timestamp=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "bindinglist",
+    "category": "Query",
+    "docPath": "commanddocs/bindinglist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "bindinglist [subsystem={voice|query|filetransfer}]"
+    ],
+    "permissions": [
+      "b_serverinstance_binding_list"
+    ],
+    "description": "Displays a list of IP addresses used by the server instance on multi-homed   machines. If no subsystem is specified, \"voice\" is used by default.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "bindinglist",
+      "ip=0.0.0.0|ip=0::0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channeladdperm",
+    "category": "Query",
+    "docPath": "commanddocs/channeladdperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channeladdperm cid={channelID} [permid={permID}...]",
+      "[permsid={permName}...] permvalue={permValue}..."
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Adds a set of specified permissions to a channel. Multiple permissions can be   added by providing the two parameters of each permission. A permission can be   specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channeladdperm cid=16 permid=17276 permvalue=50|permid=21415 permvalue=20",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelclientaddperm",
+    "category": "Query",
+    "docPath": "commanddocs/channelclientaddperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelclientaddperm cid={channelID} cldbid={clientDBID}",
+      "[permid={permID}...] [permsid={permName}...] permvalue={permValue}..."
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Adds a set of specified permissions to a client in a specific channel.   Multiple permissions can be added by providing the three parameters of each   permission. A permission can be specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelclientaddperm cid=12 cldbid=3 permid=17276 permvalue=50|permid=21415 permvalue=20",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelclientdelperm",
+    "category": "Query",
+    "docPath": "commanddocs/channelclientdelperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelclientdelperm cid={channelID} cldbid={clientDBID}",
+      "[permid={permID}...] [permsid={permName}...]"
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Removes a set of specified permissions from a client in a specific channel.   Multiple permissions can be removed at once. A permission can be specified by   permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelclientdelperm cid=12 cldbid=3 permid=17276|permid=21415",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelclientpermlist",
+    "category": "Query",
+    "docPath": "commanddocs/channelclientpermlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelclientpermlist cid={channelID} cldbid={clientDBID} [-permsid]"
+    ],
+    "permissions": [
+      "b_virtualserver_channelclient_permission_list"
+    ],
+    "description": "Displays a list of permissions defined for a client in a specific channel.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelclientpermlist cid=12 cldbid=3",
+      "cid=12 cldbid=3 permid=4353 permvalue=1 permnegated=0 permskip=0|permid=17276 permvalue=50 permnegated=0 permskip=0|permid=21415 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelcreate",
+    "category": "Query",
+    "docPath": "commanddocs/channelcreate.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelcreate channel_name={channelName} [channel_properties...]"
+    ],
+    "permissions": [
+      "i_channel_min_depth",
+      "i_channel_max_depth",
+      "b_channel_create_child",
+      "b_channel_create_permanent",
+      "b_channel_create_semi_permanent",
+      "b_channel_create_temporary",
+      "b_channel_create_with_topic",
+      "b_channel_create_with_description",
+      "b_channel_create_with_password",
+      "b_channel_create_modify_with_codec_speex8",
+      "b_channel_create_modify_with_codec_speex16",
+      "b_channel_create_modify_with_codec_speex32",
+      "b_channel_create_modify_with_codec_celtmono48",
+      "i_channel_create_modify_with_codec_maxquality",
+      "i_channel_create_modify_with_codec_latency_factor_min",
+      "b_channel_create_with_maxclients",
+      "b_channel_create_with_maxfamilyclients",
+      "b_channel_create_with_sortorder",
+      "b_channel_create_with_default",
+      "b_channel_create_with_needed_talk_power"
+    ],
+    "description": "Creates a new channel using the given properties and displays its ID. Note   that this command accepts multiple properties which means that you're able to   specifiy all settings of the new channel at once.   For detailed information, see Channel Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelcreate channel_name=My\\sChannel channel_topic=My\\sTopic",
+      "cid=16",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channeldelete",
+    "category": "Query",
+    "docPath": "commanddocs/channeldelete.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channeldelete cid={channelID} force={1|0}"
+    ],
+    "permissions": [
+      "b_channel_delete_permanent",
+      "b_channel_delete_semi_permanent",
+      "b_channel_delete_temporary",
+      "b_channel_delete_flag_force"
+    ],
+    "description": "Deletes an existing channel by ID. If force is set to 1, the channel will be   deleted even if there are clients within. The clients will be kicked to the   default channel with an appropriate reason message.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channeldelete cid=16 force=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channeldelperm",
+    "category": "Query",
+    "docPath": "commanddocs/channeldelperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channeldelperm cid=123 [permid={permID}...] [permsid={permName}...]"
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Removes a set of specified permissions from a channel. Multiple permissions   can be removed at once. A permission can be specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channeldelperm cid=16 permid=17276|permid=21415",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channeledit",
+    "category": "Query",
+    "docPath": "commanddocs/channeledit.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channeledit cid={channelID} [channel_properties...]"
+    ],
+    "permissions": [
+      "i_channel_min_depth",
+      "i_channel_max_depth",
+      "b_channel_modify_parent",
+      "b_channel_modify_make_default",
+      "b_channel_modify_make_permanent",
+      "b_channel_modify_make_semi_permanent",
+      "b_channel_modify_make_temporary",
+      "b_channel_modify_name",
+      "b_channel_modify_topic",
+      "b_channel_modify_description",
+      "b_channel_modify_password",
+      "b_channel_modify_codec",
+      "b_channel_create_modify_with_codec_speex8",
+      "b_channel_create_modify_with_codec_speex16",
+      "b_channel_create_modify_with_codec_speex32",
+      "b_channel_create_modify_with_codec_celtmono48",
+      "b_channel_modify_codec_quality",
+      "b_channel_create_modify_with_codec_maxquality",
+      "b_channel_modify_codec_latency_factor",
+      "b_channel_modify_make_codec_encrypted",
+      "b_channel_modify_maxclients",
+      "b_channel_modify_maxfamilyclients",
+      "b_channel_modify_sortorder",
+      "b_channel_modify_needed_talk_power",
+      "i_channel_modify_power",
+      "i_channel_needed_modify_power"
+    ],
+    "description": "Changes a channels configuration using given properties. Note that this   command accepts multiple properties which means that you're able to change   all settings of the channel specified with cid at once.   For detailed information, see Channel Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channeledit cid=15 channel_codec_quality=3 channel_description=My\\sDescription",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelfind",
+    "category": "Query",
+    "docPath": "commanddocs/channelfind.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelfind pattern={channelName}"
+    ],
+    "permissions": [
+      "b_virtualserver_channel_search"
+    ],
+    "description": "Displays a list of channels matching a given name pattern.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelfind pattern=default",
+      "cid=15 channel_name=Default\\sChannel",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgroupadd",
+    "category": "Query",
+    "docPath": "commanddocs/channelgroupadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgroupadd name={groupName} [type={groupDbType}]"
+    ],
+    "permissions": [
+      "b_virtualserver_channelgroup_create"
+    ],
+    "description": "Creates a new channel group using a given name and displays its ID. The   optional type parameter can be used to create template groups.   For detailed information, see Definitions.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgroupadd name=Channel\\sAdmin",
+      "cgid=13",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgroupaddperm",
+    "category": "Query",
+    "docPath": "commanddocs/channelgroupaddperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgroupaddperm cgid={groupID} [permid={permID}...]",
+      "[permsid={permName}...] permvalue={permValue}..."
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Adds a set of specified permissions to a channel group. Multiple permissions   can be added by providing the two parameters of each permission. A permission   can be specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgroupaddperm cgid=13 permid=17276 permvalue=50|permid=21415 permvalue=20",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgroupclientlist",
+    "category": "Query",
+    "docPath": "commanddocs/channelgroupclientlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgroupclientlist [cid={channelID}] [cldbid={clientDBID}]",
+      "[cgid={groupID}]"
+    ],
+    "permissions": [
+      "b_virtualserver_channelgroup_client_list"
+    ],
+    "description": "Displays all the client and/or channel IDs currently assigned to channel   groups. All three parameters are optional so you're free to choose the most   suitable combination for your requirements.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgroupclientlist cid=2 cgid=9",
+      "cid=2 cldbid=9 cgid=9|cid=2 cldbid=24 cgid=9|cid=2 cldbid=47 cgid=9",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgroupcopy",
+    "category": "Query",
+    "docPath": "commanddocs/channelgroupcopy.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgroupcopy scgid={sourceGroupID} tsgid={targetGroupID}",
+      "name={groupName} type={groupDbType}"
+    ],
+    "permissions": [
+      "b_virtualserver_channelgroup_create",
+      "i_group_modify_power",
+      "i_group_needed_modify_power"
+    ],
+    "description": "Creates a copy of the channel group specified with scgid. If tcgid is set to   0, the server will create a new group. To overwrite an existing group, simply   set tcgid to the ID of a designated target group. If a target group is set,   the name parameter will be ignored. The type parameter can be used to create   template groups.   For detailed information, see Definitions.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgroupcopy scgid=4 tcgid=0 name=My\\sGroup\\s(Copy) type=1",
+      "cgid=33",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgroupdel",
+    "category": "Query",
+    "docPath": "commanddocs/channelgroupdel.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgroupdel cgid={groupID} force={1|0}"
+    ],
+    "permissions": [
+      "b_virtualserver_channelgroup_delete"
+    ],
+    "description": "Deletes a channel group by ID. If force is set to 1, the channel group will   be deleted even if there are clients within.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgroupdel cgid=13",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgroupdelperm",
+    "category": "Query",
+    "docPath": "commanddocs/channelgroupdelperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgroupdelperm cgid={groupID} [permid={permID}...]",
+      "[permsid={permName}...]"
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Removes a set of specified permissions from the channel group. Multiple   permissions can be removed at once. A permission can be specified by permid   or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgroupdelperm cgid=16 permid=17276|permid=21415",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgrouplist",
+    "category": "Query",
+    "docPath": "commanddocs/channelgrouplist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgrouplist"
+    ],
+    "permissions": [
+      "b_virtualserver_channelgroup_list",
+      "b_serverinstance_modify_templates"
+    ],
+    "description": "Displays a list of channel groups available on the selected virtual server.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgrouplist",
+      "cgid=1 name=Channel\\sAdmin type=2 iconid=100 savedb=1|cgid=2 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgrouppermlist",
+    "category": "Query",
+    "docPath": "commanddocs/channelgrouppermlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgrouppermlist cgid={groupID} [-permsid]"
+    ],
+    "permissions": [
+      "b_virtualserver_channelgroup_permission_list"
+    ],
+    "description": "Displays a list of permissions assigned to the channel group specified with   cgid. If the -permsid option is specified, the output will contain the   permission names instead of the internal IDs.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgrouppermlist cgid=13",
+      "permid=8470 permvalue=1 permnegated=0 permskip=0|permid=8475 permvalue=1 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelgrouprename",
+    "category": "Query",
+    "docPath": "commanddocs/channelgrouprename.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelgrouprename cgid={groupID} name={groupName}"
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power"
+    ],
+    "description": "Changes the name of a specified channel group.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelgrouprename cgid=13 name=New\\sName",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelinfo",
+    "category": "Query",
+    "docPath": "commanddocs/channelinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelinfo cid={channelID}"
+    ],
+    "permissions": [
+      "b_channel_info_view"
+    ],
+    "description": "Displays detailed configuration information about a channel including ID,   topic, description, etc.   For detailed information, see Channel Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelinfo cid=1",
+      "channel_name=Default\\sChannel channel_topic=Default\\sChannel\\shas\\sno\\s[b]topic[\\/b] channel_description=This\\sis\\sthe\\sdefault\\schannel ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channellist",
+    "category": "Query",
+    "docPath": "commanddocs/channellist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channellist [-topic] [-flags] [-voice] [-limits] [-icon] [-secondsempty]"
+    ],
+    "permissions": [
+      "b_virtualserver_channel_list"
+    ],
+    "description": "Displays a list of channels created on a virtual server including their ID,   order, name, etc. The output can be modified using several command options.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channellist -topic",
+      "cid=15 pid=0 channel_order=0 channel_name=Default\\sChannel channel_topic=Default\\sChannel\\shas\\sno\\s[b]topic[\\/b] total_clients=2|cid=16 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelmove",
+    "category": "Query",
+    "docPath": "commanddocs/channelmove.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelmove cid={channelID} cpid={channelParentID}",
+      "[order={channelSortOrder}]"
+    ],
+    "permissions": [
+      "i_channel_min_depth",
+      "i_channel_max_depth",
+      "b_channel_modify_parent",
+      "b_channel_modify_sortorder"
+    ],
+    "description": "Moves a channel to a new parent channel with the ID cpid. If order is   specified, the channel will be sorted right under the channel with the   specified ID. If order is set to 0, the channel will be sorted right below   the new parent.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelmove cid=16 cpid=1 order=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "channelpermlist",
+    "category": "Query",
+    "docPath": "commanddocs/channelpermlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "channelpermlist cid={channelID} [-permsid]"
+    ],
+    "permissions": [
+      "b_virtualserver_channel_permission_list"
+    ],
+    "description": "Displays a list of permissions defined for a channel.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "channelpermlist cid=2",
+      "cid=2 permid=4353 permvalue=1 permnegated=0 permskip=0|permid=17276 permvalue=50 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientaddperm",
+    "category": "Query",
+    "docPath": "commanddocs/clientaddperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientaddperm cldbid={clientDBID} [permid={permID}...]",
+      "[permsid={permName}...] permvalue={permValue}... permskip={1|0}..."
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Adds a set of specified permissions to a client. Multiple permissions can be   added by providing the three parameters of each permission. A permission can   be specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientaddperm cldbid=16 permid=17276 permvalue=50 permskip=1|permid=21415 permvalue=20 permskip=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientdbdelete",
+    "category": "Query",
+    "docPath": "commanddocs/clientdbdelete.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientdbdelete cldbid={clientDBID}"
+    ],
+    "permissions": [
+      "b_client_delete_dbproperties"
+    ],
+    "description": "Deletes a clients properties from the database.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientdbdelete cldbid=56",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientdbedit",
+    "category": "Query",
+    "docPath": "commanddocs/clientdbedit.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientdbedit cldbid={clientDBID} [client_properties...]"
+    ],
+    "permissions": [
+      "b_client_modify_dbproperties",
+      "b_client_modify_description",
+      "b_client_set_talk_power"
+    ],
+    "description": "Changes a clients settings using given properties.   For detailed information, see Client Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientdbedit cldbid=56 client_description=Best\\sguy\\sever!",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientdbfind",
+    "category": "Query",
+    "docPath": "commanddocs/clientdbfind.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientdbfind pattern={clientName|clientUID} [-uid]"
+    ],
+    "permissions": [
+      "b_virtualserver_client_dbsearch"
+    ],
+    "description": "Displays a list of client database IDs matching a given pattern. You can   either search for a clients last known nickname or his unique identity by   using the -uid option.   \t\tThe pattern parameter can include regular characters and SQL wildcard   characters (e.g. %).",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientdbfind pattern=%Sven%",
+      "cldbid=56",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientdbinfo",
+    "category": "Query",
+    "docPath": "commanddocs/clientdbinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientdbinfo cldbid={clientDBID}"
+    ],
+    "permissions": [
+      "b_virtualserver_client_dbinfo"
+    ],
+    "description": "Displays detailed database information about a client including unique ID,   creation date, etc.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientdbinfo cldbid=4",
+      "client_unique_identifier=FPMPSC6MXqXq751dX7BKV0JniSo= client_nickname=ScP client_created=1265411019 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientdblist",
+    "category": "Query",
+    "docPath": "commanddocs/clientdblist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientdblist [start={offset}] [duration={limit}] [-count]"
+    ],
+    "permissions": [
+      "b_virtualserver_client_dblist"
+    ],
+    "description": "Displays a list of client identities known by the server including their   database ID, last nickname, etc.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientdblist",
+      "cldbid=7 client_unique_identifier=DZhdQU58qyooEK4Fr8Ly738hEmc= client_nickname=MuhChy client_created=1259147468 client_lastconnected=1259421233 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientdelperm",
+    "category": "Query",
+    "docPath": "commanddocs/clientdelperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientdelperm cldbid={clientDBID} [permid={permID}...]",
+      "[permsid={permName}...]"
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Removes a set of specified permissions from a client. Multiple permissions   can be removed at once. A permission can be specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientdelperm cldbid=16 permid=17276|permid=21415",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientedit",
+    "category": "Query",
+    "docPath": "commanddocs/clientedit.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientedit clid={clientID} [client_properties...]"
+    ],
+    "permissions": [
+      "b_client_modify_description",
+      "b_client_modify_own_description",
+      "b_client_set_talk_power",
+      "i_client_music_modify_power",
+      "i_client_music_rename_power",
+      "i_client_music_create_modify_max_volume",
+      "b_client_use_channel_commander",
+      "b_client_use_priority_speaker",
+      "b_client_request_talker",
+      "b_client_music_modify_temporary",
+      "b_client_music_modify_semi_permanent",
+      "b_client_music_modify_permanent"
+    ],
+    "description": "Changes a clients or music bots settings using given properties.   For detailed information, see Client Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientedit clid=10 client_description=Best\\sguy\\sever!",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientfind",
+    "category": "Query",
+    "docPath": "commanddocs/clientfind.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientfind pattern={clientName}"
+    ],
+    "permissions": [
+      "b_virtualserver_client_search"
+    ],
+    "description": "Displays a list of clients matching a given name pattern.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientfind pattern=sven",
+      "clid=7 client_nickname=Sven",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientgetdbidfromuid",
+    "category": "Query",
+    "docPath": "commanddocs/clientgetdbidfromuid.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientgetdbidfromuid cluid={clientUID}"
+    ],
+    "permissions": [],
+    "description": "Displays the database ID matching the unique identifier specified by cluid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientgetdbidfromuid cluid=dyjxkshZP6bz0n3bnwFQ1CkwZOM=",
+      "cluid=dyjxkshZP6bz0n3bnwFQ1CkwZOM= cldbid=32",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientgetids",
+    "category": "Query",
+    "docPath": "commanddocs/clientgetids.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientgetids cluid={clientUID}"
+    ],
+    "permissions": [],
+    "description": "Displays all client IDs matching the unique identifier specified by cluid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientgetids cluid=dyjxkshZP6bz0n3bnwFQ1CkwZOM=",
+      "cluid=dyjxkshZP6bz0n3bnwFQ1CkwZOM= clid=1 name=Janko",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientgetnamefromdbid",
+    "category": "Query",
+    "docPath": "commanddocs/clientgetnamefromdbid.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientgetnamefromdbid cldbid={clientDBID}"
+    ],
+    "permissions": [],
+    "description": "Displays the unique identifier and nickname matching the database ID   specified by cldbid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientgetnamefromdbid cldbid=32",
+      "cluid=dyjxkshZP6bz0n3bnwFQ1CkwZOM= cldbid=32 name=Janko",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientgetnamefromuid",
+    "category": "Query",
+    "docPath": "commanddocs/clientgetnamefromuid.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientgetnamefromuid cluid={clientUID}"
+    ],
+    "permissions": [],
+    "description": "Displays the database ID and nickname matching the unique identifier   specified by cluid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientgetnamefromuid cluid=dyjxkshZP6bz0n3bnwFQ1CkwZOM=",
+      "cluid=dyjxkshZP6bz0n3bnwFQ1CkwZOM= cldbid=32 name=Janko",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientgetuidfromclid",
+    "category": "Query",
+    "docPath": "commanddocs/clientgetuidfromclid.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientgetuidfromclid clid={clientID}"
+    ],
+    "permissions": [],
+    "description": "Displays the unique identifier matching the clientID specified by clid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientgetuidfromclid clid=8",
+      "clid=8 cluid=yXM6PUfbCcPU+joxIFek1xOQwwQ= nickname=MuhChy1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientinfo",
+    "category": "Query",
+    "docPath": "commanddocs/clientinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientinfo clid={clientID}"
+    ],
+    "permissions": [
+      "b_client_info_view"
+    ],
+    "description": "Displays detailed configuration information about a client including unique   ID, nickname, client version, etc.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientinfo clid=6",
+      "client_unique_identifier=P5H2hrN6+gpQI4n\\/dXp3p17vtY0= client_nickname=Rabe85 client_version=3.0.0-alpha24\\s[Build:\\s8785]\\s(UI:\\s8785) ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientkick",
+    "category": "Query",
+    "docPath": "commanddocs/clientkick.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientkick clid={clientID}... reasonid={4|5} [reasonmsg={text}]"
+    ],
+    "permissions": [
+      "i_client_kick_from_server_power",
+      "i_client_kick_from_channel_power",
+      "i_client_needed_kick_from_server_power",
+      "i_client_needed_kick_from_channel_power"
+    ],
+    "description": "Kicks one or more clients specified with clid from their currently joined   channel or from the server, depending on reasonid. The reasonmsg parameter   specifies a text message sent to the kicked clients. This parameter is   optional and may only have a maximum of 40 characters.   For detailed information, see Definitions.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientkick clid=5|clid=6 reasonid=4 reasonmsg=Go\\saway!",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientlist",
+    "category": "Query",
+    "docPath": "commanddocs/clientlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientlist [-uid] [-away] [-voice] [-times] [-groups] [-info] [-country]",
+      "[-ip] [-badges]"
+    ],
+    "permissions": [
+      "b_virtualserver_client_list",
+      "i_channel_subscribe_power",
+      "i_channel_needed_subscribe_power"
+    ],
+    "description": "Displays a list of clients online on a virtual server including their ID,   nickname, status flags, etc. The output can be modified using several command   options.   Please note that the output will only contain clients which are currently in   channels you're able to subscribe to.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientlist -away",
+      "clid=5 cid=7 client_database_id=40 client_nickname=ScP client_type=0 client_away=1 client_away_message=not\\shere|clid=6 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientmove",
+    "category": "Query",
+    "docPath": "commanddocs/clientmove.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientmove clid={clientID}... cid={channelID} [cpw={channelPassword}]"
+    ],
+    "permissions": [
+      "i_client_move_power",
+      "i_client_needed_move_power"
+    ],
+    "description": "Moves one or more clients specified with clid to the channel with ID cid. If   the target channel has a password, it needs to be specified with cpw. If the   channel has no password, the parameter can be omitted.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientmove clid=5|clid=6 cid=3",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientpermlist",
+    "category": "Query",
+    "docPath": "commanddocs/clientpermlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientpermlist cldbid={clientDBID} [-permsid]"
+    ],
+    "permissions": [
+      "b_virtualserver_client_permission_list"
+    ],
+    "description": "Displays a list of permissions defined for a client.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientpermlist cldbid=2",
+      "cldbid=2 permid=4353 permvalue=1 permnegated=0 permskip=0|permid=17276 permvalue=50 permnegated=0 permskip=0|permid=21415 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientpoke",
+    "category": "Query",
+    "docPath": "commanddocs/clientpoke.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientpoke clid={clientID} msg={text}"
+    ],
+    "permissions": [
+      "i_client_poke_power",
+      "i_client_needed_poke_power",
+      "i_client_poke_max_clients"
+    ],
+    "description": "Sends a poke message to the client specified with clid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientpoke clid=5 msg=Wake\\sup! | clid=6",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientsetserverquerylogin",
+    "category": "Query",
+    "docPath": "commanddocs/clientsetserverquerylogin.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientsetserverquerylogin client_login_name={username}"
+    ],
+    "permissions": [
+      "b_client_create_modify_serverquery_login"
+    ],
+    "description": "Updates your own ServerQuery login credentials using a specified username.   The password will be auto-generated.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientsetserverquerylogin client_login_name=admin",
+      "client_login_password=+r\\/TQqvR",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "clientupdate",
+    "category": "Query",
+    "docPath": "commanddocs/clientupdate.txt",
+    "binaryOffset": null,
+    "usage": [
+      "clientupdate [client_properties...]"
+    ],
+    "permissions": [],
+    "description": "Change your ServerQuery clients settings using given properties.   For detailed information, see Client Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "clientupdate client_nickname=ScP\\s(query)",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "complainadd",
+    "category": "Query",
+    "docPath": "commanddocs/complainadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "complainadd tcldbid={targetClientDBID} message={text}"
+    ],
+    "permissions": [
+      "i_client_complain_power",
+      "i_client_needed_complain_power"
+    ],
+    "description": "Submits a complaint about a connected client with database ID tcldbid to the   server.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "complainadd tcldbid=3 message=Bad\\sguy!",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "complaindel",
+    "category": "Query",
+    "docPath": "commanddocs/complaindel.txt",
+    "binaryOffset": null,
+    "usage": [
+      "complaindel tcldbid={targetClientDBID} fcldbid={fromClientDBID}"
+    ],
+    "permissions": [
+      "b_client_complain_delete",
+      "b_client_complain_delete_own"
+    ],
+    "description": "Deletes the complaint about the client with ID tcldbid submitted by the   client with ID fcldbid from the server.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "complaindel tcldbid=3 fcldbid=4",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "complaindelall",
+    "category": "Query",
+    "docPath": "commanddocs/complaindelall.txt",
+    "binaryOffset": null,
+    "usage": [
+      "complaindelall tcldbid={targetClientDBID}"
+    ],
+    "permissions": [
+      "b_client_complain_delete"
+    ],
+    "description": "Deletes all complaints about the client with database ID tcldbid from the   server.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "complaindelall tcldbid=3",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "complainlist",
+    "category": "Query",
+    "docPath": "commanddocs/complainlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "complainlist [tcldbid={targetClientDBID}]"
+    ],
+    "permissions": [
+      "b_client_complain_list"
+    ],
+    "description": "Displays a list of complaints on the selected virtual server. If tcldbid is   specified, only complaints about the targeted client will be shown.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "complainlist tcldbid=3",
+      "tcldbid=3 tname=Julian fcldbid=56 fname=Sven message=Bad\\sguy! timestamp=1259440948 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "conversationfetch",
+    "category": "Query",
+    "docPath": "commanddocs/conversationfetch.txt",
+    "binaryOffset": null,
+    "usage": [
+      "conversationfetch cid={channel id} [cpw={channel password}] | ..."
+    ],
+    "permissions": [
+      "b_channel_join_ignore_password",
+      "b_channel_ignore_join_power",
+      "i_channel_join_power"
+    ],
+    "description": "Fetches the newest message timestamps",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "conversationfetch cid=4 | cid=3 cpw=Hello\\sWorld | cid=99999",
+      "cid=4 timestamp=1563550716314|cid=3 timestamp=0|cid=99999 error_id=8704 error_msg=invalid\\sconversation\\sid",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "conversationhistory",
+    "category": "Query",
+    "docPath": "commanddocs/conversationhistory.txt",
+    "binaryOffset": null,
+    "usage": [
+      "conversationhistory cid={channel id} [cpw={channel password}] [timestamp_begin={milliseconds since epoch}] [timestamp_end={milliseconds since epoch}] [message_count={max messages to receive}] [-merge]"
+    ],
+    "permissions": [
+      "b_channel_join_ignore_password",
+      "b_channel_ignore_join_power",
+      "i_channel_join_power"
+    ],
+    "description": "Queries the channel conversation history from 'timestamp_end' up to 'timestamp_begin'.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "conversationhistory cid=4",
+      "cid=4 timestamp=1563549595756 sender_database_id=3 sender_unique_id=xxjnc14LmvTk+Lyrm8OOeo4tOqw= sender_name=WolverinDEV msg=Wow\\sthis\\sreally\\sworks\\s(server\\srestarted)",
+      "cid=4 timestamp=1563549584318 sender_database_id=3 sender_unique_id=xxjnc14LmvTk+Lyrm8OOeo4tOqw= sender_name=WolverinDEV msg=This\\sis\\sanother\\smessage",
+      "cid=4 timestamp=1563549583750 sender_database_id=3 sender_unique_id=xxjnc14LmvTk+Lyrm8OOeo4tOqw= sender_name=WolverinDEV msg=A\\smessage\\sa\\slong\\stime\\sago",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "custominfo",
+    "category": "Query",
+    "docPath": "commanddocs/custominfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "custominfo cldbid={clientDBID}"
+    ],
+    "permissions": [],
+    "description": "Displays a list of custom properties for the client specified with cldbid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "custominfo cldbid=3",
+      "cldbid=3 ident=forum_account value=ScP|ident=forum_id value=123",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "customsearch",
+    "category": "Query",
+    "docPath": "commanddocs/customsearch.txt",
+    "binaryOffset": null,
+    "usage": [
+      "customsearch ident={ident} pattern={pattern}"
+    ],
+    "permissions": [],
+    "description": "Searches for custom client properties specified by ident and value. The value   parameter can include regular characters and SQL wildcard characters (e.g. %).",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "customsearch ident=forum_account pattern=%ScP%",
+      "cldbid=2 ident=forum_account value=ScP",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftcreatedir",
+    "category": "Query",
+    "docPath": "commanddocs/ftcreatedir.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftcreatedir cid={channelID} cpw={channelPassword} dirname={dirPath}"
+    ],
+    "permissions": [
+      "i_ft_directory_create_power",
+      "i_ft_needed_file_directory_create_power"
+    ],
+    "description": "Creates new directory in a channels file repository.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftcreatedir cid=2 cpw= dirname=\\/My\\sDirectory",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftdeletefile",
+    "category": "Query",
+    "docPath": "commanddocs/ftdeletefile.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftdeletefile cid={channelID} cpw={channelPassword} name={filePath}..."
+    ],
+    "permissions": [
+      "i_ft_file_delete_power",
+      "i_ft_needed_file_delete_power"
+    ],
+    "description": "Deletes one or more files stored in a channels file repository.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftdeletefile cid=2 cpw= name=\\/Pic1.PNG|name=\\/Pic2.PNG",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftgetfileinfo",
+    "category": "Query",
+    "docPath": "commanddocs/ftgetfileinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftgetfileinfo cid={channelID} cpw={channelPassword} name={filePath}... [-as-list]"
+    ],
+    "permissions": [
+      "i_ft_file_browse_power",
+      "i_ft_needed_file_browse_power"
+    ],
+    "description": "Displays detailed information about one or more specified files stored in a   channels file repository.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftgetfileinfo cid=2 cpw= path=\\/Pic1.PNG|cid=3 cpw=Hello\\sWorld path=\\/Pic2.PNG",
+      "cid=2 path=\\/ name=Stuff size=0 empty=0 datetime=1259415210 type=0|name=Pic1.PNG empty=0 size=563783 datetime=1259425462 type=1|name=Pic2.PNG empty=0 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftgetfilelist",
+    "category": "Query",
+    "docPath": "commanddocs/ftgetfilelist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftgetfilelist cid={channelID} cpw={channelPassword} path={filePath}"
+    ],
+    "permissions": [
+      "i_ft_file_browse_power",
+      "i_ft_needed_file_browse_power"
+    ],
+    "description": "Displays a list of files and directories stored in the specified channels   file repository.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftgetfilelist cid=2 cpw= path=\\/",
+      "cid=2 path=\\/ name=Stuff size=0 datetime=1259415210 type=0|name=Pic1.PNG size=563783 datetime=1259425462 type=1|name=Pic2.PNG ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftinitdownload",
+    "category": "Query",
+    "docPath": "commanddocs/ftinitdownload.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftinitdownload clientftfid={clientFileTransferID} name={filePath}",
+      "cid={channelID} cpw={channelPassword} seekpos={seekPosition} [proto=0-1]"
+    ],
+    "permissions": [
+      "i_ft_file_download_power",
+      "i_ft_needed_file_ download _power",
+      "i_ft_quota_mb_ download _per_client"
+    ],
+    "description": "Initializes a file transfer download. clientftfid is an arbitrary ID to   identify the file transfer on client-side. On success, the server generates a   new ftkey which is required to start downloading the file through TeaSpeak's   or TeamSpeak 3's file transfer interface.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftinitdownload clientftfid=1 name=\\/image.iso cid=5 cpw= seekpos=0",
+      "clientftfid=1 serverftfid=7 ftkey=NrOga\\/4d2GpYC5oKgxuclTO37X83ca\\/1 port=30033 size=673460224 proto=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftinitupload",
+    "category": "Query",
+    "docPath": "commanddocs/ftinitupload.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftinitupload clientftfid={clientFileTransferID} name={filePath}",
+      "cid={channelID} cpw={channelPassword} size={fileSize} overwrite={1|0}",
+      "resume={1|0} [proto=0-1]"
+    ],
+    "permissions": [
+      "i_ft_file_upload_power",
+      "i_ft_needed_file_ upload _power",
+      "i_ft_quota_mb_upload_per_client"
+    ],
+    "description": "Initializes a file transfer upload. clientftfid is an arbitrary ID to   identify the file transfer on client-side. On success, the server generates a   new ftkey which is required to start uploading the file through TeaSpeak's   or TeamSpeak 3's file transfer interface.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftinitupload clientftfid=1 name=\\/image.iso cid=5 cpw= size=673460224 overwrite=1 resume=0",
+      "clientftfid=1 serverftfid=6 ftkey=itRNdsIOvcBiBg\\/Xj4Ge51ZSrsShHuid port=30033 seekpos=0 proto=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftlist",
+    "category": "Query",
+    "docPath": "commanddocs/ftlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftlist"
+    ],
+    "permissions": [
+      "b_ft_transfer_list"
+    ],
+    "description": "Displays a list of running file transfers on the selected virtual server. The   output contains the path to which a file is uploaded to, the current transfer   rate in bytes per second, etc.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftlist",
+      "clid=2 path=files\\/virtualserver_1\\/channel_5 name=image.iso size=673460224 sizedone=450756 clientftfid=2 serverftfid=6 sender=0 status=1 current_speed=60872.8 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftrenamefile",
+    "category": "Query",
+    "docPath": "commanddocs/ftrenamefile.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftrenamefile cid={channelID} cpw={channelPassword}",
+      "[tcid={targetChannelID}] [tcpw={targetChannelPassword}]",
+      "oldname={oldFilePath} newname={newFilePath}"
+    ],
+    "permissions": [
+      "i_ft_file_rename_power",
+      "i_ft_needed_file_rename_power"
+    ],
+    "description": "Renames a file in a channels file repository. If the two parameters tcid and   tcpw are specified, the file will be moved into another channels file   repository.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftrenamefile cid=2 cpw= tcid=3 tcpw=secret oldname=\\/Pic3.PNG newname=\\/Pic3.PNG",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "ftstop",
+    "category": "Query",
+    "docPath": "commanddocs/ftstop.txt",
+    "binaryOffset": null,
+    "usage": [
+      "ftstop serverftfid={serverFileTransferID} delete={1|0}"
+    ],
+    "permissions": [],
+    "description": "Stops the running file transfer with server-side ID serverftfid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "ftstop serverftfid=2 delete=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "gm",
+    "category": "Query",
+    "docPath": "commanddocs/gm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "gm msg={text}"
+    ],
+    "permissions": [
+      "b_serverinstance_textmessage_send"
+    ],
+    "description": "Sends a text message to all clients on all virtual servers in the TeaSpeak   Server instance.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "gm msg=Hello\\sWorld!",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "help",
+    "category": "Query",
+    "docPath": "commanddocs/help.txt",
+    "binaryOffset": null,
+    "usage": [],
+    "permissions": [],
+    "description": "",
+    "result": null,
+    "notes": null,
+    "examples": []
+  },
+  {
+    "name": "hostinfo",
+    "category": "Query",
+    "docPath": "commanddocs/hostinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "hostinfo"
+    ],
+    "permissions": [
+      "b_serverinstance_info_view"
+    ],
+    "description": "Displays detailed connection information about the server instance including   uptime, number of virtual servers online, traffic information, etc.      For detailed information, see Server Instance Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "hostinfo",
+      "instance_uptime=1903203 host_timestamp_utc=1259337246 virtualservers_running_total=1 connection_filetransfer_bandwidth_sent=0 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "instanceedit",
+    "category": "Query",
+    "docPath": "commanddocs/instanceedit.txt",
+    "binaryOffset": null,
+    "usage": [
+      "instanceedit [instance_properties...]"
+    ],
+    "permissions": [
+      "b_serverinstance_modify_settings"
+    ],
+    "description": "Changes the server instance configuration using given properties.   For detailed information, see Server Instance Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "instanceedit serverinstance_filetransfer_port=1337",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "instanceinfo",
+    "category": "Query",
+    "docPath": "commanddocs/instanceinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "instanceinfo"
+    ],
+    "permissions": [
+      "b_serverinstance_info_view"
+    ],
+    "description": "Displays the server instance configuration including database revision   number, the file transfer port, default group IDs, etc.   For detailed information, see Server Instance Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "instanceinfo",
+      "serverinstance_database_version=11 serverinstance_filetransfer_port=30033 serverinstance_template_guest_serverquery_group=1 serverinstance_template_serveradmin_group=3 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "listfeaturesupport",
+    "category": "Query",
+    "docPath": "commanddocs/listfeaturesupport.txt",
+    "binaryOffset": null,
+    "usage": [
+      "listfeaturesupport"
+    ],
+    "permissions": [],
+    "description": "List all supported features by the server.   This could be used to determine if a server has some functionality already   and so enable it for the user.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "listfeaturesupport",
+      "name=error-bulks support=1 version=1 | name=advanced-channel-chat support=1 version=1 | ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "logadd",
+    "category": "Query",
+    "docPath": "commanddocs/logadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "logadd msg={text} [-instance]"
+    ],
+    "permissions": [
+      "b_serverinstance_log_add",
+      "b_virtualserver_log_add"
+    ],
+    "description": "Writes a custom entry into the servers log. Depending on your permissions,   you'll be able to add entries into the server instance log and/or your   virtual servers log.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "logadd logmsg=Hello\\sWorld!",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "login",
+    "category": "Query",
+    "docPath": "commanddocs/login.txt",
+    "binaryOffset": null,
+    "usage": [
+      "login client_login_name={username} client_login_password={password}",
+      "login {username} {password}"
+    ],
+    "permissions": [
+      "b_serverquery_login"
+    ],
+    "description": "Authenticates with the TeaSpeak Server instance using given ServerQuery   login credentials.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "login client_login_name=xyz client_login_password=xyz",
+      "error id=0 msg=ok",
+      "",
+      "or",
+      "",
+      "login xyz xyz",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "logout",
+    "category": "Query",
+    "docPath": "commanddocs/logout.txt",
+    "binaryOffset": null,
+    "usage": [
+      "logout"
+    ],
+    "permissions": [
+      "b_serverquery_login"
+    ],
+    "description": "Deselects the active virtual server and logs out from the server instance.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "logout",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "logquery",
+    "category": "Query",
+    "docPath": "commanddocs/logquery.txt",
+    "binaryOffset": null,
+    "usage": [
+      "logquery [begin={milliseconds since epoch}] [end={milliseconds since epoch}] [limit={entry count} [groups={server,channel,...}] [instance={0|1}]"
+    ],
+    "permissions": [
+      "b_serverinstance_log_view",
+      "b_virtualserver_log_view"
+    ],
+    "description": "Displays a specified number of entries from the servers log. If instance is   set to 1, the server will return entries from the instance log.   Available groups are  custom, server, channel, permission, client, files and query.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "logquery limit=8",
+      "timestamp=1593345495642 invoker_database_id=10 invoker_nickname=Yeahr\\slogs\\s;) action=client-edit ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "messageadd",
+    "category": "Query",
+    "docPath": "commanddocs/messageadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "messageadd cluid={clientUID} subject={subject} message={text}"
+    ],
+    "permissions": [],
+    "description": "Sends an offline message to the client specified by cluid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "messageadd cluid=oHhi9WzXLNEFQOwAu4JYKGU+C+c= subject=Hi! message=Where\\sare\\syou?!?",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "messagedel",
+    "category": "Query",
+    "docPath": "commanddocs/messagedel.txt",
+    "binaryOffset": null,
+    "usage": [
+      "messagedel msgid={messageID}"
+    ],
+    "permissions": [],
+    "description": "Deletes an existing offline message with ID msgid from your inbox.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "messagedel msgid=4",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "messageget",
+    "category": "Query",
+    "docPath": "commanddocs/messageget.txt",
+    "binaryOffset": null,
+    "usage": [
+      "messageget msgid={messageID}"
+    ],
+    "permissions": [],
+    "description": "Displays an existing offline message with ID msgid from your inbox. Please   note that this does not automatically set the flag_read property of the   message.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "messageget msgid=4",
+      "msgid=4 cluid=xwEzb5ENOaglVHu9oelK++reUyE= subject=Hi! message=Where\\sare\\syou?!?",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "messagelist",
+    "category": "Query",
+    "docPath": "commanddocs/messagelist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "messagelist"
+    ],
+    "permissions": [],
+    "description": "Displays a list of offline messages you've received. The output contains the   senders unique identifier, the messages subject, etc.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "messagelist",
+      "msgid=4 cluid=xwEzb5ENOaglVHu9oelK++reUyE= subject=Test timestamp=1259439465 flag_read=0 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "messageupdateflag",
+    "category": "Query",
+    "docPath": "commanddocs/messageupdateflag.txt",
+    "binaryOffset": null,
+    "usage": [
+      "messageupdateflag msgid={messageID} flag={1|0}"
+    ],
+    "permissions": [],
+    "description": "Updates the flag_read property of the offline message specified with msgid.   If flag is set to 1, the message will be marked as read.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "messageupdateflag msgid=4 flag=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "musicbotcreate",
+    "category": "Query",
+    "docPath": "commanddocs/musicbotcreate.txt",
+    "binaryOffset": null,
+    "usage": [
+      "musicbotcreate [cid={channelid}]"
+    ],
+    "permissions": [
+      "b_client_music_create",
+      "i_client_music_limit"
+    ],
+    "description": "Creates a new musicbot. The channel id is optional and   requires sufficient join power for the target channel.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "musicbotcreate cid=1",
+      "botid=4",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "musicbotdelete",
+    "category": "Query",
+    "docPath": "commanddocs/musicbotdelete.txt",
+    "binaryOffset": null,
+    "usage": [
+      "musicbotdelete botid={botid}"
+    ],
+    "permissions": [
+      "b_client_music_delete_own",
+      "i_client_music_delete_power"
+    ],
+    "description": "Deletes a musicbot. The bot id is required and can be   aquired with the clientlist command (property: client_type=4).",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "musicbotdelete botid=4",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "musicbotplayeraction",
+    "category": "Query",
+    "docPath": "commanddocs/musicbotplayeraction.txt",
+    "binaryOffset": null,
+    "usage": [
+      "musicbotplayeraction botid={botid} action={0-4}"
+    ],
+    "permissions": [],
+    "description": "Executes a action on a certain musicbot",
+    "result": null,
+    "notes": null,
+    "examples": []
+  },
+  {
+    "name": "musicbotplayerinfo",
+    "category": "Query",
+    "docPath": "commanddocs/musicbotplayerinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "musicbotplayerinfo botid={botid}"
+    ],
+    "permissions": [],
+    "description": "Aquires information about a musicbot.   This will give you detailed informations   about the playing status, current title, etc.   (See the examples below)",
+    "result": null,
+    "notes": null,
+    "examples": []
+  },
+  {
+    "name": "musicbotplaylistassign",
+    "category": "Query",
+    "docPath": "commanddocs/musicbotplaylistassign.txt",
+    "binaryOffset": null,
+    "usage": [
+      "musicbotplaylistassign bot_id={botid} playlist_id={playlist_id}"
+    ],
+    "permissions": [],
+    "description": "Changes/sets the current playlist for a music bot",
+    "result": null,
+    "notes": null,
+    "examples": []
+  },
+  {
+    "name": "permfind",
+    "category": "Query",
+    "docPath": "commanddocs/permfind.txt",
+    "binaryOffset": null,
+    "usage": [
+      "permfind [permid={permID}...] [permsid={permName}...]"
+    ],
+    "permissions": [
+      "b_virtualserver_permission_find",
+      "b_serverinstance_permission_find"
+    ],
+    "description": "Displays detailed information about all assignments of the permission   specified with permid. The output is similar to permoverview which includes   the type and the ID of the client, channel or group associated with the   permission. A permission can be specified by permid or permsid.   Each result bulk contains the following entries:",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "permfind permid=4353",
+      "t=0 id1=1 id2=0 p=4353|t=0 id1=2 id2=0 p=4353",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "permget",
+    "category": "Query",
+    "docPath": "commanddocs/permget.txt",
+    "binaryOffset": null,
+    "usage": [
+      "permget permid={permID}|permid={permID}",
+      "permget permsid={permName}|permsid={permName}"
+    ],
+    "permissions": [
+      "b_client_permissionoverview_own"
+    ],
+    "description": "Displays the current value of the permission specified with permid or permsid   for your own connection. This can be useful when you need to check your own   privileges.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "permget permid=21174",
+      "permsid=i_client_move_power permid=21174 permvalue=100",
+      "error id=0 msg=ok",
+      "",
+      "permget permsid=i_client_move_power",
+      "permsid=i_client_move_power permid=21174 permvalue=100",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "permidgetbyname",
+    "category": "Query",
+    "docPath": "commanddocs/permidgetbyname.txt",
+    "binaryOffset": null,
+    "usage": [
+      "permidgetbyname permsid={permName}..."
+    ],
+    "permissions": [
+      "b_serverinstance_permission_list"
+    ],
+    "description": "Displays the database ID of one or more permissions specified by permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "permidgetbyname permsid=b_serverinstance_help_view|permsid=b_serverinstance_info_view",
+      "permsid=b_serverinstance_help_view permid=4353|permsid=b_serverinstance_info_view permid=4355",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "permissionlist",
+    "category": "Query",
+    "docPath": "commanddocs/permissionlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "permissionlist"
+    ],
+    "permissions": [
+      "b_serverinstance_permission_list"
+    ],
+    "description": "Displays a list of permissions available on the server instance including ID,   name and description.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "permissionlist",
+      "permid=21413 permname=b_client_channel_textmessage_send permdesc=Send\\stext\\smessages\\sto\\schannel|permid=21414 permname=i_client_talk_power ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "permoverview",
+    "category": "Query",
+    "docPath": "commanddocs/permoverview.txt",
+    "binaryOffset": null,
+    "usage": [
+      "permoverview cid={channelID} cldbid={clientDBID} [permid={permID}...]",
+      "[permsid={permName}...]"
+    ],
+    "permissions": [
+      "b_client_permissionoverview_view"
+    ],
+    "description": "Displays all permissions assigned to a client for the channel specified with   cid. If permid is set to 0, all permissions will be displayed. A permission   can be specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "permoverview cldbid=57 cid=74 permid=0",
+      "t=0 id1=5 id2=0 p=37 v=1 n=0 s=0|t=0 id1=5 id2=0 p=38 v=1 n=0 s=0 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "permreset",
+    "category": "Query",
+    "docPath": "commanddocs/permreset.txt",
+    "binaryOffset": null,
+    "usage": [
+      "permreset"
+    ],
+    "permissions": [
+      "b_virtualserver_permission_reset"
+    ],
+    "description": "Restores the default permission settings on the selected virtual server and   creates a new initial administrator token. Please note that in case of an   error during the permreset call - e.g. when the database has been modified or   corrupted - the virtual server will be deleted from the database.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "permreset",
+      "token=eKnFZQ9EK7G7MhtuQB6+N2B1PNZZ6OZL3ycDp2OW",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistaddperm",
+    "category": "Query",
+    "docPath": "commanddocs/playlistaddperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistaddperm playlist_id={playlist_id} permsid={name} permvalue={value} permnegated={flag negated} permskip={flag skip}"
+    ],
+    "permissions": [
+      "i_playlist_permission_modify_power"
+    ],
+    "description": "Add or modify a permission",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistaddperm playlist_id=13 permsid=i_playlist_needed_delete_power permvalue=200 permnegated=0 permskip=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistclientaddperm",
+    "category": "Query",
+    "docPath": "commanddocs/playlistclientaddperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistclientaddperm playlist_id={playlist_id} cldbid={database_id} permsid={name} permvalue={value} permnegated={flag negated} permskip={flag skip}"
+    ],
+    "permissions": [
+      "i_playlist_permission_modify_power"
+    ],
+    "description": "Add or modify a permission for a specific client",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistaddperm playlist_id=13 cldbid=2 permsid=i_playlist_delete_power permvalue=200 permnegated=0 permskip=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistclientlist",
+    "category": "Query",
+    "docPath": "commanddocs/playlistclientlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistclientlist playlist_id={playlist_id}"
+    ],
+    "permissions": [
+      "b_virtualserver_playlist_permission_list"
+    ],
+    "description": "Received all client database ids which have special permission set   for the playlist.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistclientlist playlist_id=13",
+      "cldbid=1|cldbid=7|...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistclientpermlist",
+    "category": "Query",
+    "docPath": "commanddocs/playlistclientpermlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistclientpermlist playlist_id={playlist_id} [cldbid={database_id}] [-permsid]"
+    ],
+    "permissions": [
+      "b_virtualserver_playlist_permission_list"
+    ],
+    "description": "View all permissions, given to a playlist for a specific client.   A playlist owner ignores this permission and could view them anyways.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistclientpermlist playlist_id=13 cldbid=2",
+      "playlist_id=13 cldbid=2 permid=253 permvalue=100 permnegated=0 permskip=0|...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistcreate",
+    "category": "Query",
+    "docPath": "commanddocs/playlistcreate.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistcreate"
+    ],
+    "permissions": [
+      "b_playlist_create"
+    ],
+    "description": "Creates a new playlist, which is directly owned by the invoker.   The owner has any rights, ignoring any permission given to the playlist.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistcreate",
+      "playlist_id=13",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistdelclientperm",
+    "category": "Query",
+    "docPath": "commanddocs/playlistdelclientperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistdelperm playlist_id={playlist_id} cldbid={database_id} permsid={name}"
+    ],
+    "permissions": [
+      "i_playlist_permission_modify_power"
+    ],
+    "description": "Removes a permission from the playlist for a specific client",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistdelperm playlist_id=13 cldbid=2 permsid=i_playlist_delete_power",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistdelete",
+    "category": "Query",
+    "docPath": "commanddocs/playlistdelete.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistdelete playlist_id={playlist_id}"
+    ],
+    "permissions": [
+      "i_playlist_delete_power"
+    ],
+    "description": "Deletes a playlist and all their songs",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistdelete playlist_id=13",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistdelperm",
+    "category": "Query",
+    "docPath": "commanddocs/playlistdelperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistdelperm playlist_id={playlist_id} permsid={name}"
+    ],
+    "permissions": [
+      "i_playlist_permission_modify_power"
+    ],
+    "description": "Removes a permission from the playlist",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistdelperm playlist_id=13 permsid=i_playlist_needed_delete_power",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistedit",
+    "category": "Query",
+    "docPath": "commanddocs/playlistedit.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistedit playlist_id={playlist_id} [playlist_properties...]"
+    ],
+    "permissions": [
+      "i_playlist_modify_power"
+    ],
+    "description": "Edit the properties for a specific playlist.   For detailed information, see playlist properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistedit playlist_id=13 playlist_title=My\\samazing\\splaylist!",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistinfo",
+    "category": "Query",
+    "docPath": "commanddocs/playlistinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistinfo playlist_id={playlist_id}"
+    ],
+    "permissions": [
+      "i_playlist_view_power"
+    ],
+    "description": "Returns all playlist properties and their values",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistinfo playlist_id=13",
+      "playlist_id=13 playlist_title=Yet\\sanother\\splaylist playlist_description playlist_type=1 playlist_owner_dbid=1 playlist_owner_name=Hello\\sWorld playlist_flag_delete_played=1 playlist_flag_finished=0 playlist_replay_mode=0 playlist_current_song_id=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistlist",
+    "category": "Query",
+    "docPath": "commanddocs/playlistlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistlist"
+    ],
+    "permissions": [
+      "i_playlist_needed_view_power"
+    ],
+    "description": "List all available and viewable playlists.   Own playlists are shown, ignoring the view power",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistlist",
+      "playlist_id=10 playlist_title=Yet\\sanother\\splaylist playlist_type=0 playlist_owner_dbid=1 playlist_owner_name=owned\\svia\\sbot needed_power_modify=-2 needed_power_permission_modify=-2 needed_power_delete=-2 needed_power_song_add=-2 needed_power_song_move=-2 needed_power_song_remove=-2|...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistpermlist",
+    "category": "Query",
+    "docPath": "commanddocs/playlistpermlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistpermlist playlist_id={playlist_id} [-permsid]"
+    ],
+    "permissions": [
+      "b_virtualserver_playlist_permission_list"
+    ],
+    "description": "View all permissions, given to a playlist.   A playlist owner ignores this permission and could view them anyways.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistpermlist playlist_id=13",
+      "playlist_id=13 permid=253 permvalue=100 permnegated=0 permskip=0|...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistsongadd",
+    "category": "Query",
+    "docPath": "commanddocs/playlistsongadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistsongadd playlist_id={playlist_id} url={url} [invoker={loader/provider}]"
+    ],
+    "permissions": [
+      "i_playlist_song_add_power"
+    ],
+    "description": "Adds a new song entry to the playlist.   Playlists (e.g. from YouTube) will be resolved automatically!)",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistsongadd playlist_id=13 url=https://www.youtube.com/watch?v=XU8iCAxAsH4",
+      "song_id=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistsonglist",
+    "category": "Query",
+    "docPath": "commanddocs/playlistsonglist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistsonglist playlist_id={playlist_id} [-extract-metadata]"
+    ],
+    "permissions": [
+      "i_playlist_view_power"
+    ],
+    "description": "List all songs which are within a playlist.   When \"-extract-metadata\" is given, the fixed song_metadata content will   be given as normal parameters. These will begin with \"song_metadata_\".",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistsonglist playlist_id=13",
+      "playlist_id=13 song_id=1 song_invoker=1 song_previous_song_id=0 song_url=https:\\/\\/www.youtube.com\\/watch?v=XU8iCAxAsH4 song_url_loader song_loaded=0 song_metadata",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistsongremove",
+    "category": "Query",
+    "docPath": "commanddocs/playlistsongremove.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistsongremove playlist_id={playlist_id} song_id={song id}"
+    ],
+    "permissions": [
+      "i_playlist_song_remove_power"
+    ],
+    "description": "Removes a song from the playlist",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistsongremove playlist_id=13 song_id=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistsongreorder",
+    "category": "Query",
+    "docPath": "commanddocs/playlistsongreorder.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistsongreorder playlist_id={playlist_id} song_id={song id} song_previous_song_id={order id}"
+    ],
+    "permissions": [
+      "i_playlist_song_move_power"
+    ],
+    "description": "Moves a song and changes his position",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistsongreorder playlist_id=13 song_id=1 song_previous_song_id=2",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "playlistsongsetcurrent",
+    "category": "Query",
+    "docPath": "commanddocs/playlistsongsetcurrent.txt",
+    "binaryOffset": null,
+    "usage": [
+      "playlistsongsetcurrent playlist_id={playlist_id} song_id={od}"
+    ],
+    "permissions": [
+      "i_playlist_song_move_power"
+    ],
+    "description": "Sets the current song which will be replayed.   When the playlist is bound to an bot the bot will abort the replay start start over again.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "playlistsongsetcurrent playlist_id=13 song_id=2",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "privilegekeyadd",
+    "category": "Query",
+    "docPath": "commanddocs/privilegekeyadd.txt",
+    "binaryOffset": null,
+    "usage": [],
+    "permissions": [],
+    "description": "",
+    "result": null,
+    "notes": null,
+    "examples": []
+  },
+  {
+    "name": "privilegekeydelete",
+    "category": "Query",
+    "docPath": "commanddocs/privilegekeydelete.txt",
+    "binaryOffset": null,
+    "usage": [],
+    "permissions": [],
+    "description": "",
+    "result": null,
+    "notes": null,
+    "examples": []
+  },
+  {
+    "name": "privilegekeylist",
+    "category": "Query",
+    "docPath": "commanddocs/privilegekeylist.txt",
+    "binaryOffset": null,
+    "usage": [],
+    "permissions": [],
+    "description": "",
+    "result": null,
+    "notes": null,
+    "examples": []
+  },
+  {
+    "name": "privilegekeyuse",
+    "category": "Query",
+    "docPath": "commanddocs/privilegekeyuse.txt",
+    "binaryOffset": null,
+    "usage": [],
+    "permissions": [],
+    "description": "",
+    "result": null,
+    "notes": null,
+    "examples": []
+  },
+  {
+    "name": "propertylist",
+    "category": "Query",
+    "docPath": "commanddocs/propertylist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "propertylist propertylist [-all] [-server] [-channel] [-client] [-instance] [-group] [-connection]"
+    ],
+    "permissions": [
+      "None"
+    ],
+    "description": "Get a full list of all available properties",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "propertylist -all",
+      "flag_set=.... name=virtualserver_id flags=256 type=SERVER|name=virtualserver_unique_identifier flags=392 type=SERVER|name=virtualserver_name flags=408 type=SERVER|name=virtualserver_welcomemessage flags=408 type=SERVER|name=virtualserver_platform flags=256 type=SERVER|name=virtualserver_version flags=256 type=SERVER|name=virtualserver_maxclients flags=408 type=SERVER|name=virtualserver_password flags=24 type=SERVER|name=virtualserver_clientsonline flags=128 type=SERVER|name=virtualserver_channelsonline flags=128 type=SERVER|name=virtualserver_queryclientsonline flags=128 type=SERVER|name=virtualserver_created flags=280 type=SERVER|name=virtualserver_uptime flags=128 type=SERVER|name=virtualserver_codec_encryption_mode flags=408 type=SERVER|name=virtualserver_keypair flags=24 type=SERVER|name=virtualserver_hostmessage flags=408 type=SERVER|name=virtualserver_hostmessage_mode flags=408 type=SERVER|name=virtualserver_default_server_group flags=408 type=SERVER|name=virtualserver_default_channel_group flags=408"
+    ]
+  },
+  {
+    "name": "querychangepassword",
+    "category": "Query",
+    "docPath": "commanddocs/querychangepassword.txt",
+    "binaryOffset": null,
+    "usage": [
+      "querychangepassword client_login_name={username} [client_login_password={new password}]"
+    ],
+    "permissions": [
+      "b_client_query_change_password",
+      "b_client_query_change_own_password"
+    ],
+    "description": "Change the password for the given query.   You could generate a new one or change the password to a specific one.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "querychangepassword client_login_name=server_bot",
+      "client_login_name=server_bot client_login_password=l7ShF3FMOURn",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "querycreate",
+    "category": "Query",
+    "docPath": "commanddocs/querycreate.txt",
+    "binaryOffset": null,
+    "usage": [
+      "querycreate client_login_name={username} [client_login_password={password}] [server_id={bounded server id}] [cldbid={client database id}]"
+    ],
+    "permissions": [
+      "b_client_query_create",
+      "b_client_query_create_own"
+    ],
+    "description": "Creates a new query account with your own identity.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "querycreate client_login_name=a client_login_password=a server_id=2",
+      "client_unique_identifier=xxjnc14LmvTk+Lyrm8OOeo4tOqw= client_login_name=server_bot client_login_password=mysecretpassword client_bounded_server=2",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "querydelete",
+    "category": "Query",
+    "docPath": "commanddocs/querydelete.txt",
+    "binaryOffset": null,
+    "usage": [
+      "querydelete client_login_name={username}"
+    ],
+    "permissions": [
+      "b_client_query_delete",
+      "b_client_query_delete_own"
+    ],
+    "description": "Deletes a query account.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "querydelete client_login_name=server_bot",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "querylist",
+    "category": "Query",
+    "docPath": "commanddocs/querylist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "querylist [server_id={server id}]"
+    ],
+    "permissions": [
+      "b_client_query_list",
+      "b_client_query_list_own"
+    ],
+    "description": "List all existing query accounts.   If no specific server is given, all accounts will be listed.   If the permission b_client_query_list isn't preset, all own accounts will be listed",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "Global list:",
+      "querylist",
+      "server_id=-1 flag_own=1 flag_all=1 client_unique_identifier=serveradmin client_login_name=serveradmin client_bounded_server=0|client_unique_identifier=serveradmin client_login_name=server_bot client_bounded_server=2|...",
+      "error id=0 msg=ok",
+      "",
+      "Server specific list:",
+      "querylist server_id=2",
+      "server_id=-1 flag_own=1 flag_all=1 client_unique_identifier=serveradmin client_login_name=server_bot client_bounded_server=2|...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "queryrename",
+    "category": "Query",
+    "docPath": "commanddocs/queryrename.txt",
+    "binaryOffset": null,
+    "usage": [
+      "queryrename client_login_name={username} client_new_login_name={new username}"
+    ],
+    "permissions": [
+      "b_client_query_rename",
+      "b_client_query_rename_own"
+    ],
+    "description": "Renames a query account.   The new name must be free and not yet used!",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "queryrename client_login_name=server_bot client_new_login_name=server_bot_a",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "quit",
+    "category": "Query",
+    "docPath": "commanddocs/quit.txt",
+    "binaryOffset": null,
+    "usage": [
+      "quit"
+    ],
+    "permissions": [],
+    "description": "Closes the ServerQuery connection to the TeaSpeak Server instance.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "quit"
+    ]
+  },
+  {
+    "name": "sendtextmessage",
+    "category": "Query",
+    "docPath": "commanddocs/sendtextmessage.txt",
+    "binaryOffset": null,
+    "usage": [
+      "sendtextmessage targetmode={1-3} target={clientID} msg={text} [cid={channelId}]"
+    ],
+    "permissions": [
+      "i_client_private_textmessage_power",
+      "i_client_needed_private_textmessage_power",
+      "b_client_server_textmessage_send",
+      "b_client_channel_textmessage_send"
+    ],
+    "description": "Sends a text message to a specified target. If targetmode is set to 1, a   message is sent to the client with the ID specified by target. If targetmode   is set to 2 or 3, the target parameter will be ignored and a message is sent   to the current channel or server respectively.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "sendtextmessage targetmode=2 target=1 msg=Hello\\sWorld!",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servercreate",
+    "category": "Query",
+    "docPath": "commanddocs/servercreate.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servercreate virtualserver_name={serverName}",
+      "[virtualserver_properties...]"
+    ],
+    "permissions": [
+      "b_virtualserver_create"
+    ],
+    "description": "Creates a new virtual server using the given properties and displays its ID,   port and initial administrator privilege key. If virtualserver_port is not   specified, the server will test for the first unused UDP port.   The first virtual server will be running on UDP port 9987 by default.   Subsequently started virtual servers will be running on increasing UDP port   numbers.   For detailed information, see Virtual Server Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servercreate virtualserver_name=Another\\sTeaSpeak\\sserver\\ssoftware\\suser virtualserver_port=9988 virtualserver_maxclients=32",
+      "sid=2 virtualserver_port=9988 token=eKnFZQ9EK7G7MhtuQB6+N2B1PNZZ6OZL3ycDp2OW",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serverdelete",
+    "category": "Query",
+    "docPath": "commanddocs/serverdelete.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serverdelete sid={serverID}"
+    ],
+    "permissions": [
+      "b_virtualserver_delete"
+    ],
+    "description": "Deletes the virtual server specified with sid. Please note that only virtual   servers in stopped state can be deleted.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serverdelete sid=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serveredit",
+    "category": "Query",
+    "docPath": "commanddocs/serveredit.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serveredit [virtualserver_properties...]"
+    ],
+    "permissions": [
+      "b_virtualserver_modify_name",
+      "b_virtualserver_modify_welcomemessage",
+      "b_virtualserver_modify_maxclients",
+      "b_virtualserver_modify_reserved_slots",
+      "b_virtualserver_modify_password",
+      "b_virtualserver_modify_default_servergroup",
+      "b_virtualserver_modify_default_channelgroup",
+      "b_virtualserver_modify_default_channeladmingroup",
+      "b_virtualserver_modify_ft_settings",
+      "b_virtualserver_modify_ft_quotas",
+      "b_virtualserver_modify_channel_forced_silence",
+      "b_virtualserver_modify_complain",
+      "b_virtualserver_modify_antiflood",
+      "b_virtualserver_modify_hostmessage",
+      "b_virtualserver_modify_hostbanner",
+      "b_virtualserver_modify_hostbutton",
+      "b_virtualserver_modify_port",
+      "b_virtualserver_modify_autostart",
+      "b_virtualserver_modify_needed_identity_security_level",
+      "b_virtualserver_modify_priority_speaker_dimm_modificator",
+      "b_virtualserver_modify_log_settings",
+      "b_virtualserver_modify_icon_id",
+      "b_virtualserver_modify_weblist",
+      "b_virtualserver_modify_min_client_version",
+      "b_virtualserver_modify_codec_encryption_mode"
+    ],
+    "description": "Changes the selected virtual servers configuration using given properties.    Note that this command accepts multiple properties which means that you're   able to change all settings of the selected virtual server at once.   For detailed information, see Virtual Server Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serveredit virtualserver_name=Yet\\sanother\\sTeaSpeak\\sServer virtualserver_maxclients=32",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupadd",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupadd name={groupName} [type={groupDbType}]"
+    ],
+    "permissions": [
+      "b_virtualserver_servergroup_create"
+    ],
+    "description": "Creates a new server group using the name specified with name and displays   its ID. The optional type parameter can be used to create ServerQuery groups   and template groups. For detailed information, see Definitions.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupadd name=Server\\sAdmin",
+      "sgid=13",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupaddclient",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupaddclient.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupaddclient sgid={groupID} cldbid={clientDBID}"
+    ],
+    "permissions": [
+      "i_group_member_add_power",
+      "i_group_needed_member_add_power"
+    ],
+    "description": "Adds a client to the server group specified with sgid. Please note that a   client cannot be added to default groups or template groups.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupaddclient sgid=16 cldbid=3",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupaddperm",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupaddperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupaddperm sgid={groupID} [permid={permID}...]",
+      "[permsid={permName}...] permvalue={permValue}... permnegated={1|0}...",
+      "permskip={1|0}..."
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Adds a set of specified permissions to the server group specified with sgid.   Multiple permissions can be added by providing the four parameters of each   permission. A permission can be specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupaddperm sgid=13 permid=17276 permvalue=50 permnegated=0 permskip=0|permid=21415 permvalue=20 permnegated=0",
+      "error id=0 msg=ok",
+      "",
+      "servergroupaddperm sgid=3 permsid=b_virtualserver_modify_maxclients permvalue=1 permnegated=0 permskip=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupautoaddperm",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupautoaddperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupautoaddperm sgtype={groupID} [permid={permID}...]",
+      "[permsid={permName}...] permvalue={permValue}... permnegated={1|0}...",
+      "permskip={1|0}..."
+    ],
+    "permissions": [
+      "b_permission_modify_power_ignore"
+    ],
+    "description": "Adds a set of specified permissions to *ALL* regular server groups on all   virtual servers. The target groups will be identified by the value of their   i_group_auto_update_type permission specified with sgtype. Multiple   permissions can be added at once. A permission can be specified by permid or   permsid.      The known values for sgtype are:      10: Channel Guest   15: Server Guest   20: Query Guest   25: Channel Voice   30: Server Normal   35: Channel Operator   40: Channel Admin   45: Server Admin   50: Query Admin",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupautoaddperm sgtype=45 permsid=b_virtualserver_start permvalue=1 permskip=0 permnegated=0",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupautodelperm",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupautodelperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupautodelperm sgtype={groupID} [permid={permID}...]",
+      "[permsid={permName}...]"
+    ],
+    "permissions": [
+      "b_permission_modify_power_ignore"
+    ],
+    "description": "Removes a set of specified permissions from *ALL* regular server groups on   all virtual servers. The target groups will be identified by the value of   their i_group_auto_update_type permission specified with sgtype. Multiple   permissions can be removed at once. A permission can be specified by permid   or permsid.      The known values for sgtype are:      10: Channel Guest   15: Server Guest   20: Query Guest   25: Channel Voice   30: Server Normal   35: Channel Operator   40: Channel Admin   45: Server Admin   50: Query Admin",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupautodelperm sgtype=45 permsid=b_virtualserver_start",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupclientlist",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupclientlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupclientlist sgid={groupID} [-names]"
+    ],
+    "permissions": [
+      "b_virtualserver_servergroup_client_list"
+    ],
+    "description": "Displays the IDs of all clients currently residing in the server group   specified with sgid. If you're using the optional -names option, the output   will also contain the last known nickname and the unique identifier of the   clients.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupclientlist sgid=16",
+      "cldbid=7|cldbid=8|cldbid=9|cldbid=11|cldbid=13|cldbid=16|cldbid=18|cldbid=29|cldbid=32|cldbid=34|cldbid=37|cldbid=40|cldbid=47|cldbid=53",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupcopy",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupcopy.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupcopy ssgid={sourceGroupID} tsgid={targetGroupID}",
+      "name={groupName} type={groupDbType}"
+    ],
+    "permissions": [
+      "b_virtualserver_servergroup_create",
+      "i_group_modify_power",
+      "i_group_needed_modify_power"
+    ],
+    "description": "Creates a copy of the server group specified with ssgid. If tsgid is set to   0, the server will create a new group. To overwrite an existing group, simply   set tsgid to the ID of a designated target group. If a target group is set,   the name parameter will be ignored.   The type parameter can be used to create ServerQuery groups and template   groups. For detailed information, see Definitions.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupcopy ssgid=6 tsgid=0 name=My\\sGroup\\s(Copy) type=1",
+      "sgid=21",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupdel",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupdel.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupdel sgid={groupID} force={1|0}"
+    ],
+    "permissions": [
+      "b_virtualserver_servergroup_delete"
+    ],
+    "description": "Deletes the server group specified with sgid. If force is set to 1, the   server group will be deleted even if there are clients within.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupdel sgid=13",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupdelclient",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupdelclient.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupdelclient sgid={groupID} cldbid={clientDBID}"
+    ],
+    "permissions": [
+      "i_group_member_remove_power",
+      "i_group_needed_member_remove_power"
+    ],
+    "description": "Removes a client specified with cldbid from the server group specified with   sgid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupdelclient sgid=16 cldbid=3",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupdelperm",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupdelperm.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupdelperm sgid={groupID} [permid={permID}...]",
+      "[permsid={permName}...]"
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power",
+      "i_permission_modify_power"
+    ],
+    "description": "Removes a set of specified permissions from the server group specified with   sgid. Multiple permissions can be removed at once. A permission can be   specified by permid or permsid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupdelperm sgid=16 permid=17276|permid=21415",
+      "error id=0 msg=ok",
+      "",
+      "servergroupdelperm sgid=3 permsid=b_virtualserver_modify_maxclients",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergrouplist",
+    "category": "Query",
+    "docPath": "commanddocs/servergrouplist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergrouplist"
+    ],
+    "permissions": [
+      "b_serverinstance_modify_querygroup",
+      "b_serverinstance_modify_templates",
+      "b_virtualserver_servergroup_list"
+    ],
+    "description": "Displays a list of server groups available. Depending on your permissions,   the output may also contain global ServerQuery groups and template groups.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergrouplist",
+      "sgid=9 name=Server\\sAdmin type=1 iconid=300 savedb=1|sgid=10 name=Normal type=1 iconid=0 savedb=1|sgid=11 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergrouppermlist",
+    "category": "Query",
+    "docPath": "commanddocs/servergrouppermlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergrouppermlist sgid={groupID} [-permsid]"
+    ],
+    "permissions": [
+      "b_virtualserver_servergroup_permission_list"
+    ],
+    "description": "Displays a list of permissions assigned to the server group specified with   sgid. If the -permsid option is specified, the output will contain the   permission names instead of the internal IDs.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergrouppermlist sgid=13",
+      "permid=8470 permvalue=1 permnegated=0 permskip=0|permid=8475 permvalue=1 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergrouprename",
+    "category": "Query",
+    "docPath": "commanddocs/servergrouprename.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergrouprename sgid={groupID} name={groupName}"
+    ],
+    "permissions": [
+      "i_group_modify_power",
+      "i_group_needed_modify_power"
+    ],
+    "description": "Changes the name of the server group specified with sgid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergrouprename sgid=13 name=New\\sName",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servergroupsbyclientid",
+    "category": "Query",
+    "docPath": "commanddocs/servergroupsbyclientid.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servergroupsbyclientid cldbid={clientDBID}"
+    ],
+    "permissions": [],
+    "description": "Displays all server groups the client specified with cldbid is currently   residing in.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servergroupsbyclientid cldbid=18",
+      "name=Server\\sAdmin sgid=6 cldbid=18",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serveridgetbyport",
+    "category": "Query",
+    "docPath": "commanddocs/serveridgetbyport.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serveridgetbyport virtualserver_port={serverPort}"
+    ],
+    "permissions": [
+      "b_serverinstance_virtualserver_list"
+    ],
+    "description": "Displays the database ID of the virtual server running on the UDP port   specified by virtualserver_port.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serveridgetbyport virtualserver_port=9987",
+      "server_id=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serverinfo",
+    "category": "Query",
+    "docPath": "commanddocs/serverinfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serverinfo"
+    ],
+    "permissions": [
+      "b_virtualserver_info_view"
+    ],
+    "description": "Displays detailed configuration information about the selected virtual server   including unique ID, number of clients online, configuration, etc.   For detailed information, see Virtual Server Properties.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serverinfo",
+      "virtualserver_port=9987 virtualserver_unique_identifier=BKvB7K9aJZPbqRPmeu59fRzW0c8/D virtualserver_name=Another\\sTeaSpeak\\sserver\\ssoftware\\suser ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serverlist",
+    "category": "Query",
+    "docPath": "commanddocs/serverlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serverlist [-uid] [-short] [-all] [-onlyoffline]"
+    ],
+    "permissions": [
+      "b_serverinstance_virtualserver_list"
+    ],
+    "description": "Displays a list of virtual servers including their ID, status, number of   clients online, etc. If you're using the -all option, the server will list   all virtual servers stored in the database. This can be useful when multiple   server instances with different machine IDs are using the same database. The   machine ID is used to identify the server instance a virtual server is   associated with.   The status of a virtual server can be either online, offline, booting up,   shutting down or virtual online. While most of them are self-explanatory,   virtual online is a bit more complicated.   Whenever you select a virtual server which is currently stopped with the   -virtual parameter, it will be started in virtual mode which means you are   able to change its configuration, create channels or change permissions, but   no regular TeaSpeak or TeamSpeak 3 Client can connect. As soon as the last ServerQuery   client deselects the virtual server, its status will be changed back to   offline.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serverlist",
+      "virtualserver_id=1 virtualserver_port=9987 virtualserver_status=online virtualserver_clientsonline=6 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servernotifyregister",
+    "category": "Query",
+    "docPath": "commanddocs/servernotifyregister.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servernotifyregister",
+      "event={server|channel|textserver|textchannel|textprivate}",
+      "[id={channelID}]"
+    ],
+    "permissions": [
+      "b_virtualserver_notify_register"
+    ],
+    "description": "Registers for a specified category of events on a virtual server to receive   notification messages. Depending on the notifications you've registered for,   the server will send you a message on every event in the view of your   ServerQuery client (e.g. clients joining your channel, incoming text   messages, server configuration changes, etc). The event source is declared by   the event parameter while id can be used to limit the notifications to a   specific channel.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servernotifyregister event=server",
+      "error id=0 msg=ok",
+      "",
+      "servernotifyregister event=channel id=123",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servernotifyunregister",
+    "category": "Query",
+    "docPath": "commanddocs/servernotifyunregister.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servernotifyunregister"
+    ],
+    "permissions": [
+      "b_virtualserver_notify_unregister"
+    ],
+    "description": "Unregisters all events previously registered with servernotifyregister so you   will no longer receive notification messages.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servernotifyunregister",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serverprocessstop",
+    "category": "Query",
+    "docPath": "commanddocs/serverprocessstop.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serverprocessstop"
+    ],
+    "permissions": [
+      "b_serverinstance_stop"
+    ],
+    "description": "Stops the entire TeaSpeak Server instance by shutting down the process.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serverprocessstop [type=<cancel|schedule> [time=60]] [msg=Server\\swill\\sbe\\sclosed\\swithin\\s60\\sseconds!]",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serverrequestconnectioninfo",
+    "category": "Query",
+    "docPath": "commanddocs/serverrequestconnectioninfo.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serverrequestconnectioninfo"
+    ],
+    "permissions": [
+      "b_virtualserver_connectioninfo_view"
+    ],
+    "description": "Displays detailed connection information about the selected virtual server   including uptime, traffic information, etc.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serverrequestconnectioninfo",
+      "connection_filetransfer_bandwidth_sent=0 connection_filetransfer_bandwidth_received=0 connection_packets_sent_total=241454 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serversnapshotcreate",
+    "category": "Query",
+    "docPath": "commanddocs/serversnapshotcreate.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serversnapshotcreate"
+    ],
+    "permissions": [
+      "b_virtualserver_snapshot_create"
+    ],
+    "description": "Displays a snapshot of the selected virtual server containing all settings,   groups and known client identities. The data from a server snapshot can be   used to restore a virtual servers configuration, channels and permissions   using the serversnapshotdeploy command.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serversnapshotcreate",
+      "hash=bnTd2E1kNITHjJYRCFjgbKKO5P8=|virtualserver_unique_identifier=zrPkjznB1tMnRwj01xx7RxXjqeY= virtualserver_name=Another\\sTeaSpeak\\sserver\\ssoftware\\suser ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serversnapshotdeploy",
+    "category": "Query",
+    "docPath": "commanddocs/serversnapshotdeploy.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serversnapshotdeploy [-mapping] virtualserver_snapshot"
+    ],
+    "permissions": [
+      "b_virtualserver_snapshot_deploy"
+    ],
+    "description": "Restores the selected virtual servers configuration using the data from a   previously created server snapshot. Please note that the TeaSpeak Server   does NOT check for necessary permissions while deploying a snapshot so the   command could be abused to gain additional privileges.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serversnapshotdeploy hash=bnTd2E1kNITHjJYRCFjgbKKO5P8=|virtualserver_unique_identifier=zrPkjznB1tMnRwj01xx7RxXjq= ...",
+      "error id=0 msg=ok",
+      "",
+      "serversnapshotdeploy -mapping hash=bnTd2E1kNITHjJYRCFjgbKKO5P8=|virtualserver_...",
+      "ocid=36 ncid=40|ocid=37 ncid=41|ocid=38 ncid=42|ocid=39 ncid=43",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serverstart",
+    "category": "Query",
+    "docPath": "commanddocs/serverstart.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serverstart sid={serverID}"
+    ],
+    "permissions": [
+      "b_virtualserver_start_any",
+      "b_virtualserver_start"
+    ],
+    "description": "Starts the virtual server specified with sid. Depending on your permissions,   you're able to start either your own virtual server only or all virtual   servers in the server instance.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serverstart sid=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "serverstop",
+    "category": "Query",
+    "docPath": "commanddocs/serverstop.txt",
+    "binaryOffset": null,
+    "usage": [
+      "serverstop sid={serverID}"
+    ],
+    "permissions": [
+      "b_virtualserver_stop_any",
+      "b_virtualserver_stop"
+    ],
+    "description": "Stops the virtual server specified with sid. Depending on your permissions,   you're able to stop either your own virtual server only or all virtual   servers in the server instance.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "serverstop sid=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servertemppasswordadd",
+    "category": "Query",
+    "docPath": "commanddocs/servertemppasswordadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servertemppasswordadd pw={password} desc={description}",
+      "duration={seconds} tcid={channelID} tcpw={channelPW}"
+    ],
+    "permissions": [
+      "b_virtualserver_modify_password"
+    ],
+    "description": "Sets a new temporary server password specified with pw. The temporary   password will be valid for the number of seconds specified with duration. The   client connecting with this password will automatically join the channel   specified with tcid. If tcid is set to 0, the client will join the default   channel.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servertemppasswordadd pw=secret desc=none duration=3600 tcid=117535 tcpw=secret",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servertemppassworddel",
+    "category": "Query",
+    "docPath": "commanddocs/servertemppassworddel.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servertemppassworddel pw={password}"
+    ],
+    "permissions": [
+      "b_virtualserver_modify_password"
+    ],
+    "description": "Deletes the temporary server password specified with pw.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servertemppassworddel pw=secret",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "servertemppasswordlist",
+    "category": "Query",
+    "docPath": "commanddocs/servertemppasswordlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "servertemppasswordlist"
+    ],
+    "permissions": [
+      "b_virtualserver_modify_password"
+    ],
+    "description": "Returns a list of active temporary server passwords. The output contains the   clear-text password, the nickname and unique identifier of the creating   client.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "servertemppasswordlist",
+      "nickname=serveradmin uid=serveradmin desc=none pw_clear=secret start=1331496494 end=1331500094 tcid=117535",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "setclientchannelgroup",
+    "category": "Query",
+    "docPath": "commanddocs/setclientchannelgroup.txt",
+    "binaryOffset": null,
+    "usage": [
+      "setclientchannelgroup cgid={groupID} cid={channelID} cldbid={clientDBID}"
+    ],
+    "permissions": [
+      "i_group_member_add_power",
+      "i_group_needed_member_add_power",
+      "i_group_member_remove_power",
+      "i_group_needed_member_remove_power"
+    ],
+    "description": "Sets the channel group of a client to the ID specified with cgid.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "setclientchannelgroup cgid=13 cid=15 cldbid=20",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "tokenactionlist",
+    "category": "Query",
+    "docPath": "commanddocs/tokenactionlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "tokenactionlist [token_id={token_id}] [token={token}]"
+    ],
+    "permissions": [
+      "b_virtualserver_token_list_all for listing actions of not owned tokens"
+    ],
+    "description": "Displays all actions the token does when applied.   Either \"token_id\" or \"token\" must be supplied to identify the token.   Lookup the tokens manual for more information.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "tokenactionlist token_id=6",
+      "action_type=2 action_id=6 action_id1=10 action_id2=0 action_text|action_type=2 action_id=7 action_id1=2 ...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "tokenadd",
+    "category": "Query",
+    "docPath": "commanddocs/tokenadd.txt",
+    "binaryOffset": null,
+    "usage": [
+      "tokenadd [token_description={description}] [token_max_uses={max uses}] [token_expired={unix expire timestamp}]",
+      "[[action_type={type}] [action_id1={first parameter}] [action_id2={second parameter}] [action_text={text parameter}] | ...]"
+    ],
+    "permissions": [
+      "b_virtualserver_token_limit"
+    ],
+    "description": "Create a new token with the defined characteristics",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "tokenadd token_description=My\\sDesc token_max_uses=1 action_type=2 action_id1=10 | action_type=2 action_id1=2 | action_type=2 action_id1=3",
+      "action_id=11 token=tOm5TsoWkjPNvVQOggoDWoyMdZ5HpX3u token_id=7|action_id=12",
+      "error id=0 msg=ok|id=0 msg=ok|id=4864 msg=Invalid\\sgroup\\sid"
+    ]
+  },
+  {
+    "name": "tokendelete",
+    "category": "Query",
+    "docPath": "commanddocs/tokendelete.txt",
+    "binaryOffset": null,
+    "usage": [
+      "tokendelete [token={tokenKey}] [token_id={token id}]"
+    ],
+    "permissions": [
+      "b_virtualserver_token_delete_all"
+    ],
+    "description": "Delete a token",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "tokendelete token=eKnFZQ9EK7G7MhtuQB6+N2B1PNZZ6OZL3ycDp2OW",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "tokenedit",
+    "category": "Query",
+    "docPath": "commanddocs/tokenedit.txt",
+    "binaryOffset": null,
+    "usage": [
+      "tokenedit [token_description={description}] [token_max_uses={max uses}] [token_expired={unix expire timestamp}]",
+      "[[action_id={id}] [action_type={type}] [action_id1={first parameter}] [action_id2={second parameter}] [action_text={text parameter}] | ...]"
+    ],
+    "permissions": [
+      "b_virtualserver_token_edit_all"
+    ],
+    "description": "Edit an already existing token.   Add new actions or remove any action by only supplying the action id.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "tokenedit token_id=6 action_type=2 action_id1=9 | action_id=11",
+      "action_id=13",
+      "error id=0 msg=ok|id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "tokenlist",
+    "category": "Query",
+    "docPath": "commanddocs/tokenlist.txt",
+    "binaryOffset": null,
+    "usage": [
+      "tokenlist -new [offset=0] [limit=100] [-own-only]"
+    ],
+    "permissions": [
+      "b_virtualserver_token_list_all for listing all tokens"
+    ],
+    "description": "Displays a list of available tokens.   If \"-own-only\" has been passed or you dont have permissions to list all   tokens, only your tokens will be shown.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "tokenlist -new",
+      "token_count=1 token=f7bSQSyHClRqqSeTbIOwMd0WuUGjIYyP token_id=6 token_created...",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "tokenuse",
+    "category": "Query",
+    "docPath": "commanddocs/tokenuse.txt",
+    "binaryOffset": null,
+    "usage": [
+      "tokenuse token={tokenKey}"
+    ],
+    "permissions": [],
+    "description": "Use a token.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "tokenuse token=eKnFZQ9EK7G7MhtuQB6+N2B1PNZZ6OZL3ycDp2OW",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "use",
+    "category": "Query",
+    "docPath": "commanddocs/use.txt",
+    "binaryOffset": null,
+    "usage": [
+      "use [sid={serverID}] [port={serverPort}] [-virtual]",
+      "use {serverID} [-virtual]"
+    ],
+    "permissions": [
+      "b_virtualserver_select"
+    ],
+    "description": "Selects the virtual server specified with sid or port to allow further   interaction. The ServerQuery client will appear on the virtual server and   acts like a real TeaSpeak or TeamSpeak 3 Client, except it's unable to send or receive   voice data.   If your database contains multiple virtual servers using the same UDP port,   use will select a random virtual server using the specified port.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "use sid=1",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "version",
+    "category": "Query",
+    "docPath": "commanddocs/version.txt",
+    "binaryOffset": null,
+    "usage": [
+      "version"
+    ],
+    "permissions": [
+      "b_serverinstance_version_view"
+    ],
+    "description": "Displays the servers version information including platform and build number.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "version",
+      "version=3.0.0-alpha4 build=9155 platform=Linux",
+      "error id=0 msg=ok"
+    ]
+  },
+  {
+    "name": "whoami",
+    "category": "Query",
+    "docPath": "commanddocs/whoami.txt",
+    "binaryOffset": null,
+    "usage": [
+      "whoami"
+    ],
+    "permissions": [],
+    "description": "Displays information about your current ServerQuery connection including your   loginname, etc.",
+    "result": null,
+    "notes": null,
+    "examples": [
+      "whoami",
+      "virtualserver_status=online virtualserver_id=1 virtualserver_unique_identifier=zrPkjznB1tMnRwj01xx7RxXjqeY= client_channel_id=2 ...",
+      "error id=0 msg=ok"
+    ]
+  }
+]

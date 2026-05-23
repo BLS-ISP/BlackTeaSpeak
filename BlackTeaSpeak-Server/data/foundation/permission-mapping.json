@@ -1,0 +1,1423 @@
+[
+  {
+    "groupId": 0,
+    "groupName": "Group 0",
+    "mappings": [
+      {
+        "originalName": "b_serverinstance_help_view",
+        "mappedValue": "b_serverinstance_help_view"
+      },
+      {
+        "originalName": "b_serverinstance_version_view",
+        "mappedValue": "b_serverinstance_version_view"
+      },
+      {
+        "originalName": "b_serverinstance_info_view",
+        "mappedValue": "b_serverinstance_info_view"
+      },
+      {
+        "originalName": "b_serverinstance_virtualserver_list",
+        "mappedValue": "b_serverinstance_virtualserver_list"
+      },
+      {
+        "originalName": "b_serverinstance_binding_list",
+        "mappedValue": "b_serverinstance_binding_list"
+      },
+      {
+        "originalName": "b_serverinstance_permission_list",
+        "mappedValue": "b_serverinstance_permission_list"
+      },
+      {
+        "originalName": "b_serverinstance_permission_find",
+        "mappedValue": "b_serverinstance_permission_find"
+      },
+      {
+        "originalName": "b_virtualserver_create",
+        "mappedValue": "b_virtualserver_create"
+      },
+      {
+        "originalName": "b_virtualserver_delete",
+        "mappedValue": "b_virtualserver_delete"
+      },
+      {
+        "originalName": "b_virtualserver_start_any",
+        "mappedValue": "b_virtualserver_start_any"
+      },
+      {
+        "originalName": "b_virtualserver_stop_any",
+        "mappedValue": "b_virtualserver_stop_any"
+      },
+      {
+        "originalName": "b_virtualserver_change_machine_id",
+        "mappedValue": "b_virtualserver_change_machine_id"
+      },
+      {
+        "originalName": "b_virtualserver_change_template",
+        "mappedValue": "b_virtualserver_change_template"
+      },
+      {
+        "originalName": "b_serverquery_login",
+        "mappedValue": "b_serverquery_login"
+      },
+      {
+        "originalName": "b_serverinstance_textmessage_send",
+        "mappedValue": "b_serverinstance_textmessage_send"
+      },
+      {
+        "originalName": "b_serverinstance_log_view",
+        "mappedValue": "b_serverinstance_log_view"
+      },
+      {
+        "originalName": "b_serverinstance_log_add",
+        "mappedValue": "b_serverinstance_log_add"
+      },
+      {
+        "originalName": "b_serverinstance_stop",
+        "mappedValue": "b_serverinstance_stop"
+      },
+      {
+        "originalName": "b_serverinstance_modify_settings",
+        "mappedValue": "b_serverinstance_modify_settings"
+      },
+      {
+        "originalName": "b_serverinstance_modify_querygroup",
+        "mappedValue": "b_serverinstance_modify_querygroup"
+      },
+      {
+        "originalName": "b_serverinstance_modify_templates",
+        "mappedValue": "b_serverinstance_modify_templates"
+      },
+      {
+        "originalName": "b_virtualserver_select",
+        "mappedValue": "b_virtualserver_select"
+      },
+      {
+        "originalName": "b_virtualserver_select_godmode",
+        "mappedValue": "b_virtualserver_select_godmode"
+      },
+      {
+        "originalName": "b_virtualserver_info_view",
+        "mappedValue": "b_virtualserver_info_view"
+      },
+      {
+        "originalName": "b_virtualserver_connectioninfo_view",
+        "mappedValue": "b_virtualserver_connectioninfo_view"
+      },
+      {
+        "originalName": "b_virtualserver_channel_list",
+        "mappedValue": "b_virtualserver_channel_list"
+      },
+      {
+        "originalName": "b_virtualserver_channel_search",
+        "mappedValue": "b_virtualserver_channel_search"
+      },
+      {
+        "originalName": "b_virtualserver_client_list",
+        "mappedValue": "b_virtualserver_client_list"
+      },
+      {
+        "originalName": "b_virtualserver_client_search",
+        "mappedValue": "b_virtualserver_client_search"
+      },
+      {
+        "originalName": "b_virtualserver_client_dblist",
+        "mappedValue": "b_virtualserver_client_dblist"
+      },
+      {
+        "originalName": "b_virtualserver_client_dbsearch",
+        "mappedValue": "b_virtualserver_client_dbsearch"
+      },
+      {
+        "originalName": "b_virtualserver_client_dbinfo",
+        "mappedValue": "b_virtualserver_client_dbinfo"
+      },
+      {
+        "originalName": "b_virtualserver_permission_find",
+        "mappedValue": "b_virtualserver_permission_find"
+      },
+      {
+        "originalName": "b_virtualserver_custom_search",
+        "mappedValue": "b_virtualserver_custom_search"
+      },
+      {
+        "originalName": "b_virtualserver_start",
+        "mappedValue": "b_virtualserver_start"
+      },
+      {
+        "originalName": "b_virtualserver_stop",
+        "mappedValue": "b_virtualserver_stop"
+      },
+      {
+        "originalName": "b_virtualserver_token_list",
+        "mappedValue": "b_virtualserver_token_list"
+      },
+      {
+        "originalName": "b_virtualserver_token_add",
+        "mappedValue": "b_virtualserver_token_add"
+      },
+      {
+        "originalName": "b_virtualserver_token_use",
+        "mappedValue": "b_virtualserver_token_use"
+      },
+      {
+        "originalName": "b_virtualserver_token_delete",
+        "mappedValue": "b_virtualserver_token_delete"
+      },
+      {
+        "originalName": "b_virtualserver_log_view",
+        "mappedValue": "b_virtualserver_log_view"
+      },
+      {
+        "originalName": "b_virtualserver_log_add",
+        "mappedValue": "b_virtualserver_log_add"
+      },
+      {
+        "originalName": "b_virtualserver_join_ignore_password",
+        "mappedValue": "b_virtualserver_join_ignore_password"
+      },
+      {
+        "originalName": "b_virtualserver_notify_register",
+        "mappedValue": "b_virtualserver_notify_register"
+      },
+      {
+        "originalName": "b_virtualserver_notify_unregister",
+        "mappedValue": "b_virtualserver_notify_unregister"
+      },
+      {
+        "originalName": "b_virtualserver_snapshot_create",
+        "mappedValue": "b_virtualserver_snapshot_create"
+      },
+      {
+        "originalName": "b_virtualserver_snapshot_deploy",
+        "mappedValue": "b_virtualserver_snapshot_deploy"
+      },
+      {
+        "originalName": "b_virtualserver_permission_reset",
+        "mappedValue": "b_virtualserver_permission_reset"
+      },
+      {
+        "originalName": "b_virtualserver_modify_name",
+        "mappedValue": "b_virtualserver_modify_name"
+      },
+      {
+        "originalName": "b_virtualserver_modify_welcomemessage",
+        "mappedValue": "b_virtualserver_modify_welcomemessage"
+      },
+      {
+        "originalName": "b_virtualserver_modify_maxclients",
+        "mappedValue": "b_virtualserver_modify_maxclients"
+      },
+      {
+        "originalName": "b_virtualserver_modify_reserved_slots",
+        "mappedValue": "b_virtualserver_modify_reserved_slots"
+      },
+      {
+        "originalName": "b_virtualserver_modify_password",
+        "mappedValue": "b_virtualserver_modify_password"
+      },
+      {
+        "originalName": "b_virtualserver_modify_default_servergroup",
+        "mappedValue": "b_virtualserver_modify_default_servergroup"
+      },
+      {
+        "originalName": "b_virtualserver_modify_default_musicgroup",
+        "mappedValue": "b_virtualserver_modify_default_\u0332musicgroup"
+      },
+      {
+        "originalName": "b_virtualserver_modify_default_channelgroup",
+        "mappedValue": "b_virtualserver_modify_default_channelgroup"
+      },
+      {
+        "originalName": "b_virtualserver_modify_default_channeladmingroup",
+        "mappedValue": "b_virtualserver_modify_default_channeladmingroup"
+      },
+      {
+        "originalName": "b_virtualserver_modify_channel_forced_silence",
+        "mappedValue": "b_virtualserver_modify_channel_forced_silence"
+      },
+      {
+        "originalName": "b_virtualserver_modify_complain",
+        "mappedValue": "b_virtualserver_modify_complain"
+      },
+      {
+        "originalName": "b_virtualserver_modify_antiflood",
+        "mappedValue": "b_virtualserver_modify_antiflood"
+      },
+      {
+        "originalName": "b_virtualserver_modify_ft_settings",
+        "mappedValue": "b_virtualserver_modify_ft_settings"
+      },
+      {
+        "originalName": "b_virtualserver_modify_ft_quotas",
+        "mappedValue": "b_virtualserver_modify_ft_quotas"
+      },
+      {
+        "originalName": "b_virtualserver_modify_hostmessage",
+        "mappedValue": "b_virtualserver_modify_hostmessage"
+      },
+      {
+        "originalName": "b_virtualserver_modify_hostbanner",
+        "mappedValue": "b_virtualserver_modify_hostbanner"
+      },
+      {
+        "originalName": "b_virtualserver_modify_hostbutton",
+        "mappedValue": "b_virtualserver_modify_hostbutton"
+      },
+      {
+        "originalName": "b_virtualserver_modify_port",
+        "mappedValue": "b_virtualserver_modify_port"
+      },
+      {
+        "originalName": "b_virtualserver_modify_host",
+        "mappedValue": "b_virtualserver_modify_host"
+      },
+      {
+        "originalName": "b_virtualserver_modify_autostart",
+        "mappedValue": "b_virtualserver_modify_autostart"
+      },
+      {
+        "originalName": "b_virtualserver_modify_needed_identity_security_level",
+        "mappedValue": "b_virtualserver_modify_needed_identity_security_level"
+      },
+      {
+        "originalName": "b_virtualserver_modify_priority_speaker_dimm_modificator",
+        "mappedValue": "b_virtualserver_modify_priority_speaker_dimm_modificator"
+      },
+      {
+        "originalName": "b_virtualserver_modify_log_settings",
+        "mappedValue": "b_virtualserver_modify_log_settings"
+      },
+      {
+        "originalName": "b_virtualserver_modify_min_client_version",
+        "mappedValue": "b_virtualserver_modify_min_client_version"
+      },
+      {
+        "originalName": "b_virtualserver_modify_icon_id",
+        "mappedValue": "b_virtualserver_modify_icon_id"
+      },
+      {
+        "originalName": "b_virtualserver_modify_country_code",
+        "mappedValue": "b_virtualserver_modify_country_code"
+      },
+      {
+        "originalName": "b_virtualserver_modify_codec_encryption_mode",
+        "mappedValue": "b_virtualserver_modify_codec_encryption_mode"
+      },
+      {
+        "originalName": "b_virtualserver_modify_temporary_passwords",
+        "mappedValue": "b_virtualserver_modify_temporary_passwords"
+      },
+      {
+        "originalName": "b_virtualserver_modify_temporary_passwords_own",
+        "mappedValue": "b_virtualserver_modify_temporary_passwords_own"
+      },
+      {
+        "originalName": "b_virtualserver_modify_channel_temp_delete_delay_default",
+        "mappedValue": "b_virtualserver_modify_channel_temp_delete_delay_default"
+      },
+      {
+        "originalName": "b_virtualserver_modify_music_bot_limit",
+        "mappedValue": "b_virtualserver_modify_\u0332music_bot_limit"
+      },
+      {
+        "originalName": "b_virtualserver_modify_default_messages",
+        "mappedValue": "b_virtualserver_modify_default_messages"
+      },
+      {
+        "originalName": "i_channel_min_depth",
+        "mappedValue": "i_channel_min_depth"
+      },
+      {
+        "originalName": "i_channel_max_depth",
+        "mappedValue": "i_channel_max_depth"
+      },
+      {
+        "originalName": "b_channel_group_inheritance_end",
+        "mappedValue": "b_channel_group_inheritance_end"
+      },
+      {
+        "originalName": "i_channel_permission_modify_power",
+        "mappedValue": "i_channel_permission_modify_power"
+      },
+      {
+        "originalName": "i_channel_needed_permission_modify_power",
+        "mappedValue": "i_channel_needed_permission_modify_power"
+      },
+      {
+        "originalName": "b_channel_info_view",
+        "mappedValue": "b_channel_info_view"
+      },
+      {
+        "originalName": "b_channel_create_child",
+        "mappedValue": "b_channel_create_child"
+      },
+      {
+        "originalName": "b_channel_create_permanent",
+        "mappedValue": "b_channel_create_permanent"
+      },
+      {
+        "originalName": "b_channel_create_semi_permanent",
+        "mappedValue": "b_channel_create_semi_permanent"
+      },
+      {
+        "originalName": "b_channel_create_temporary",
+        "mappedValue": "b_channel_create_temporary"
+      },
+      {
+        "originalName": "b_channel_create_private",
+        "mappedValue": "b_channel_create_private"
+      },
+      {
+        "originalName": "b_channel_create_with_topic",
+        "mappedValue": "b_channel_create_with_topic"
+      },
+      {
+        "originalName": "b_channel_create_with_description",
+        "mappedValue": "b_channel_create_with_description"
+      },
+      {
+        "originalName": "b_channel_create_with_password",
+        "mappedValue": "b_channel_create_with_password"
+      },
+      {
+        "originalName": "b_channel_create_modify_with_codec_speex8",
+        "mappedValue": "b_channel_create_modify_with_codec_speex8"
+      },
+      {
+        "originalName": "b_channel_create_modify_with_codec_speex16",
+        "mappedValue": "b_channel_create_modify_with_codec_speex16"
+      },
+      {
+        "originalName": "b_channel_create_modify_with_codec_speex32",
+        "mappedValue": "b_channel_create_modify_with_codec_speex32"
+      },
+      {
+        "originalName": "b_channel_create_modify_with_codec_celtmono48",
+        "mappedValue": "b_channel_create_modify_with_codec_celtmono48"
+      },
+      {
+        "originalName": "b_channel_create_modify_with_codec_opusvoice",
+        "mappedValue": "b_channel_create_modify_with_codec_opusvoice"
+      },
+      {
+        "originalName": "b_channel_create_modify_with_codec_opusmusic",
+        "mappedValue": "b_channel_create_modify_with_codec_opusmusic"
+      },
+      {
+        "originalName": "i_channel_create_modify_with_codec_maxquality",
+        "mappedValue": "i_channel_create_modify_with_codec_maxquality"
+      },
+      {
+        "originalName": "i_channel_create_modify_with_codec_latency_factor_min",
+        "mappedValue": "i_channel_create_modify_with_codec_latency_factor_min"
+      },
+      {
+        "originalName": "b_channel_create_with_maxclients",
+        "mappedValue": "b_channel_create_with_maxclients"
+      },
+      {
+        "originalName": "b_channel_create_with_maxfamilyclients",
+        "mappedValue": "b_channel_create_with_maxfamilyclients"
+      },
+      {
+        "originalName": "b_channel_create_with_sortorder",
+        "mappedValue": "b_channel_create_with_sortorder"
+      },
+      {
+        "originalName": "b_channel_create_with_default",
+        "mappedValue": "b_channel_create_with_default"
+      },
+      {
+        "originalName": "b_channel_create_with_needed_talk_power",
+        "mappedValue": "b_channel_create_with_needed_talk_power"
+      },
+      {
+        "originalName": "b_channel_create_modify_with_force_password",
+        "mappedValue": "b_channel_create_modify_with_force_password"
+      },
+      {
+        "originalName": "i_channel_create_modify_with_temp_delete_delay",
+        "mappedValue": "i_channel_create_modify_with_temp_delete_delay"
+      },
+      {
+        "originalName": "i_channel_create_modify_conversation_history_length",
+        "mappedValue": "i_channel_create_modify_conversation_history_length"
+      },
+      {
+        "originalName": "b_channel_create_modify_conversation_history_unlimited",
+        "mappedValue": "b_channel_create_modify_conversation_history_unlimited"
+      },
+      {
+        "originalName": "b_channel_create_modify_conversation_private",
+        "mappedValue": "b_channel_create_modify_conversation_private"
+      },
+      {
+        "originalName": "b_channel_modify_parent",
+        "mappedValue": "b_channel_modify_parent"
+      },
+      {
+        "originalName": "b_channel_modify_make_default",
+        "mappedValue": "b_channel_modify_make_default"
+      },
+      {
+        "originalName": "b_channel_modify_make_permanent",
+        "mappedValue": "b_channel_modify_make_permanent"
+      },
+      {
+        "originalName": "b_channel_modify_make_semi_permanent",
+        "mappedValue": "b_channel_modify_make_semi_permanent"
+      },
+      {
+        "originalName": "b_channel_modify_make_temporary",
+        "mappedValue": "b_channel_modify_make_temporary"
+      },
+      {
+        "originalName": "b_channel_modify_name",
+        "mappedValue": "b_channel_modify_name"
+      },
+      {
+        "originalName": "b_channel_modify_topic",
+        "mappedValue": "b_channel_modify_topic"
+      },
+      {
+        "originalName": "b_channel_modify_description",
+        "mappedValue": "b_channel_modify_description"
+      },
+      {
+        "originalName": "b_channel_modify_password",
+        "mappedValue": "b_channel_modify_password"
+      },
+      {
+        "originalName": "b_channel_modify_codec",
+        "mappedValue": "b_channel_modify_codec"
+      },
+      {
+        "originalName": "b_channel_modify_codec_quality",
+        "mappedValue": "b_channel_modify_codec_quality"
+      },
+      {
+        "originalName": "b_channel_modify_codec_latency_factor",
+        "mappedValue": "b_channel_modify_codec_latency_factor"
+      },
+      {
+        "originalName": "b_channel_modify_maxclients",
+        "mappedValue": "b_channel_modify_maxclients"
+      },
+      {
+        "originalName": "b_channel_modify_maxfamilyclients",
+        "mappedValue": "b_channel_modify_maxfamilyclients"
+      },
+      {
+        "originalName": "b_channel_modify_sortorder",
+        "mappedValue": "b_channel_modify_sortorder"
+      },
+      {
+        "originalName": "b_channel_modify_needed_talk_power",
+        "mappedValue": "b_channel_modify_needed_talk_power"
+      },
+      {
+        "originalName": "i_channel_modify_power",
+        "mappedValue": "i_channel_modify_power"
+      },
+      {
+        "originalName": "i_channel_needed_modify_power",
+        "mappedValue": "i_channel_needed_modify_power"
+      },
+      {
+        "originalName": "b_channel_modify_make_codec_encrypted",
+        "mappedValue": "b_channel_modify_make_codec_encrypted"
+      },
+      {
+        "originalName": "b_channel_modify_temp_delete_delay",
+        "mappedValue": "b_channel_modify_temp_delete_delay"
+      },
+      {
+        "originalName": "b_channel_conversation_message_delete",
+        "mappedValue": "b_channel_conversation_message_delete"
+      },
+      {
+        "originalName": "b_channel_delete_permanent",
+        "mappedValue": "b_channel_delete_permanent"
+      },
+      {
+        "originalName": "b_channel_delete_semi_permanent",
+        "mappedValue": "b_channel_delete_semi_permanent"
+      },
+      {
+        "originalName": "b_channel_delete_temporary",
+        "mappedValue": "b_channel_delete_temporary"
+      },
+      {
+        "originalName": "b_channel_delete_flag_force",
+        "mappedValue": "b_channel_delete_flag_force"
+      },
+      {
+        "originalName": "i_channel_delete_power",
+        "mappedValue": "i_channel_delete_power"
+      },
+      {
+        "originalName": "i_channel_needed_delete_power",
+        "mappedValue": "i_channel_needed_delete_power"
+      },
+      {
+        "originalName": "b_channel_join_permanent",
+        "mappedValue": "b_channel_join_permanent"
+      },
+      {
+        "originalName": "b_channel_join_semi_permanent",
+        "mappedValue": "b_channel_join_semi_permanent"
+      },
+      {
+        "originalName": "b_channel_join_temporary",
+        "mappedValue": "b_channel_join_temporary"
+      },
+      {
+        "originalName": "b_channel_join_ignore_password",
+        "mappedValue": "b_channel_join_ignore_password"
+      },
+      {
+        "originalName": "b_channel_join_ignore_maxclients",
+        "mappedValue": "b_channel_join_ignore_maxclients"
+      },
+      {
+        "originalName": "b_channel_ignore_view_power",
+        "mappedValue": "b_channel_ignore_view_power"
+      },
+      {
+        "originalName": "i_channel_join_power",
+        "mappedValue": "i_channel_join_power"
+      },
+      {
+        "originalName": "i_channel_needed_join_power",
+        "mappedValue": "i_channel_needed_join_power"
+      },
+      {
+        "originalName": "b_channel_ignore_join_power",
+        "mappedValue": "b_channel_ignore_join_power"
+      },
+      {
+        "originalName": "i_channel_view_power",
+        "mappedValue": "i_channel_view_power"
+      },
+      {
+        "originalName": "i_channel_needed_view_power",
+        "mappedValue": "i_channel_needed_view_power"
+      },
+      {
+        "originalName": "i_channel_subscribe_power",
+        "mappedValue": "i_channel_subscribe_power"
+      },
+      {
+        "originalName": "i_channel_needed_subscribe_power",
+        "mappedValue": "i_channel_needed_subscribe_power"
+      },
+      {
+        "originalName": "b_channel_ignore_subscribe_power",
+        "mappedValue": "b_channel_ignore_subscribe_power"
+      },
+      {
+        "originalName": "i_channel_description_view_power",
+        "mappedValue": "i_channel_description_view_power"
+      },
+      {
+        "originalName": "i_channel_needed_description_view_power",
+        "mappedValue": "i_channel_needed_description_view_power"
+      },
+      {
+        "originalName": "b_channel_ignore_description_view_power",
+        "mappedValue": "b_channel_ignore_description_view_power"
+      },
+      {
+        "originalName": "i_icon_id",
+        "mappedValue": "i_icon_id"
+      },
+      {
+        "originalName": "i_max_icon_filesize",
+        "mappedValue": "i_max_icon_filesize"
+      },
+      {
+        "originalName": "i_max_playlist_size",
+        "mappedValue": "i_max_\u0332playlist_size"
+      },
+      {
+        "originalName": "i_max_playlists",
+        "mappedValue": "i_max_\u0332playlists"
+      },
+      {
+        "originalName": "b_icon_manage",
+        "mappedValue": "b_icon_manage"
+      },
+      {
+        "originalName": "b_group_is_permanent",
+        "mappedValue": "b_group_is_permanent"
+      },
+      {
+        "originalName": "i_group_auto_update_type",
+        "mappedValue": "i_group_auto_update_type"
+      },
+      {
+        "originalName": "i_group_auto_update_max_value",
+        "mappedValue": "i_group_auto_update_max_value"
+      },
+      {
+        "originalName": "i_group_sort_id",
+        "mappedValue": "i_group_sort_id"
+      },
+      {
+        "originalName": "i_group_show_name_in_tree",
+        "mappedValue": "i_group_show_name_in_tree"
+      },
+      {
+        "originalName": "b_virtualserver_servergroup_list",
+        "mappedValue": "b_virtualserver_servergroup_list"
+      },
+      {
+        "originalName": "b_virtualserver_servergroup_permission_list",
+        "mappedValue": "b_virtualserver_servergroup_permission_list"
+      },
+      {
+        "originalName": "b_virtualserver_servergroup_client_list",
+        "mappedValue": "b_virtualserver_servergroup_client_list"
+      },
+      {
+        "originalName": "b_virtualserver_channelgroup_list",
+        "mappedValue": "b_virtualserver_channelgroup_list"
+      },
+      {
+        "originalName": "b_virtualserver_channelgroup_permission_list",
+        "mappedValue": "b_virtualserver_channelgroup_permission_list"
+      },
+      {
+        "originalName": "b_virtualserver_channelgroup_client_list",
+        "mappedValue": "b_virtualserver_channelgroup_client_list"
+      },
+      {
+        "originalName": "b_virtualserver_client_permission_list",
+        "mappedValue": "b_virtualserver_client_permission_list"
+      },
+      {
+        "originalName": "b_virtualserver_channel_permission_list",
+        "mappedValue": "b_virtualserver_channel_permission_list"
+      },
+      {
+        "originalName": "b_virtualserver_channelclient_permission_list",
+        "mappedValue": "b_virtualserver_channelclient_permission_list"
+      },
+      {
+        "originalName": "b_virtualserver_playlist_permission_list",
+        "mappedValue": "b_virtualserver_\u0332playlist_permission_list"
+      },
+      {
+        "originalName": "b_virtualserver_servergroup_create",
+        "mappedValue": "b_virtualserver_servergroup_create"
+      },
+      {
+        "originalName": "b_virtualserver_channelgroup_create",
+        "mappedValue": "b_virtualserver_channelgroup_create"
+      },
+      {
+        "originalName": "i_server_group_modify_power",
+        "mappedValue": "i_server_group_modify_power"
+      },
+      {
+        "originalName": "i_server_group_needed_modify_power",
+        "mappedValue": "i_server_group_needed_modify_power"
+      },
+      {
+        "originalName": "i_server_group_member_add_power",
+        "mappedValue": "i_server_group_member_add_power"
+      },
+      {
+        "originalName": "i_server_group_self_add_power",
+        "mappedValue": "i_server_group_self_add_power"
+      },
+      {
+        "originalName": "i_server_group_needed_member_add_power",
+        "mappedValue": "i_server_group_needed_member_add_power"
+      },
+      {
+        "originalName": "i_server_group_member_remove_power",
+        "mappedValue": "i_server_group_member_remove_power"
+      },
+      {
+        "originalName": "i_server_group_self_remove_power",
+        "mappedValue": "i_server_group_self_remove_power"
+      },
+      {
+        "originalName": "i_server_group_needed_member_remove_power",
+        "mappedValue": "i_server_group_needed_member_remove_power"
+      },
+      {
+        "originalName": "i_channel_group_modify_power",
+        "mappedValue": "i_channel_group_modify_power"
+      },
+      {
+        "originalName": "i_channel_group_needed_modify_power",
+        "mappedValue": "i_channel_group_needed_modify_power"
+      },
+      {
+        "originalName": "i_channel_group_member_add_power",
+        "mappedValue": "i_channel_group_member_add_power"
+      },
+      {
+        "originalName": "i_channel_group_self_add_power",
+        "mappedValue": "i_channel_group_self_add_power"
+      },
+      {
+        "originalName": "i_channel_group_needed_member_add_power",
+        "mappedValue": "i_channel_group_needed_member_add_power"
+      },
+      {
+        "originalName": "i_channel_group_member_remove_power",
+        "mappedValue": "i_channel_group_member_remove_power"
+      },
+      {
+        "originalName": "i_channel_group_self_remove_power",
+        "mappedValue": "i_channel_group_self_remove_power"
+      },
+      {
+        "originalName": "i_channel_group_needed_member_remove_power",
+        "mappedValue": "i_channel_group_needed_member_remove_power"
+      },
+      {
+        "originalName": "i_group_member_add_power",
+        "mappedValue": "i_group_member_add_power"
+      },
+      {
+        "originalName": "i_group_needed_member_add_power",
+        "mappedValue": "i_group_needed_member_add_power"
+      },
+      {
+        "originalName": "i_group_member_remove_power",
+        "mappedValue": "i_group_member_remove_power"
+      },
+      {
+        "originalName": "i_group_needed_member_remove_power",
+        "mappedValue": "i_group_needed_member_remove_power"
+      },
+      {
+        "originalName": "i_group_modify_power",
+        "mappedValue": "i_group_modify_power"
+      },
+      {
+        "originalName": "i_group_needed_modify_power",
+        "mappedValue": "i_group_needed_modify_power"
+      },
+      {
+        "originalName": "i_permission_modify_power",
+        "mappedValue": "i_permission_modify_power"
+      },
+      {
+        "originalName": "b_permission_modify_power_ignore",
+        "mappedValue": "b_permission_modify_power_ignore"
+      },
+      {
+        "originalName": "b_virtualserver_servergroup_delete",
+        "mappedValue": "b_virtualserver_servergroup_delete"
+      },
+      {
+        "originalName": "b_virtualserver_channelgroup_delete",
+        "mappedValue": "b_virtualserver_channelgroup_delete"
+      },
+      {
+        "originalName": "i_client_permission_modify_power",
+        "mappedValue": "i_client_permission_modify_power"
+      },
+      {
+        "originalName": "i_client_needed_permission_modify_power",
+        "mappedValue": "i_client_needed_permission_modify_power"
+      },
+      {
+        "originalName": "i_client_max_clones_uid",
+        "mappedValue": "i_client_max_clones_uid"
+      },
+      {
+        "originalName": "i_client_max_clones_ip",
+        "mappedValue": "i_client_max_clones_ip"
+      },
+      {
+        "originalName": "i_client_max_clones_hwid",
+        "mappedValue": "i_client_max_clones_\u0332hwid"
+      },
+      {
+        "originalName": "i_client_max_idletime",
+        "mappedValue": "i_client_max_idletime"
+      },
+      {
+        "originalName": "i_client_max_avatar_filesize",
+        "mappedValue": "i_client_max_avatar_filesize"
+      },
+      {
+        "originalName": "i_client_max_channel_subscriptions",
+        "mappedValue": "i_client_max_channel_subscriptions"
+      },
+      {
+        "originalName": "i_client_max_channels",
+        "mappedValue": "i_client_max_channels"
+      },
+      {
+        "originalName": "i_client_max_temporary_channels",
+        "mappedValue": "i_client_max_temporary_channels"
+      },
+      {
+        "originalName": "i_client_max_semi_channels",
+        "mappedValue": "i_client_max_semi_channels"
+      },
+      {
+        "originalName": "i_client_max_permanent_channels",
+        "mappedValue": "i_client_max_permanent_channels"
+      },
+      {
+        "originalName": "b_client_use_priority_speaker",
+        "mappedValue": "b_client_use_priority_speaker"
+      },
+      {
+        "originalName": "b_client_is_priority_speaker",
+        "mappedValue": "b_client_is_priority_speaker"
+      },
+      {
+        "originalName": "b_client_skip_channelgroup_permissions",
+        "mappedValue": "b_client_skip_channelgroup_permissions"
+      },
+      {
+        "originalName": "b_client_force_push_to_talk",
+        "mappedValue": "b_client_force_push_to_talk"
+      },
+      {
+        "originalName": "b_client_ignore_bans",
+        "mappedValue": "b_client_ignore_bans"
+      },
+      {
+        "originalName": "b_client_ignore_vpn",
+        "mappedValue": "b_client_ignore_vpn"
+      },
+      {
+        "originalName": "b_client_ignore_antiflood",
+        "mappedValue": "b_client_ignore_antiflood"
+      },
+      {
+        "originalName": "b_client_enforce_valid_hwid",
+        "mappedValue": "b_client_enforce_valid_\u0332hwid"
+      },
+      {
+        "originalName": "b_client_allow_invalid_packet",
+        "mappedValue": "b_client_allow_invalid_packet"
+      },
+      {
+        "originalName": "b_client_allow_invalid_badges",
+        "mappedValue": "b_client_allow_invalid_badges"
+      },
+      {
+        "originalName": "b_client_issue_client_query_command",
+        "mappedValue": "b_client_issue_client_query_command"
+      },
+      {
+        "originalName": "b_client_use_reserved_slot",
+        "mappedValue": "b_client_use_reserved_slot"
+      },
+      {
+        "originalName": "b_client_use_channel_commander",
+        "mappedValue": "b_client_use_channel_commander"
+      },
+      {
+        "originalName": "b_client_request_talker",
+        "mappedValue": "b_client_request_talker"
+      },
+      {
+        "originalName": "b_client_avatar_delete_other",
+        "mappedValue": "b_client_avatar_delete_other"
+      },
+      {
+        "originalName": "b_client_is_sticky",
+        "mappedValue": "b_client_is_sticky"
+      },
+      {
+        "originalName": "b_client_ignore_sticky",
+        "mappedValue": "b_client_ignore_sticky"
+      },
+      {
+        "originalName": "b_client_music_channel_list",
+        "mappedValue": "b_client_\u0332music_channel_list"
+      },
+      {
+        "originalName": "b_client_music_server_list",
+        "mappedValue": "b_client_\u0332music_server_list"
+      },
+      {
+        "originalName": "i_client_music_info",
+        "mappedValue": "i_client_\u0332music_info"
+      },
+      {
+        "originalName": "i_client_music_needed_info",
+        "mappedValue": "i_client_\u0332music_needed_info"
+      },
+      {
+        "originalName": "b_client_info_view",
+        "mappedValue": "b_client_info_view"
+      },
+      {
+        "originalName": "b_client_permissionoverview_view",
+        "mappedValue": "b_client_permissionoverview_view"
+      },
+      {
+        "originalName": "b_client_permissionoverview_own",
+        "mappedValue": "b_client_permissionoverview_own"
+      },
+      {
+        "originalName": "b_client_remoteaddress_view",
+        "mappedValue": "b_client_remoteaddress_view"
+      },
+      {
+        "originalName": "i_client_serverquery_view_power",
+        "mappedValue": "i_client_serverquery_view_power"
+      },
+      {
+        "originalName": "i_client_needed_serverquery_view_power",
+        "mappedValue": "i_client_needed_serverquery_view_power"
+      },
+      {
+        "originalName": "b_client_custom_info_view",
+        "mappedValue": "b_client_custom_info_view"
+      },
+      {
+        "originalName": "i_client_kick_from_server_power",
+        "mappedValue": "i_client_kick_from_server_power"
+      },
+      {
+        "originalName": "i_client_needed_kick_from_server_power",
+        "mappedValue": "i_client_needed_kick_from_server_power"
+      },
+      {
+        "originalName": "i_client_kick_from_channel_power",
+        "mappedValue": "i_client_kick_from_channel_power"
+      },
+      {
+        "originalName": "i_client_needed_kick_from_channel_power",
+        "mappedValue": "i_client_needed_kick_from_channel_power"
+      },
+      {
+        "originalName": "i_client_ban_power",
+        "mappedValue": "i_client_ban_power"
+      },
+      {
+        "originalName": "i_client_needed_ban_power",
+        "mappedValue": "i_client_needed_ban_power"
+      },
+      {
+        "originalName": "i_client_move_power",
+        "mappedValue": "i_client_move_power"
+      },
+      {
+        "originalName": "i_client_needed_move_power",
+        "mappedValue": "i_client_needed_move_power"
+      },
+      {
+        "originalName": "i_client_complain_power",
+        "mappedValue": "i_client_complain_power"
+      },
+      {
+        "originalName": "i_client_needed_complain_power",
+        "mappedValue": "i_client_needed_complain_power"
+      },
+      {
+        "originalName": "b_client_complain_list",
+        "mappedValue": "b_client_complain_list"
+      },
+      {
+        "originalName": "b_client_complain_delete_own",
+        "mappedValue": "b_client_complain_delete_own"
+      },
+      {
+        "originalName": "b_client_complain_delete",
+        "mappedValue": "b_client_complain_delete"
+      },
+      {
+        "originalName": "b_client_ban_list",
+        "mappedValue": "b_client_ban_list"
+      },
+      {
+        "originalName": "b_client_ban_trigger_list",
+        "mappedValue": "b_client_ban_trigger_list"
+      },
+      {
+        "originalName": "b_client_ban_list_global",
+        "mappedValue": "b_client_ban_list_global"
+      },
+      {
+        "originalName": "b_client_ban_create",
+        "mappedValue": "b_client_ban_create"
+      },
+      {
+        "originalName": "b_client_ban_create_global",
+        "mappedValue": "b_client_ban_create_global"
+      },
+      {
+        "originalName": "b_client_ban_name",
+        "mappedValue": "b_client_ban_name"
+      },
+      {
+        "originalName": "b_client_ban_ip",
+        "mappedValue": "b_client_ban_ip"
+      },
+      {
+        "originalName": "b_client_ban_hwid",
+        "mappedValue": "b_client_ban_\u0332hwid"
+      },
+      {
+        "originalName": "b_client_ban_edit",
+        "mappedValue": "b_client_ban_edit"
+      },
+      {
+        "originalName": "b_client_ban_edit_global",
+        "mappedValue": "b_client_ban_edit_global"
+      },
+      {
+        "originalName": "b_client_ban_delete_own",
+        "mappedValue": "b_client_ban_delete_own"
+      },
+      {
+        "originalName": "b_client_ban_delete",
+        "mappedValue": "b_client_ban_delete"
+      },
+      {
+        "originalName": "b_client_ban_delete_own_global",
+        "mappedValue": "b_client_ban_delete_own_global"
+      },
+      {
+        "originalName": "b_client_ban_delete_global",
+        "mappedValue": "b_client_ban_delete_global"
+      },
+      {
+        "originalName": "i_client_ban_max_bantime",
+        "mappedValue": "i_client_ban_max_bantime"
+      },
+      {
+        "originalName": "b_client_even_textmessage_send",
+        "mappedValue": "b_client_even_textmessage_send"
+      },
+      {
+        "originalName": "i_client_private_textmessage_power",
+        "mappedValue": "i_client_private_textmessage_power"
+      },
+      {
+        "originalName": "i_client_needed_private_textmessage_power",
+        "mappedValue": "i_client_needed_private_textmessage_power"
+      },
+      {
+        "originalName": "b_client_server_textmessage_send",
+        "mappedValue": "b_client_server_textmessage_send"
+      },
+      {
+        "originalName": "b_client_channel_textmessage_send",
+        "mappedValue": "b_client_channel_textmessage_send"
+      },
+      {
+        "originalName": "b_client_offline_textmessage_send",
+        "mappedValue": "b_client_offline_textmessage_send"
+      },
+      {
+        "originalName": "i_client_talk_power",
+        "mappedValue": "i_client_talk_power"
+      },
+      {
+        "originalName": "i_client_needed_talk_power",
+        "mappedValue": "i_client_needed_talk_power"
+      },
+      {
+        "originalName": "i_client_poke_power",
+        "mappedValue": "i_client_poke_power"
+      },
+      {
+        "originalName": "i_client_needed_poke_power",
+        "mappedValue": "i_client_needed_poke_power"
+      },
+      {
+        "originalName": "b_client_set_flag_talker",
+        "mappedValue": "b_client_set_flag_talker"
+      },
+      {
+        "originalName": "i_client_whisper_power",
+        "mappedValue": "i_client_whisper_power"
+      },
+      {
+        "originalName": "i_client_needed_whisper_power",
+        "mappedValue": "i_client_needed_whisper_power"
+      },
+      {
+        "originalName": "b_client_modify_description",
+        "mappedValue": "b_client_modify_description"
+      },
+      {
+        "originalName": "b_client_modify_own_description",
+        "mappedValue": "b_client_modify_own_description"
+      },
+      {
+        "originalName": "b_client_modify_dbproperties",
+        "mappedValue": "b_client_modify_dbproperties"
+      },
+      {
+        "originalName": "b_client_delete_dbproperties",
+        "mappedValue": "b_client_delete_dbproperties"
+      },
+      {
+        "originalName": "b_client_create_modify_serverquery_login",
+        "mappedValue": "b_client_create_modify_serverquery_login"
+      },
+      {
+        "originalName": "b_client_query_create",
+        "mappedValue": "b_client_query_create"
+      },
+      {
+        "originalName": "b_client_query_list",
+        "mappedValue": "b_client_query_list"
+      },
+      {
+        "originalName": "b_client_query_list_own",
+        "mappedValue": "b_client_query_list_own"
+      },
+      {
+        "originalName": "b_client_query_rename",
+        "mappedValue": "b_client_query_rename"
+      },
+      {
+        "originalName": "b_client_query_rename_own",
+        "mappedValue": "b_client_query_rename_own"
+      },
+      {
+        "originalName": "b_client_query_change_password",
+        "mappedValue": "b_client_query_change_password"
+      },
+      {
+        "originalName": "b_client_query_change_own_password",
+        "mappedValue": "b_client_query_change_own_password"
+      },
+      {
+        "originalName": "b_client_query_change_password_global",
+        "mappedValue": "b_client_query_change_password_global"
+      },
+      {
+        "originalName": "b_client_query_delete",
+        "mappedValue": "b_client_query_delete"
+      },
+      {
+        "originalName": "b_client_query_delete_own",
+        "mappedValue": "b_client_query_delete_own"
+      },
+      {
+        "originalName": "b_client_music_create_temporary",
+        "mappedValue": "b_client_\u0332music_create_temporary"
+      },
+      {
+        "originalName": "b_client_music_create_semi_permanent",
+        "mappedValue": "b_client_\u0332music_create_semi_permanent"
+      },
+      {
+        "originalName": "b_client_music_create_permanent",
+        "mappedValue": "b_client_\u0332music_create_permanent"
+      },
+      {
+        "originalName": "b_client_music_modify_temporary",
+        "mappedValue": "b_client_\u0332music_modify_temporary"
+      },
+      {
+        "originalName": "b_client_music_modify_semi_permanent",
+        "mappedValue": "b_client_\u0332music_modify_semi_permanent"
+      },
+      {
+        "originalName": "b_client_music_modify_permanent",
+        "mappedValue": "b_client_\u0332music_modify_permanent"
+      },
+      {
+        "originalName": "i_client_music_create_modify_max_volume",
+        "mappedValue": "i_client_\u0332music_create_modify_max_volume"
+      },
+      {
+        "originalName": "i_client_music_limit",
+        "mappedValue": "i_client_\u0332music_limit"
+      },
+      {
+        "originalName": "i_client_music_delete_power",
+        "mappedValue": "i_client_\u0332music_delete_power"
+      },
+      {
+        "originalName": "i_client_music_needed_delete_power",
+        "mappedValue": "i_client_\u0332music_needed_delete_power"
+      },
+      {
+        "originalName": "i_client_music_play_power",
+        "mappedValue": "i_client_\u0332music_play_power"
+      },
+      {
+        "originalName": "i_client_music_needed_modify_power",
+        "mappedValue": "i_client_\u0332music_needed_modify_power"
+      },
+      {
+        "originalName": "i_client_music_modify_power",
+        "mappedValue": "i_client_\u0332music_modify_power"
+      },
+      {
+        "originalName": "i_client_music_needed_play_power",
+        "mappedValue": "i_client_\u0332music_needed_play_power"
+      },
+      {
+        "originalName": "i_client_music_rename_power",
+        "mappedValue": "i_client_\u0332music_rename_power"
+      },
+      {
+        "originalName": "i_client_music_needed_rename_power",
+        "mappedValue": "i_client_\u0332music_needed_rename_power"
+      },
+      {
+        "originalName": "b_playlist_create",
+        "mappedValue": "b_\u0332playlist_create"
+      },
+      {
+        "originalName": "i_playlist_view_power",
+        "mappedValue": "i_\u0332playlist_view_power"
+      },
+      {
+        "originalName": "i_playlist_needed_view_power",
+        "mappedValue": "i_\u0332playlist_needed_view_power"
+      },
+      {
+        "originalName": "i_playlist_modify_power",
+        "mappedValue": "i_\u0332playlist_modify_power"
+      },
+      {
+        "originalName": "i_playlist_needed_modify_power",
+        "mappedValue": "i_\u0332playlist_needed_modify_power"
+      },
+      {
+        "originalName": "i_playlist_permission_modify_power",
+        "mappedValue": "i_\u0332playlist_permission_modify_power"
+      },
+      {
+        "originalName": "i_playlist_needed_permission_modify_power",
+        "mappedValue": "i_\u0332playlist_needed_permission_modify_power"
+      },
+      {
+        "originalName": "i_playlist_delete_power",
+        "mappedValue": "i_\u0332playlist_delete_power"
+      },
+      {
+        "originalName": "i_playlist_needed_delete_power",
+        "mappedValue": "i_\u0332playlist_needed_delete_power"
+      },
+      {
+        "originalName": "i_playlist_song_add_power",
+        "mappedValue": "i_\u0332playlist_song_add_power"
+      },
+      {
+        "originalName": "i_playlist_song_needed_add_power",
+        "mappedValue": "i_\u0332playlist_song_needed_add_power"
+      },
+      {
+        "originalName": "i_playlist_song_remove_power",
+        "mappedValue": "i_\u0332playlist_song_remove_power"
+      },
+      {
+        "originalName": "i_playlist_song_needed_remove_power",
+        "mappedValue": "i_\u0332playlist_song_needed_remove_power"
+      },
+      {
+        "originalName": "i_playlist_song_move_power",
+        "mappedValue": "i_\u0332playlist_song_move_power"
+      },
+      {
+        "originalName": "i_playlist_song_needed_move_power",
+        "mappedValue": "i_\u0332playlist_song_needed_move_power"
+      },
+      {
+        "originalName": "b_client_use_bbcode_any",
+        "mappedValue": "b_client_use_bbcode_any"
+      },
+      {
+        "originalName": "b_client_use_bbcode_image",
+        "mappedValue": "b_client_use_bbcode_image"
+      },
+      {
+        "originalName": "b_client_use_bbcode_url",
+        "mappedValue": "b_client_use_bbcode_url"
+      },
+      {
+        "originalName": "b_ft_ignore_password",
+        "mappedValue": "b_ft_ignore_password"
+      },
+      {
+        "originalName": "b_ft_transfer_list",
+        "mappedValue": "b_ft_transfer_list"
+      },
+      {
+        "originalName": "i_ft_file_upload_power",
+        "mappedValue": "i_ft_file_upload_power"
+      },
+      {
+        "originalName": "i_ft_needed_file_upload_power",
+        "mappedValue": "i_ft_needed_file_upload_power"
+      },
+      {
+        "originalName": "i_ft_file_download_power",
+        "mappedValue": "i_ft_file_download_power"
+      },
+      {
+        "originalName": "i_ft_needed_file_download_power",
+        "mappedValue": "i_ft_needed_file_download_power"
+      },
+      {
+        "originalName": "i_ft_file_delete_power",
+        "mappedValue": "i_ft_file_delete_power"
+      },
+      {
+        "originalName": "i_ft_needed_file_delete_power",
+        "mappedValue": "i_ft_needed_file_delete_power"
+      },
+      {
+        "originalName": "i_ft_file_rename_power",
+        "mappedValue": "i_ft_file_rename_power"
+      },
+      {
+        "originalName": "i_ft_needed_file_rename_power",
+        "mappedValue": "i_ft_needed_file_rename_power"
+      },
+      {
+        "originalName": "i_ft_file_browse_power",
+        "mappedValue": "i_ft_file_browse_power"
+      },
+      {
+        "originalName": "i_ft_needed_file_browse_power",
+        "mappedValue": "i_ft_needed_file_browse_power"
+      },
+      {
+        "originalName": "i_ft_directory_create_power",
+        "mappedValue": "i_ft_directory_create_power"
+      },
+      {
+        "originalName": "i_ft_needed_directory_create_power",
+        "mappedValue": "i_ft_needed_directory_create_power"
+      },
+      {
+        "originalName": "i_ft_quota_mb_download_per_client",
+        "mappedValue": "i_ft_quota_mb_download_per_client"
+      },
+      {
+        "originalName": "i_ft_quota_mb_upload_per_client",
+        "mappedValue": "i_ft_quota_mb_upload_per_client"
+      }
+    ]
+  },
+  {
+    "groupId": 1,
+    "groupName": "Group 1",
+    "mappings": []
+  },
+  {
+    "groupId": 2,
+    "groupName": "Group 2",
+    "mappings": []
+  },
+  {
+    "groupId": 3,
+    "groupName": "Group 3",
+    "mappings": []
+  }
+]

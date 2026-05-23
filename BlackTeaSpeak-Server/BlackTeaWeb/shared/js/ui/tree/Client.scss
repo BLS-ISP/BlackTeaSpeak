@@ -1,0 +1,120 @@
+﻿@use "../../../css/static/globals" as *;
+
+html:root {
+    --channel-tree-name-edit-color: #f4ead7;
+    --channel-tree-name-edit-background: rgba(12, 11, 14, 0.96);
+    --channel-tree-name-edit-border: rgba(231, 193, 144, 0.3);
+}
+
+.clientEntry {
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+    gap: .15rem;
+
+    > div {
+        margin-right: .18em;
+    }
+
+    .statusIcon {
+        flex-shrink: 0;
+    }
+
+    .clientName {
+        line-height: 1.2em;
+        font-size: .92em;
+
+        min-width: 2em;
+
+        flex-grow: 0;
+        flex-shrink: 1;
+
+        padding-right: .25em;
+        color: var(--channel-tree-entry-color);
+
+        &:not(.edit) {
+            @include text-dotdotdot();
+        }
+
+        &.clientNameOwn {
+            font-weight: bold;
+            color: var(--text-strong);
+        }
+
+        &.edit {
+            width: 100%;
+            font-weight: normal;
+
+            color: var(--channel-tree-name-edit-color);
+            background-color: var(--channel-tree-name-edit-background);
+            border: 1px solid var(--channel-tree-name-edit-border);
+
+            overflow-y: hidden;
+            overflow-x: hidden;
+        }
+    }
+
+    .clientAwayMessage {
+        color: var(--channel-tree-entry-color);
+    }
+
+    .containerIcons {
+        margin-right: 0; /* override from previous thing */
+        height: 100%;
+
+        position: absolute;
+        right: 0;
+        padding-right: 5px;
+        padding-left: 8px;
+        background: linear-gradient(90deg, rgba(18, 16, 19, 0) 0%, rgba(18, 16, 19, 0.88) 40%);
+
+        display: flex;
+        flex-direction: row;
+
+        align-items: center;
+
+        .containerIconsGroup {
+            display: flex;
+            flex-direction: row;
+
+            .containerHroupIcon {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
+    }
+
+    &.selected {
+        &:focus-within {
+            .containerIcons {
+                background-color: var(--channel-tree-entry-selected); /* overpaint the name change box */
+
+                padding-left: 5px;
+                z-index: 1001; /* show before client name */
+
+                height: 18px;
+            }
+        }
+
+        .clientName {
+            &:focus {
+                position: absolute;
+                color: var(--channel-tree-name-edit-color);
+
+                padding-top: 1px;
+                padding-bottom: 1px;
+
+                z-index: 1000;
+
+                margin-right: -10px;
+                margin-left: 18px;
+
+                width: 100%;
+            }
+        }
+    }
+}

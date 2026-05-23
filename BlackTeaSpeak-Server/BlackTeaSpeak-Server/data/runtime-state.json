@@ -1,0 +1,4013 @@
+{
+  "schema_version": 13,
+  "query_accounts": {
+    "serveradmin": {
+      "login_name": "serveradmin",
+      "password": "serveradmin",
+      "server_id": 1,
+      "client_database_id": 1,
+      "server_groups": [
+        6
+      ],
+      "permissions": {}
+    }
+  },
+  "server_groups": {
+    "6": {
+      "id": 6,
+      "name": "Admin Server Query",
+      "group_type": 1,
+      "icon_id": 300,
+      "save_db": true,
+      "permissions": {
+        "b_channel_create_child": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_conversation_history_unlimited": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_conversation_mode_none": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_conversation_mode_private": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_conversation_mode_public": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_with_codec_opusmusic": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_with_codec_opusvoice": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_with_force_password": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_default": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_maxfamilyclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_needed_talk_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_sortorder": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_topic": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_flag_force": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_group_inheritance_end": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_ignore_description_view_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_ignore_join_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_ignore_subscribe_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_ignore_view_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_ignore_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_ignore_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec_latency_factor": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec_quality": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_codec_encrypted": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_default": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_maxfamilyclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_name": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_needed_talk_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_parent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_sortorder": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_temp_delete_delay": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_topic": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_allow_invalid_badges": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_allow_invalid_packet": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_avatar_delete_other": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_create_global": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_delete_global": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_delete_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_delete_own_global": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_edit": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_edit_global": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_hwid": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_ip": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_list_global": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_name": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_trigger_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_channel_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_complain_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_complain_delete_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_complain_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_create_modify_serverquery_login": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_custom_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_delete_dbproperties": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_enforce_valid_hwid": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_even_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_force_push_to_talk": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ignore_antiflood": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ignore_bans": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ignore_sticky": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ignore_vpn": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_is_priority_speaker": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_is_sticky": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_issue_client_query_command": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_modify_dbproperties": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_modify_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_modify_own_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_channel_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_create_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_create_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_create_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_modify_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_modify_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_modify_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_server_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_offline_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_permissionoverview_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_permissionoverview_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_change_own_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_change_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_change_password_global": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_create_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_delete_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_list_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_rename": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_rename_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_remoteaddress_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_request_talker": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_server_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_set_flag_talker": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_skip_channelgroup_permissions": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_bbcode_any": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_bbcode_image": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_bbcode_url": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_channel_commander": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_priority_speaker": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_reserved_slot": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_ft_ignore_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_ft_transfer_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_group_is_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_icon_manage": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_permission_modify_power_ignore": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_playlist_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_binding_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_help_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_log_add": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_log_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_modify_querygroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_modify_settings": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_modify_templates": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_permission_find": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_stop": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_version_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_virtualserver_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverquery_login": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_video_camera": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_video_screen": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_change_machine_id": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_change_template": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channel_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channel_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channel_search": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelclient_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_client_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_dbinfo": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_dblist": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_dbsearch": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_search": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_connectioninfo_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_custom_search": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_join_ignore_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_log_add": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_log_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_antiflood": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_autostart": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_channel_forced_silence": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_channel_temp_delete_delay_default": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_codec_encryption_mode": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_complain": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_country_code": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_channeladmingroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_channelgroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_messages": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_musicgroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_servergroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_ft_quotas": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_ft_settings": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_host": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_hostbanner": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_hostbutton": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_hostmessage": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_icon_id": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_log_settings": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_maxchannels": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_min_client_version": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_music_bot_limit": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_name": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_needed_identity_security_level": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_port": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_priority_speaker_dimm_modificator": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_reserved_slots": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_temporary_passwords": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_temporary_passwords_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_welcomemessage": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_notify_register": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_notify_unregister": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_permission_find": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_permission_reset": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_playlist_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_select": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_select_godmode": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_client_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_snapshot_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_snapshot_deploy": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_start": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_start_any": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_stop": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_stop_any": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_token_delete_all": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_token_edit_all": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_token_list_all": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_token_use": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_conversation_history_length": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_with_codec_latency_factor_min": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_with_codec_maxquality": {
+          "value": 10,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_with_temp_delete_delay": {
+          "value": 86400,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_delete_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_description_view_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_member_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_member_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_member_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_member_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_self_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_self_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_join_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_max_depth": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_min_depth": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_delete_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_description_view_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_join_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_modify_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_permission_modify_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_subscribe_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_view_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_permission_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_subscribe_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_view_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_ban_max_bantime": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_ban_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_complain_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_kick_from_channel_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_kick_from_server_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_avatar_filesize": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_channel_subscriptions": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_channels": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_clones_hwid": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_clones_ip": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_clones_uid": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_idletime": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_permanent_channels": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_semi_channels": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_temporary_channels": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_move_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_create_modify_max_volume": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_delete_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_info": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_limit": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_delete_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_info": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_modify_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_play_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_rename_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_play_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_rename_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_ban_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_complain_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_kick_from_channel_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_kick_from_server_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_move_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_permission_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_poke_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_private_textmessage_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_serverquery_view_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_talk_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_whisper_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_permission_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_poke_max_clients": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_poke_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_private_textmessage_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_serverquery_view_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_talk_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_whisper_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_directory_create_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_browse_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_delete_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_download_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_rename_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_upload_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_max_bandwidth_download": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_max_bandwidth_upload": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_directory_create_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_browse_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_delete_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_download_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_rename_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_upload_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_quota_mb_download_per_client": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_quota_mb_upload_per_client": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_auto_update_max_value": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_auto_update_type": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_member_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_member_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_needed_member_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_needed_member_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_needed_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_show_name_in_tree": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_sort_id": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_icon_id": {
+          "value": 500,
+          "negated": false,
+          "skipped": false
+        },
+        "i_max_icon_filesize": {
+          "value": 8192,
+          "negated": false,
+          "skipped": false
+        },
+        "i_max_playlist_size": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "i_max_playlists": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "i_permission_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_delete_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_needed_delete_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_needed_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_needed_permission_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_needed_view_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_permission_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_move_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_needed_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_needed_move_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_needed_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_view_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_member_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_member_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_needed_member_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_needed_member_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_needed_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_self_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_self_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_video_max_camera_streams": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_video_max_kbps": {
+          "value": 5000,
+          "negated": false,
+          "skipped": false
+        },
+        "i_video_max_screen_streams": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_video_max_streams": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_virtualserver_token_limit": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        }
+      }
+    },
+    "7": {
+      "id": 7,
+      "name": "Guest Server Query",
+      "group_type": 1,
+      "icon_id": 0,
+      "save_db": true,
+      "permissions": {
+        "b_channel_create_permanent": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_semi_permanent": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_temporary": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_permanent": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_semi_permanent": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_temporary": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_channel_textmessage_send": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_offline_textmessage_send": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_server_textmessage_send": {
+          "value": 0,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_help_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverinstance_version_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_serverquery_login": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_select": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_permission_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_poke_power": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_private_textmessage_power": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_auto_update_type": {
+          "value": 20,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_needed_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_needed_modify_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        }
+      }
+    },
+    "8": {
+      "id": 8,
+      "name": "Normal",
+      "group_type": 1,
+      "icon_id": 0,
+      "save_db": true,
+      "permissions": {
+        "i_server_group_member_add_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_member_remove_power": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        }
+      }
+    },
+    "9": {
+      "id": 9,
+      "name": "Server Admin",
+      "group_type": 1,
+      "icon_id": 300,
+      "save_db": true,
+      "permissions": {
+        "b_channel_conversation_message_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_child": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_conversation_history_unlimited": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_conversation_mode_none": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_conversation_mode_private": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_conversation_mode_public": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_sidebar_mode": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_with_codec_opusmusic": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_with_codec_opusvoice": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_modify_with_force_password": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_default": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_maxfamilyclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_needed_talk_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_sortorder": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_create_with_topic": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_flag_force": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_group_inheritance_end": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_ignore_description_view_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_ignore_join_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_ignore_subscribe_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_ignore_view_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_ignore_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_ignore_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_join_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec_latency_factor": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec_quality": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_codec_encrypted": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_default": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_maxfamilyclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_name": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_needed_talk_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_parent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_sortorder": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_temp_delete_delay": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_topic": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_allow_invalid_badges": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_allow_invalid_packet": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_avatar_delete_other": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_delete_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_edit": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_hwid": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_ip": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_list_global": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_name": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ban_trigger_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_channel_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_complain_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_complain_delete_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_complain_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_create_modify_serverquery_login": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_custom_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_delete_dbproperties": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_enforce_valid_hwid": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_even_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_force_push_to_talk": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ignore_antiflood": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ignore_bans": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ignore_sticky": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_ignore_vpn": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_is_priority_speaker": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_is_sticky": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_issue_client_query_command": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_modify_dbproperties": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_modify_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_modify_own_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_channel_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_create_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_create_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_create_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_modify_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_modify_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_modify_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_music_server_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_offline_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_permissionoverview_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_permissionoverview_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_change_own_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_change_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_delete_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_list_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_rename": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_query_rename_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_remoteaddress_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_request_talker": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_server_textmessage_send": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_set_flag_talker": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_skip_channelgroup_permissions": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_bbcode_any": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_bbcode_image": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_bbcode_url": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_channel_commander": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_priority_speaker": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_reserved_slot": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_ft_ignore_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_ft_transfer_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_group_is_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_icon_manage": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_playlist_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_video_camera": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_video_screen": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channel_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channel_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channel_search": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelclient_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_client_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_channelgroup_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_dbinfo": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_dblist": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_dbsearch": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_client_search": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_connectioninfo_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_custom_search": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_info_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_join_ignore_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_log_add": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_log_view": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_antiflood": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_autostart": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_channel_forced_silence": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_channel_temp_delete_delay_default": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_codec_encryption_mode": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_complain": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_country_code": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_channeladmingroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_channelgroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_messages": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_musicgroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_default_servergroup": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_ft_quotas": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_ft_settings": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_host": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_hostbanner": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_hostbutton": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_hostmessage": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_icon_id": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_log_settings": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_maxchannels": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_min_client_version": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_music_bot_limit": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_name": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_needed_identity_security_level": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_port": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_priority_speaker_dimm_modificator": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_reserved_slots": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_temporary_passwords": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_temporary_passwords_own": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_modify_welcomemessage": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_notify_register": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_notify_unregister": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_permission_find": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_playlist_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_select": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_select_godmode": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_client_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_create": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_delete": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_servergroup_permission_list": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_start": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_stop": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_token_delete_all": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_token_edit_all": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_token_list_all": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_virtualserver_token_use": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_conversation_history_length": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_with_codec_latency_factor_min": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_with_codec_maxquality": {
+          "value": 10,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_with_temp_delete_delay": {
+          "value": 86400,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_delete_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_description_view_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_member_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_member_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_member_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_member_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_self_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_self_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_join_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_max_depth": {
+          "value": 10,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_min_depth": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_delete_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_description_view_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_join_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_modify_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_permission_modify_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_subscribe_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_needed_view_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_permission_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_subscribe_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_view_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_ban_max_bantime": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_ban_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_complain_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_kick_from_channel_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_kick_from_server_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_avatar_filesize": {
+          "value": 200000,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_channel_subscriptions": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_channels": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_clones_hwid": {
+          "value": 10,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_clones_ip": {
+          "value": 10,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_clones_uid": {
+          "value": 10,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_idletime": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_permanent_channels": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_semi_channels": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_max_temporary_channels": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_move_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_create_modify_max_volume": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_delete_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_info": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_limit": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_delete_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_info": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_modify_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_play_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_needed_rename_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_play_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_music_rename_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_ban_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_complain_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_kick_from_channel_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_kick_from_server_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_move_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_permission_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_poke_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_private_textmessage_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_serverquery_view_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_talk_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_whisper_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_permission_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_poke_max_clients": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_poke_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_private_textmessage_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_serverquery_view_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_talk_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_whisper_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_directory_create_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_browse_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_delete_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_download_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_rename_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_file_upload_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_max_bandwidth_download": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_max_bandwidth_upload": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_directory_create_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_browse_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_delete_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_download_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_rename_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_needed_file_upload_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_quota_mb_download_per_client": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_ft_quota_mb_upload_per_client": {
+          "value": -1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_auto_update_max_value": {
+          "value": 45,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_auto_update_type": {
+          "value": 45,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_member_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_member_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_needed_member_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_needed_member_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_show_name_in_tree": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_sort_id": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_icon_id": {
+          "value": 300,
+          "negated": false,
+          "skipped": false
+        },
+        "i_max_icon_filesize": {
+          "value": 8192,
+          "negated": false,
+          "skipped": false
+        },
+        "i_max_playlist_size": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_max_playlists": {
+          "value": 10,
+          "negated": false,
+          "skipped": false
+        },
+        "i_permission_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_delete_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_needed_delete_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_needed_modify_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_needed_permission_modify_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_needed_view_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_permission_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_move_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_needed_add_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_needed_move_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_needed_remove_power": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_song_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_playlist_view_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_member_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_member_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_needed_member_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_needed_member_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_self_add_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_server_group_self_remove_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_video_max_camera_streams": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_video_max_kbps": {
+          "value": 5000,
+          "negated": false,
+          "skipped": false
+        },
+        "i_video_max_screen_streams": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_video_max_streams": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_virtualserver_token_limit": {
+          "value": -2,
+          "negated": false,
+          "skipped": false
+        }
+      }
+    }
+  },
+  "channel_groups": {
+    "8": {
+      "id": 8,
+      "name": "Channel Admin",
+      "group_type": 2,
+      "icon_id": 100,
+      "save_db": true,
+      "permissions": {
+        "b_channel_delete_flag_force": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_semi_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_delete_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec_latency_factor": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_codec_quality": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_description": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_codec_encrypted": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_make_temporary": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_maxclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_maxfamilyclients": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_name": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_needed_talk_power": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_password": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_channel_modify_topic": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_set_flag_talker": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_client_use_channel_commander": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_group_is_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_create_modify_with_codec_latency_factor_min": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_delete_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_description_view_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_member_add_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_member_remove_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_member_add_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_member_remove_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_kick_from_channel_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_move_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_complain_power": {
+          "value": 25,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_kick_from_channel_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_talk_power": {
+          "value": 60,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_member_add_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_member_remove_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_needed_member_add_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_needed_member_remove_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_auto_update_type": {
+          "value": 40,
+          "negated": false,
+          "skipped": false
+        },
+        "i_icon_id": {
+          "value": 100,
+          "negated": false,
+          "skipped": false
+        }
+      }
+    },
+    "9": {
+      "id": 9,
+      "name": "Operator",
+      "group_type": 1,
+      "icon_id": 200,
+      "save_db": true,
+      "permissions": {
+        "b_client_set_flag_talker": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "b_group_is_permanent": {
+          "value": 1,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_member_add_power": {
+          "value": 30,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_member_remove_power": {
+          "value": 30,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_member_add_power": {
+          "value": 30,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_member_remove_power": {
+          "value": 30,
+          "negated": false,
+          "skipped": false
+        },
+        "i_channel_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_needed_complain_power": {
+          "value": 25,
+          "negated": false,
+          "skipped": false
+        },
+        "i_client_talk_power": {
+          "value": 50,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_member_add_power": {
+          "value": 30,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_member_remove_power": {
+          "value": 30,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_needed_member_add_power": {
+          "value": 30,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_needed_member_remove_power": {
+          "value": 30,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_auto_update_type": {
+          "value": 35,
+          "negated": false,
+          "skipped": false
+        },
+        "i_icon_id": {
+          "value": 200,
+          "negated": false,
+          "skipped": false
+        }
+      }
+    },
+    "10": {
+      "id": 10,
+      "name": "Guest",
+      "group_type": 2,
+      "icon_id": 0,
+      "save_db": true,
+      "permissions": {
+        "i_channel_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_displayed_group_needed_modify_power": {
+          "value": 75,
+          "negated": false,
+          "skipped": false
+        },
+        "i_group_auto_update_type": {
+          "value": 10,
+          "negated": false,
+          "skipped": false
+        }
+      }
+    }
+  },
+  "virtual_servers": {
+    "1": {
+      "id": 1,
+      "port": 9987,
+      "name": "BlackTeaSpeak Compat",
+      "unique_identifier": "compat-baseline-uid",
+      "welcome_message": "Welcome to BlackTeaSpeak Compat",
+      "host_message": "",
+      "host_message_mode": 0,
+      "ask_for_privilegekey": 0,
+      "max_clients": 128,
+      "antiflood_points_tick_reduce": 10,
+      "antiflood_points_needed_command_block": 150,
+      "antiflood_points_needed_ip_block": 250,
+      "antiflood_ban_time": 300
+    }
+  },
+  "channels": {
+    "1": [
+      {
+        "id": 1,
+        "parent_id": 0,
+        "order": 0,
+        "kind": "permanent",
+        "name": "Default Channel",
+        "topic": "Default Channel has no topic",
+        "description": "",
+        "permissions": {}
+      },
+      {
+        "id": 2,
+        "parent_id": 0,
+        "order": 1,
+        "kind": "permanent",
+        "name": "Music Lounge",
+        "topic": "Music bot staging area",
+        "description": "",
+        "permissions": {}
+      }
+    ]
+  },
+  "channel_group_assignments": [
+    {
+      "channel_id": 1,
+      "client_database_id": 40,
+      "channel_group_id": 10
+    },
+    {
+      "channel_id": 1,
+      "client_database_id": 41,
+      "channel_group_id": 10
+    },
+    {
+      "channel_id": 2,
+      "client_database_id": 42,
+      "channel_group_id": 10
+    }
+  ],
+  "channel_client_permissions": [],
+  "client_permissions": [],
+  "conversation_messages": {
+    "1": [
+      {
+        "conversation_id": 2,
+        "timestamp": 1779472270456,
+        "sender_database_id": 0,
+        "sender_unique_id": "desktop-1",
+        "sender_name": "Query",
+        "message": "Hello World"
+      }
+    ]
+  },
+  "private_messages": {},
+  "music_bots": {
+    "1": {
+      "id": 1,
+      "server_id": 1,
+      "client_database_id": 42,
+      "linked_client_id": 12,
+      "playlist_id": 1,
+      "current_song_id": 0,
+      "next_song_id": 1,
+      "state": "stopped",
+      "player_volume": "1",
+      "playlist_title": "",
+      "playlist_description": "",
+      "playlist_flag_delete_played": false,
+      "playlist_flag_finished": false,
+      "playlist_replay_mode": 0,
+      "playlist_max_songs": 0,
+      "permissions": {},
+      "client_permissions": [],
+      "queue": []
+    }
+  },
+  "tokens": {},
+  "session_snapshots": {},
+  "next_client_database_id": 100,
+  "next_conversation_timestamp": 1779472270457,
+  "next_token_id": 1,
+  "next_token_action_id": 1
+}

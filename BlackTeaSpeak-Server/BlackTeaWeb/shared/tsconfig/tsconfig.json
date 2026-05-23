@@ -1,0 +1,37 @@
+/* general shared project config */
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
+    "useUnknownInCatchVariables": false,
+    "noUncheckedSideEffectImports": false,
+    "skipLibCheck": true,
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "plugins": [ /* ttypescript */
+      {
+        "transform": "../../tools/trgen/ttsc_transformer.js",
+        "type": "program",
+        "target_file": "../generated/messages_script.json",
+        "verbose": true
+      }
+    ]
+  },
+  "exclude": [
+    "../js/workers"
+  ],
+  "include": [
+    "../types",
+    "../types",
+    "../declarations/imports_*.d.ts",
+    "../declarations/exports_loader_app.d.ts",
+    "../backend",
+    "../js/**/*.ts"
+  ]
+}

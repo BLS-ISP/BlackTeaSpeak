@@ -1,0 +1,20 @@
+{
+  "identities": [
+    {
+      "id": "id_23be3641b4ad45138d6535a4358345db",
+      "name": "Genera",
+      "private_key": "Mek+PKDSYPt9tVSdI+Bb/ykJYJaX9WRQIuxuaXBrcf4=",
+      "public_key": "oB9zQL6PpQOnYOg4p1ohz8fhzOx1Pg4TjzjnLYJu0ps=",
+      "uid": "lo7xf2P5i/sCLp68CFAvVtUxTdE=",
+      "default_nickname": "Genera",
+      "audio_input_device": "Mikrofon (2- Anua Mic CM 900)",
+      "audio_output_device": null,
+      "input_amplification": 5.0,
+      "output_amplification": 1.0,
+      "voice_transmission_mode": "voice_activation",
+      "voice_activation_threshold": 0.026,
+      "ptt_hotkey": null
+    }
+  ],
+  "favorites": []
+}

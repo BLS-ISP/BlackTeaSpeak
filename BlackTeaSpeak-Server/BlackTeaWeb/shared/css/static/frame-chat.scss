@@ -1,0 +1,24 @@
+﻿@use "globals" as *;
+
+/* FIXME: Resolve variable usage! */
+html:root {
+	--side-background: rgba(31, 34, 39, 0.98);
+	--side-info-background: linear-gradient(180deg, rgba(43, 47, 54, 0.98) 0%, rgba(31, 34, 39, 0.98) 100%);
+	--side-info-shadow: rgba(0, 0, 0, 0.18);
+	--side-info-title: #adb3bc;
+
+	--side-info-indicator: #f5f2ea;
+	--side-info-indicator-border: rgba(191, 149, 92, 0.38);
+	--side-info-indicator-background: linear-gradient(180deg, rgba(171, 124, 67, 0.96) 0%, rgba(124, 86, 45, 0.96) 100%);
+
+	--side-info-value-background: rgba(255, 255, 255, 0.06);
+	--side-info-value: #edf0f4;
+
+	--side-info-ping-very-good: #8ed38a;
+	--side-info-ping-good: #72b86f;
+	--side-info-ping-medium: #d1b66a;
+	--side-info-ping-poor: #d79259;
+	--side-info-ping-very-poor: #da745d;
+
+	--side-info-bot-add-song: #91d68d;
+}

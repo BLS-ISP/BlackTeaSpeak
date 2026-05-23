@@ -1,0 +1,114 @@
+﻿@use "../../../css/static/globals" as *;
+
+html:root {
+    --button-background: rgba(255, 244, 223, 0.06);
+    --button-background-solid: rgba(18, 16, 19, 0.96);
+
+    --button-hover-background: rgba(255, 244, 223, 0.12);
+    --button-hover-background-solid: rgba(28, 24, 27, 0.98);
+
+    --button-disabled-background: rgba(255, 244, 223, 0.03);
+    --button-disabled-background-solid: rgba(18, 16, 19, 0.72);
+
+    --button-color: #e7dbc7;
+
+    --button-green: #8ac985;
+    --button-blue: #d5a15d;
+    --button-red: #ce6d53;
+    --button-purple: #8d73bf;
+    --button-brown: #c88455;
+    --button-yellow: #d5b96d;
+}
+
+.button {
+    cursor: pointer;
+
+    background-color: var(--button-background);
+
+    border-width: 1px;
+    border-radius: 999px;
+    border-style: solid;
+    border-color: rgba(255, 244, 223, 0.08);
+
+    color: var(--button-color);
+
+    height: 2.2em;
+    padding: .25em 1.15em;
+
+    box-shadow: 0 10px 24px rgba(0, 0, 0, .2), inset 0 1px 0 rgba(255, 244, 223, .05);
+
+    @include text-dotdotdot();
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    font-size: .84rem;
+    font-weight: 600;
+
+    &:hover {
+		background-color: var(--button-hover-background);
+		transform: translateY(-1px);
+    }
+
+    &:disabled {
+        box-shadow: none;
+        background-color: var(--button-disabled-background);
+        border-color: rgba(255, 244, 223, 0.04);
+    }
+
+    &.nonTransparent {
+        background-color: var(--button-background-solid);
+
+        &:hover {
+            background-color: var(--button-hover-background-solid);
+        }
+
+        &:disabled {
+            background-color: var(--button-disabled-background-solid);
+        }
+    }
+
+    &.color-green {
+        border-bottom-width: 2px;
+        border-bottom-color: var(--button-green);
+    }
+
+    &.color-blue, &.color-default {
+        border-bottom-width: 2px;
+        border-bottom-color: var(--button-blue);
+    }
+
+    &.color-red {
+        border-bottom-width: 2px;
+        border-bottom-color: var(--button-red);
+    }
+
+    &.color-purple {
+        border-bottom-width: 2px;
+        border-bottom-color: var(--button-purple);
+    }
+
+    &.color-brown {
+        border-bottom-width: 2px;
+        border-bottom-color: var(--button-brown);
+    }
+
+    &.color-yellow {
+        border-bottom-width: 2px;
+        border-bottom-color: var(--button-yellow);
+    }
+
+    &.color-none {
+        --keep-alive: true;
+    }
+
+    &.type-normal { }
+
+    &.type-small {
+        font-size: .9em;
+    }
+
+    &.type-extra-small {
+        font-size: .6em;
+    }
+
+    @include transition(background-color $button_hover_animation_time ease-in-out, transform $button_hover_animation_time ease-in-out, border-color $button_hover_animation_time ease-in-out);
+}

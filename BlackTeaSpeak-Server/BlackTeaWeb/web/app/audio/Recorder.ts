@@ -1,0 +1,874 @@
+import {AudioRecorderBacked, DeviceList, InputDevice,} from "tc-shared/audio/Recorder";
+import {Registry} from "tc-shared/events";
+import {
+    AbstractInput,
+    FilterMode,
+    InputConsumer,
+    InputConsumerType,
+    InputEvents, InputProcessor, InputProcessorConfigMapping, InputProcessorStatistics, InputProcessorType,
+    InputStartError,
+    InputState,
+    LevelMeter
+} from "tc-shared/voice/RecorderBase";
+import {LogCategory, logDebug, logWarn} from "tc-shared/log";
+import {JAbstractFilter, JStateFilter, JThresholdFilter} from "./RecorderFilter";
+import {Filter, FilterType, FilterTypeClass} from "tc-shared/voice/Filter";
+import {inputDeviceList} from "./RecorderDeviceList";
+import {requestMediaStream, stopMediaStream} from "tc-shared/media/Stream";
+import {tr} from "tc-shared/i18n/localize";
+import {getAudioBackend} from "tc-shared/audio/Player";
+
+declare global {
+    interface MediaStream {
+        stop();
+    }
+}
+
+export interface WebIDevice extends InputDevice {
+    groupId: string;
+}
+
+interface CallbackAudioProcessEvent {
+    inputBuffer: AudioBuffer;
+}
+
+interface CallbackConsumerMessage {
+    channels: Float32Array[];
+}
+
+type CallbackConsumerNode = AudioNode & {
+    port?: MessagePort;
+    addEventListener?: (type: string, listener: EventListenerOrEventListenerObject) => void;
+    removeEventListener?: (type: string, listener: EventListenerOrEventListenerObject) => void;
+};
+
+export class WebAudioRecorder implements AudioRecorderBacked {
+    createInput(): AbstractInput {
+        return new JavascriptInput();
+    }
+
+    async createLevelMeter(device: InputDevice): Promise<LevelMeter> {
+        const meter = new JavascriptLevelMeter(device as any);
+        await meter.initialize();
+        return meter;
+    }
+
+    getDeviceList(): DeviceList {
+        return inputDeviceList;
+    }
+}
+
+class JavascriptInput implements AbstractInput {
+    public readonly events: Registry<InputEvents>;
+    private static readonly callbackBufferSize = 1024 * 4;
+    private static readonly callbackWorkletName = "blackteaspeak-recorder-callback";
+    private static readonly callbackWorkletModules = new WeakMap<AudioContext, Promise<void>>();
+
+    private state: InputState = InputState.PAUSED;
+    private deviceId: string | undefined;
+    private consumer: InputConsumer;
+
+    private currentStream: MediaStream;
+    private currentAudioStream: MediaStreamAudioSourceNode;
+
+    private audioContext: AudioContext;
+    private audioSourceNode: AudioNode; /* last node which could be connected to the target; target might be the _consumer_node */
+    private audioNodeCallbackConsumer: CallbackConsumerNode | undefined;
+    private readonly audioScriptProcessorCallback;
+    private readonly audioWorkletMessageCallback;
+    private audioNodeVolume: GainNode;
+
+    /* The node is connected to the audio context. Used for the script processor so it has a sink */
+    private audioNodeMute: GainNode;
+
+    private registeredFilters: (Filter & JAbstractFilter<AudioNode>)[] = [];
+    private inputFiltered: boolean = false;
+    private filterMode: FilterMode = FilterMode.Block;
+
+    private startPromise: Promise<InputStartError | true>;
+    private callbackConsumerReadyPromise: Promise<void> | undefined;
+    private callbackConsumerActive: boolean = false;
+
+    private volumeModifier: number = 1;
+
+    constructor() {
+        this.events = new Registry<InputEvents>();
+
+        getAudioBackend().executeWhenInitialized(() => this.handleAudioInitialized());
+        this.audioScriptProcessorCallback = this.handleAudio.bind(this);
+        this.audioWorkletMessageCallback = this.handleAudioWorkletMessage.bind(this);
+    }
+
+    destroy() {
+        this.deactivateCallbackConsumer();
+        this.audioNodeCallbackConsumer?.disconnect();
+        this.audioNodeCallbackConsumer = undefined;
+    }
+
+    private handleAudioInitialized() {
+        this.audioContext = getAudioBackend().getAudioContext();
+        this.audioNodeMute = this.audioContext.createGain();
+        this.audioNodeMute.gain.value = 0;
+        this.audioNodeMute.connect(this.audioContext.destination);
+
+        this.audioNodeVolume = this.audioContext.createGain();
+        this.audioNodeVolume.gain.value = this.volumeModifier;
+
+        if(this.consumer?.type === InputConsumerType.CALLBACK) {
+            void this.ensureCallbackConsumerInitialized().catch(error => {
+                logWarn(LogCategory.AUDIO, tr("Failed to initialize the callback audio consumer: %o"), error);
+            });
+        }
+
+        this.initializeFilters();
+    }
+
+    private static ensureCallbackWorkletModule(audioContext: AudioContext): Promise<void> {
+        const cachedModule = this.callbackWorkletModules.get(audioContext);
+        if(cachedModule !== undefined) {
+            return cachedModule;
+        }
+
+        const moduleUrl = URL.createObjectURL(new Blob([this.buildCallbackWorkletModule()], { type: "text/javascript" }));
+        const modulePromise = audioContext.audioWorklet.addModule(moduleUrl).finally(() => URL.revokeObjectURL(moduleUrl));
+        this.callbackWorkletModules.set(audioContext, modulePromise);
+        return modulePromise;
+    }
+
+    private static buildCallbackWorkletModule() {
+        return `
+class BlackTeaSpeakRecorderCallbackProcessor extends AudioWorkletProcessor {
+    constructor(options) {
+        super();
+        const processorOptions = options && options.processorOptions ? options.processorOptions : {};
+        this.bufferSize = processorOptions.bufferSize || ${JavascriptInput.callbackBufferSize};
+        this.pendingFrames = 0;
+        this.channelBuffers = [];
+    }
+
+    ensureChannelBuffers(channelCount) {
+        while (this.channelBuffers.length < channelCount) {
+            this.channelBuffers.push(new Float32Array(this.bufferSize));
+        }
+
+        if (this.channelBuffers.length > channelCount) {
+            this.channelBuffers.length = channelCount;
+        }
+    }
+
+    process(inputs, outputs) {
+        const input = inputs[0];
+        const output = outputs[0];
+
+        if (output) {
+            for (let index = 0; index < output.length; index++) {
+                if (input && input[index]) {
+                    output[index].set(input[index]);
+                } else {
+                    output[index].fill(0);
+                }
+            }
+        }
+
+        if (!input || input.length === 0) {
+            return true;
+        }
+
+        this.ensureChannelBuffers(input.length);
+
+        const frameCount = input[0].length;
+        let offset = 0;
+        while (offset < frameCount) {
+            const remainingFrames = this.bufferSize - this.pendingFrames;
+            const copyFrames = Math.min(remainingFrames, frameCount - offset);
+
+            for (let channelIndex = 0; channelIndex < input.length; channelIndex++) {
+                this.channelBuffers[channelIndex].set(
+                    input[channelIndex].subarray(offset, offset + copyFrames),
+                    this.pendingFrames
+                );
+            }
+
+            offset += copyFrames;
+            this.pendingFrames += copyFrames;
+
+            if (this.pendingFrames === this.bufferSize) {
+                this.port.postMessage({
+                    channels: this.channelBuffers.map(channel => channel.slice(0))
+                });
+                this.pendingFrames = 0;
+            }
+        }
+
+        return true;
+    }
+}
+
+registerProcessor("${JavascriptInput.callbackWorkletName}", BlackTeaSpeakRecorderCallbackProcessor);
+`;
+    }
+
+    private async ensureCallbackConsumerInitialized() {
+        if(this.audioNodeCallbackConsumer || !this.audioContext || !this.audioNodeMute) {
+            return;
+        }
+
+        if(!this.callbackConsumerReadyPromise) {
+            this.callbackConsumerReadyPromise = this.createCallbackConsumer().finally(() => {
+                this.callbackConsumerReadyPromise = undefined;
+            });
+        }
+
+        await this.callbackConsumerReadyPromise;
+    }
+
+    private async createCallbackConsumer() {
+        if(!this.audioContext || !this.audioNodeMute) {
+            return;
+        }
+
+        let callbackConsumer: CallbackConsumerNode | undefined;
+        if(this.audioContext.audioWorklet && typeof AudioWorkletNode === "function") {
+            try {
+                await JavascriptInput.ensureCallbackWorkletModule(this.audioContext);
+                callbackConsumer = new AudioWorkletNode(this.audioContext, JavascriptInput.callbackWorkletName, {
+                    processorOptions: {
+                        bufferSize: JavascriptInput.callbackBufferSize
+                    }
+                });
+            } catch(error) {
+                logWarn(LogCategory.AUDIO, tr("Failed to initialize the AudioWorklet callback consumer. Falling back to the legacy audio callback path: %o"), error);
+            }
+        }
+
+        if(!callbackConsumer) {
+            callbackConsumer = this.createLegacyCallbackConsumer();
+        }
+
+        callbackConsumer.connect(this.audioNodeMute);
+        this.audioNodeCallbackConsumer = callbackConsumer;
+
+        if(this.consumer?.type === InputConsumerType.CALLBACK && this.audioSourceNode) {
+            this.audioSourceNode.connect(callbackConsumer);
+        }
+
+        if(this.state === InputState.RECORDING && this.consumer?.type === InputConsumerType.CALLBACK) {
+            this.activateCallbackConsumer();
+        }
+    }
+
+    private createLegacyCallbackConsumer(): CallbackConsumerNode {
+        const createScriptProcessor = (this.audioContext as unknown as {
+            createScriptProcessor?: (bufferSize?: number, numberOfInputChannels?: number, numberOfOutputChannels?: number) => CallbackConsumerNode;
+        }).createScriptProcessor;
+
+        if(typeof createScriptProcessor !== "function") {
+            throw new TypeError(tr("callback audio consumer isn't supported"));
+        }
+
+        return createScriptProcessor.call(this.audioContext, JavascriptInput.callbackBufferSize);
+    }
+
+    private connectConsumerToSource(consumer: InputConsumer | undefined, sourceNode: AudioNode | undefined) {
+        if(!consumer || !sourceNode) {
+            return;
+        }
+
+        if(consumer.type === InputConsumerType.NODE) {
+            consumer.callbackNode(sourceNode);
+            return;
+        }
+
+        if(consumer.type === InputConsumerType.CALLBACK) {
+            if(this.audioNodeCallbackConsumer) {
+                sourceNode.connect(this.audioNodeCallbackConsumer);
+            }
+            return;
+        }
+
+        throw new TypeError("native callback consumers are not supported!");
+    }
+
+    private disconnectConsumerFromSource(consumer: InputConsumer | undefined, sourceNode: AudioNode | undefined) {
+        if(!consumer || !sourceNode) {
+            return;
+        }
+
+        if(consumer.type === InputConsumerType.NODE) {
+            consumer.callbackDisconnect(sourceNode);
+            return;
+        }
+
+        if(consumer.type === InputConsumerType.CALLBACK && this.audioNodeCallbackConsumer) {
+            sourceNode.disconnect(this.audioNodeCallbackConsumer);
+        }
+    }
+
+    private activateCallbackConsumer() {
+        if(this.callbackConsumerActive || !this.audioNodeCallbackConsumer) {
+            return;
+        }
+
+        if(this.audioNodeCallbackConsumer.port) {
+            this.audioNodeCallbackConsumer.port.onmessage = this.audioWorkletMessageCallback;
+        } else {
+            this.audioNodeCallbackConsumer.addEventListener?.("audioprocess", this.audioScriptProcessorCallback);
+        }
+
+        this.callbackConsumerActive = true;
+    }
+
+    private deactivateCallbackConsumer() {
+        if(!this.callbackConsumerActive || !this.audioNodeCallbackConsumer) {
+            return;
+        }
+
+        if(this.audioNodeCallbackConsumer.port) {
+            this.audioNodeCallbackConsumer.port.onmessage = null;
+        } else {
+            this.audioNodeCallbackConsumer.removeEventListener?.("audioprocess", this.audioScriptProcessorCallback);
+        }
+
+        this.callbackConsumerActive = false;
+    }
+
+    private setState(state: InputState) {
+        if(this.state === state) {
+            return;
+        }
+
+        const oldState = this.state;
+        this.state = state;
+        this.events.fire("notify_state_changed", {
+            oldState,
+            newState: state
+        });
+    }
+
+    private initializeFilters() {
+        this.registeredFilters.forEach(e => e.finalize());
+        this.registeredFilters.sort((a, b) => a.priority - b.priority);
+        if(!this.audioContext || !this.audioNodeVolume) {
+            return;
+        }
+
+        if(this.filterMode === FilterMode.Block) {
+            this.switchSourceNode(this.audioNodeMute);
+        } else if(this.filterMode === FilterMode.Filter) {
+            const activeFilters = this.registeredFilters.filter(e => e.isEnabled());
+
+            let chain = "output <- ";
+            let currentSource: AudioNode = this.audioNodeVolume;
+            for(const f of activeFilters) {
+                f.initialize(this.audioContext, currentSource);
+                f.setPaused(false);
+
+                currentSource = f.audioNode;
+                chain += FilterType[f.type] + " <- ";
+            }
+            chain += "input";
+            logDebug(LogCategory.AUDIO, tr("Input filter chain: %s"), chain);
+
+            this.switchSourceNode(currentSource);
+        } else if(this.filterMode === FilterMode.Bypass) {
+            this.switchSourceNode(this.audioNodeVolume);
+        }
+
+    }
+
+    private emitCallbackAudio(inputBuffer: AudioBuffer) {
+        if(this.consumer?.type !== InputConsumerType.CALLBACK) {
+            return;
+        }
+
+        if(this.consumer.callbackAudio) {
+            this.consumer.callbackAudio(inputBuffer);
+        }
+
+        if(this.consumer.callbackBuffer) {
+            logWarn(LogCategory.AUDIO, tr("AudioInput has callback buffer, but this isn't supported yet!"));
+        }
+    }
+
+    private handleAudio(event: Event) {
+        const callbackEvent = event as unknown as Partial<CallbackAudioProcessEvent>;
+        if(callbackEvent.inputBuffer instanceof AudioBuffer) {
+            this.emitCallbackAudio(callbackEvent.inputBuffer);
+        }
+    }
+
+    private handleAudioWorkletMessage(event: MessageEvent<CallbackConsumerMessage>) {
+        const channels = event.data?.channels;
+        if(!this.audioContext || !Array.isArray(channels) || channels.length === 0 || channels[0].length === 0) {
+            return;
+        }
+
+        const inputBuffer = this.audioContext.createBuffer(channels.length, channels[0].length, this.audioContext.sampleRate);
+        channels.forEach((channel, index) => inputBuffer.getChannelData(index).set(channel));
+        this.emitCallbackAudio(inputBuffer);
+    }
+
+    async start() : Promise<InputStartError | true> {
+        while(this.startPromise !== undefined) {
+            try {
+                await this.startPromise;
+            } catch {}
+        }
+
+        if(this.state === InputState.RECORDING) {
+            return true;
+        } else if(this.state === InputState.INITIALIZING) {
+            return InputStartError.EBUSY;
+        }
+
+        try {
+            this.startPromise = this.doStart();
+            return await this.startPromise;
+        } finally {
+            this.startPromise = undefined;
+        }
+    }
+
+    private async doStart() : Promise<InputStartError | true> {
+        try {
+            if(!getAudioBackend().isInitialized() || !this.audioContext) {
+                return InputStartError.ESYSTEMUNINITIALIZED;
+            }
+
+            if(this.state != InputState.PAUSED) {
+                throw tr("recorder already started");
+            }
+            this.setState(InputState.INITIALIZING);
+
+            let deviceId;
+            if(this.deviceId === InputDevice.NoDeviceId) {
+                throw tr("no device selected");
+            } else if(this.deviceId === InputDevice.DefaultDeviceId) {
+                deviceId = undefined;
+            } else {
+                deviceId = this.deviceId;
+            }
+
+            const requestResult = await requestMediaStream(deviceId, undefined, "audio");
+            if(!(requestResult instanceof MediaStream)) {
+                this.setState(InputState.PAUSED);
+                return requestResult;
+            }
+
+            /* added the then body to avoid a inspection warning... */
+            inputDeviceList.refresh().then(() => {});
+
+            if(this.currentStream) {
+                stopMediaStream(this.currentStream);
+                this.currentStream = undefined;
+            }
+            this.currentAudioStream?.disconnect();
+            this.currentAudioStream = undefined;
+
+            this.currentStream = requestResult;
+
+            for(const filter of this.registeredFilters) {
+                if(filter.isEnabled()) {
+                    filter.setPaused(false);
+                }
+            }
+
+            if(this.consumer?.type === InputConsumerType.CALLBACK) {
+                await this.ensureCallbackConsumerInitialized();
+                this.activateCallbackConsumer();
+            }
+
+            this.currentAudioStream = this.audioContext.createMediaStreamSource(this.currentStream);
+            this.currentAudioStream.connect(this.audioNodeVolume);
+
+            this.setState(InputState.RECORDING);
+            this.updateFilterStatus(true);
+
+            return true;
+        } catch(error) {
+            if(this.state == InputState.INITIALIZING) {
+                this.setState(InputState.PAUSED);
+            }
+
+            throw error;
+        }
+    }
+
+    async stop() {
+        /* await the start */
+        if(this.startPromise !== undefined) {
+            try {
+                await this.startPromise;
+            } catch {}
+        }
+
+        this.setState(InputState.PAUSED);
+        if(this.currentAudioStream) {
+            this.currentAudioStream.disconnect();
+        }
+
+        if(this.currentStream) {
+            if(this.currentStream.stop) {
+                this.currentStream.stop();
+            } else {
+                this.currentStream.getTracks().forEach(value => {
+                    value.stop();
+                });
+            }
+        }
+
+        this.currentStream = undefined;
+        this.currentAudioStream = undefined;
+        for(const filter of this.registeredFilters) {
+            if(filter.isEnabled()) {
+                filter.setPaused(true);
+            }
+        }
+
+        this.deactivateCallbackConsumer();
+        return undefined;
+    }
+
+
+    async setDeviceId(deviceId: string) {
+        if(this.deviceId === deviceId)
+            return;
+
+        try {
+            await this.stop();
+        } catch(error) {
+            logWarn(LogCategory.AUDIO, tr("Failed to stop previous record session (%o)"), error);
+        }
+
+        const oldDeviceId = deviceId;
+        this.deviceId = deviceId;
+        this.events.fire("notify_device_changed", { newDeviceId: deviceId, oldDeviceId })
+    }
+
+
+    createFilter<T extends FilterType>(type: T, priority: number): FilterTypeClass<T> {
+        let filter: JAbstractFilter<AudioNode> & Filter;
+        switch (type) {
+            case FilterType.STATE:
+                filter = new JStateFilter(priority);
+                break;
+
+            case FilterType.THRESHOLD:
+                filter = new JThresholdFilter(priority);
+                break;
+
+            case FilterType.VOICE_LEVEL:
+                throw tr("voice filter isn't supported!");
+
+            default:
+                throw tr("unknown filter type");
+        }
+
+        filter.callback_active_change = () => this.updateFilterStatus(false);
+        filter.callback_enabled_change = () => this.initializeFilters();
+
+        this.registeredFilters.push(filter);
+        this.initializeFilters();
+        this.updateFilterStatus(false);
+        return filter as any;
+    }
+
+    supportsFilter(type: FilterType): boolean {
+        switch (type) {
+            case FilterType.THRESHOLD:
+            case FilterType.STATE:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    resetFilter() {
+        for(const filter of this.registeredFilters) {
+            filter.finalize();
+            filter.enabled = false;
+        }
+
+        this.registeredFilters = [];
+        this.initializeFilters();
+        this.updateFilterStatus(false);
+    }
+
+    removeFilter(filterInstance: Filter) {
+        const index = this.registeredFilters.indexOf(filterInstance as any);
+        if(index === -1) return;
+
+        const [ filter ] = this.registeredFilters.splice(index, 1);
+        filter.finalize();
+        filter.enabled = false;
+
+        this.initializeFilters();
+        this.updateFilterStatus(false);
+    }
+
+    private calculateCurrentFilterStatus() {
+        switch (this.filterMode) {
+            case FilterMode.Block:
+                return true;
+
+            case FilterMode.Bypass:
+                return false;
+
+            case FilterMode.Filter:
+                return this.registeredFilters.some(filter => filter.isEnabled() && filter.active);
+        }
+    }
+
+    private updateFilterStatus(forceUpdate: boolean) {
+        let filtered = this.calculateCurrentFilterStatus();
+        if(filtered === this.inputFiltered && !forceUpdate)
+            return;
+
+        this.inputFiltered = filtered;
+        if(filtered) {
+            this.events.fire("notify_voice_end");
+        } else {
+            this.events.fire("notify_voice_start");
+        }
+    }
+
+    isRecording(): boolean {
+        return !this.inputFiltered;
+    }
+
+    async setConsumer(consumer: InputConsumer) {
+        if(this.consumer?.type === InputConsumerType.CALLBACK) {
+            this.deactivateCallbackConsumer();
+        }
+
+        this.disconnectConsumerFromSource(this.consumer, this.audioSourceNode);
+
+        this.consumer = consumer;
+
+        if(!consumer) {
+            return;
+        }
+
+        if(consumer.type == InputConsumerType.CALLBACK) {
+            await this.ensureCallbackConsumerInitialized();
+            this.connectConsumerToSource(consumer, this.audioSourceNode);
+
+            if(this.state === InputState.RECORDING) {
+                this.activateCallbackConsumer();
+            }
+            return;
+        }
+
+        this.connectConsumerToSource(consumer, this.audioSourceNode);
+    }
+
+    private switchSourceNode(newNode: AudioNode) {
+        this.disconnectConsumerFromSource(this.consumer, this.audioSourceNode);
+
+        this.audioSourceNode = newNode;
+        this.connectConsumerToSource(this.consumer, this.audioSourceNode);
+    }
+
+    currentConsumer(): InputConsumer | undefined {
+        return this.consumer;
+    }
+
+    currentDeviceId(): string | undefined {
+        return this.deviceId;
+    }
+
+    currentState(): InputState {
+        return this.state;
+    }
+
+    getVolume(): number {
+        return this.volumeModifier;
+    }
+
+    setVolume(volume: number) {
+        if(volume === this.volumeModifier) {
+            return;
+        }
+
+        this.volumeModifier = volume;
+        this.audioNodeVolume.gain.value = volume;
+    }
+
+    isFiltered(): boolean {
+        return this.state === InputState.RECORDING ? this.inputFiltered : true;
+    }
+
+    getFilterMode(): FilterMode {
+        return this.filterMode;
+    }
+
+    setFilterMode(mode: FilterMode) {
+        if(this.filterMode === mode) {
+            return;
+        }
+
+        const oldMode = this.filterMode;
+        this.filterMode = mode;
+        this.updateFilterStatus(false);
+        this.initializeFilters();
+        this.events.fire("notify_filter_mode_changed", {
+            oldMode,
+            newMode: mode
+        });
+    }
+
+    getInputProcessor(): InputProcessor {
+        return JavaScriptInputProcessor.Instance;
+    }
+
+    createLevelMeter(): LevelMeter {
+        return new JavascriptLevelMeter({ deviceId: "default", name: "Default", driver: "default" } as any);
+    }
+}
+
+class JavaScriptInputProcessor implements InputProcessor {
+    static readonly Instance = new JavaScriptInputProcessor();
+
+    applyProcessorConfig<T extends InputProcessorType>(processor: T, config: InputProcessorConfigMapping[T]) {
+        throw tr("target processor is not supported");
+    }
+
+    getProcessorConfig<T extends InputProcessorType>(processor: T): InputProcessorConfigMapping[T] {
+        throw tr("target processor is not supported");
+    }
+
+    getStatistics(): InputProcessorStatistics {
+        return {} as any;
+    }
+
+    hasProcessor(processor: InputProcessorType): boolean {
+        return false;
+    }
+}
+
+class JavascriptLevelMeter implements LevelMeter {
+    private static readonly meterInstances: JavascriptLevelMeter[] = [];
+    private static meterUpdateTask: number;
+
+    readonly _device: WebIDevice;
+
+    private _callback: (num: number) => any;
+
+    private _context: AudioContext;
+    private _gain_node: GainNode;
+    private _source_node: MediaStreamAudioSourceNode;
+    private _analyser_node: AnalyserNode;
+
+    private _media_stream: MediaStream;
+
+    private _analyse_buffer: Uint8Array;
+
+    private _current_level = 0;
+
+    constructor(device: WebIDevice) {
+        this._device = device;
+    }
+
+    async initialize() {
+        await new Promise<void>((resolve, reject) => {
+            const timeout = setTimeout(() => reject(new Error(tr("audio context timeout"))), 5000);
+            getAudioBackend().executeWhenInitialized(() => {
+                clearTimeout(timeout);
+                resolve();
+            });
+        });
+
+        this._context = getAudioBackend().getAudioContext();
+        if(!this._context) throw tr("invalid context");
+
+        this._gain_node = this._context.createGain();
+        this._gain_node.gain.setValueAtTime(0, 0);
+
+        /* analyser node */
+        this._analyser_node = this._context.createAnalyser();
+
+        const optimal_ftt_size = Math.ceil(this._context.sampleRate * (JThresholdFilter.update_task_interval / 1000));
+        this._analyser_node.fftSize = Math.pow(2, Math.ceil(Math.log2(optimal_ftt_size)));
+
+        if(!this._analyse_buffer || this._analyse_buffer.length < this._analyser_node.fftSize)
+            this._analyse_buffer = new Uint8Array(this._analyser_node.fftSize);
+
+        /* starting stream */
+        const _result = await requestMediaStream(this._device.deviceId, this._device.groupId, "audio");
+        if(!(_result instanceof MediaStream)){
+            if(_result === InputStartError.ENOTALLOWED) {
+                throw tr("No permissions");}
+            if(_result === InputStartError.ENOTSUPPORTED)
+                throw tr("Not supported");
+            if(_result === InputStartError.EBUSY)
+                throw tr("Device busy");
+            if(_result === InputStartError.EUNKNOWN)
+                throw tr("an error occurred");
+            throw _result;
+        }
+        this._media_stream = _result;
+
+        this._source_node = this._context.createMediaStreamSource(this._media_stream);
+        this._source_node.connect(this._analyser_node);
+        this._analyser_node.connect(this._gain_node);
+        this._gain_node.connect(this._context.destination);
+
+        JavascriptLevelMeter.meterInstances.push(this);
+        if(JavascriptLevelMeter.meterInstances.length == 1) {
+            clearInterval(JavascriptLevelMeter.meterUpdateTask);
+            JavascriptLevelMeter.meterUpdateTask = setInterval(() => JavascriptLevelMeter._analyse_all(), JThresholdFilter.update_task_interval) as any;
+        }
+    }
+
+    destroy() {
+        JavascriptLevelMeter.meterInstances.remove(this);
+        if(JavascriptLevelMeter.meterInstances.length == 0) {
+            clearInterval(JavascriptLevelMeter.meterUpdateTask);
+            JavascriptLevelMeter.meterUpdateTask = 0;
+        }
+
+        if(this._source_node) {
+            this._source_node.disconnect();
+            this._source_node = undefined;
+        }
+        if(this._media_stream) {
+            if(this._media_stream.stop)
+                this._media_stream.stop();
+            else
+                this._media_stream.getTracks().forEach(value => {
+                    value.stop();
+                });
+            this._media_stream = undefined;
+        }
+        if(this._gain_node) {
+            this._gain_node.disconnect();
+            this._gain_node = undefined;
+        }
+        if(this._analyser_node) {
+            this._analyser_node.disconnect();
+            this._analyser_node = undefined;
+        }
+    }
+
+    getDevice(): InputDevice {
+        return this._device;
+    }
+
+    setObserver(callback: (value: number) => any) {
+        this._callback = callback;
+    }
+
+    private static _analyse_all() {
+        for(const instance of this.meterInstances.slice())
+            instance._analyse();
+    }
+
+    private _analyse() {
+        this._analyser_node.getByteTimeDomainData(this._analyse_buffer as Uint8Array<ArrayBuffer>);
+
+        this._current_level = JThresholdFilter.calculateAudioLevel(this._analyse_buffer, this._analyser_node.fftSize, this._current_level, .75);
+        if(this._callback) {
+            this._callback(this._current_level);
+        }
+    }
+}

@@ -1,0 +1,65 @@
+﻿@use "../../../../css/static/globals" as *;
+
+.htmlTag {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+
+    flex-shrink: 1;
+    min-height: 2em;
+}
+
+.logContainer {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
+    flex-shrink: 1;
+    flex-grow: 1;
+
+    min-height: 1em;
+    width: 100%;
+
+    border-radius: 0;
+
+    padding: .85rem .95rem .9rem;
+
+    overflow-x: hidden;
+    overflow-y: auto;
+
+    @include chat-scrollbar-vertical();
+}
+
+.logEntry {
+    flex-shrink: 0;
+    flex-grow: 0;
+
+    color: var(--server-log-text);
+    line-height: 1.45;
+
+    overflow-x: hidden;
+    overflow-y: hidden;
+
+    display: block;
+    padding: .16rem 0;
+
+    > *, .errorMessage > * {
+        display: inline-block;
+
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+
+        max-width: 100%;
+    }
+
+    .timestamp {
+        padding-right: 8px;
+        vertical-align: top;
+        color: #6f685f;
+    }
+
+    .errorMessage {
+        color: var(--server-log-error);
+    }
+}

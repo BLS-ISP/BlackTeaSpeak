@@ -1,0 +1,19 @@
+﻿@use "../../../../../../css/static/globals" as *;
+@use "../../../../../../css/static/color-variables";
+
+/* FIXME: Remove this wired import */
+@use "../../../../../../css/static/general";
+@use "../../../../../../css/static/modal";
+
+html, body {
+    margin: 0;
+    padding: 0;
+
+    height: 100vh;
+    width: 100vw;
+
+    background: #19191b;
+    color: #999;
+
+    overflow: hidden;
+}

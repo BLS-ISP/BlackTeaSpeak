@@ -1,0 +1,27 @@
+import * as path from "node:path";
+import * as config_base from "./webpack.config";
+
+export = (env, argv?: { mode?: string }) => config_base.config(env, "client", argv).then(config => {
+    Object.assign(config.entry, {
+        "main-app": ["./client/app/entry-points/AppMain.ts"],
+        "modal-external": ["./client/app/entry-points/ModalWindow.ts"]
+    });
+
+    Object.assign(config.resolve.alias, {
+        "tc-shared": path.resolve(__dirname, "shared/js"),
+    });
+
+    if(!Array.isArray(config.externals)) {
+        throw new TypeError("invalid config");
+    }
+
+    config.externals.push(({ context, request }, callback) => {
+        if (request.startsWith("tc-backend/")) {
+            return callback(null, `window["backend-loader"].require("${request}")`);
+        }
+
+        callback(undefined, undefined);
+    });
+
+    return config;
+});

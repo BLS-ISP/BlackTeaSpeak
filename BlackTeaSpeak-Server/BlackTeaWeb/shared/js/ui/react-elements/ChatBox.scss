@@ -1,0 +1,240 @@
+﻿@use "../../../css/static/globals" as *;
+
+html:root {
+    --chatbox-emoji-hover-background: rgba(255, 244, 223, 0.1);
+    --chatbox-input-background: linear-gradient(180deg, rgba(25, 22, 24, 0.96) 0%, rgba(16, 15, 18, 0.98) 100%);
+    --chatbox-input-background-disabled: rgba(18, 16, 18, 0.82);
+
+    --chatbox-input-border: rgba(255, 244, 223, 0.08);
+    --chatbox-input-border-hover: rgba(231, 193, 144, 0.18);
+    --chatbox-input-border-focus: rgba(231, 193, 144, 0.34);
+
+    --chatbox-input: #efe2ce;
+    --chatbox-input-planceholder: #877c6e;
+    --chatbox-input-disabled: #6b6157;
+    --chatbox-input-help: #7e7569;
+}
+
+.container {
+    @include user-select(none);
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+
+    flex-shrink: 0;
+    flex-grow: 0;
+
+    .chatbox {
+        min-height: 2em;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: stretch;
+        gap: .55rem;
+
+        padding-left: .4em;
+        padding-right: .4em;
+        padding-bottom: .5em;
+    }
+}
+
+
+.containerEmojis {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+
+    margin-right: 5px;
+    width: 2em;
+
+    position: relative;
+    box-sizing: content-box;
+
+    .button {
+        padding: .35rem;
+
+        cursor: pointer;
+
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+
+        border-radius: 14px;
+        border: 1px solid rgba(255, 244, 223, 0.08);
+        background: rgba(18, 16, 19, 0.74);
+        box-shadow: inset 0 1px 0 rgba(255, 244, 223, 0.04);
+
+        &:hover {
+            background-color: var(--chatbox-emoji-hover-background);
+            transform: translateY(-1px);
+        }
+        @include transition(background-color $button_hover_animation_time ease-in-out, transform $button_hover_animation_time ease-in-out);
+
+        width: 1.5em;
+        height: 1.5em;
+
+        margin-bottom: .2em;
+        align-self: center;
+
+        > img {
+            height: 100%;
+            width: 100%;
+
+            align-self: center;
+
+            &.emoji {
+                width: 1.25em;
+                height: 1.25em;
+            }
+        }
+    }
+
+    .picker {
+        position: absolute;
+        bottom: 100%;
+        align-self: center;
+        
+        span, button {
+            cursor: pointer;
+        }
+    }
+
+    :global(.lsx-emojipicker-appender) {
+        position: relative;
+
+        width: calc(1.5em - 4px);
+        height: calc(1.5em - 4px);
+
+        .lsx-emojipicker-container {
+            &:after {
+                right: calc(0.75em + 2px) !important
+            }
+
+            .lsx-emojipicker-tabs {
+                height: 38px;
+
+                display: flex;
+                flex-direction: row;
+                justify-content: flex-start;
+
+                li {
+                    height: 36px;
+                    width: 36px;
+
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-around;
+
+                    img {
+                        margin: 0;
+                    }
+                }
+            }
+        }
+    }
+}
+
+.containerInput {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+    min-height: 1.5em;
+
+    align-self: center;
+    box-sizing: content-box;
+
+    width: 100%;
+    background: var(--chatbox-input-background);
+    border: 1px solid var(--chatbox-input-border);
+    box-shadow: inset 0 1px 0 rgba(255, 244, 223, 0.05);
+
+    overflow: hidden;
+    border-radius: 18px;
+
+    .textarea {
+        @include user-select(text);
+
+        flex-shrink: 1;
+        flex-grow: 0;
+
+        width: 100%;
+        resize: none;
+
+        min-height: 1.5em;
+        max-height: 6em;
+
+        overflow: auto;
+
+        background-color: transparent;
+
+        padding: .55rem .8rem;
+        margin: 0;
+
+        border: none;
+        outline: none;
+
+        color: var(--chatbox-input);
+
+        @include chat-scrollbar-vertical();
+
+        &:empty::before {
+            content: attr(data-placeholder);
+            color: var(--chatbox-input-planceholder);
+        }
+
+        &:empty:focus::before {
+            content: "";
+        }
+    }
+
+    &.disabled {
+        .textarea {
+            background-color: var(--chatbox-input-background-disabled);
+            border-width: 0;
+
+            &:empty::before {
+                color: var(--chatbox-input-disabled);
+            }
+        }
+
+        pointer-events: none;
+    }
+
+    @include placeholder(textarea) {
+        color: var(--chatbox-input-planceholder);
+        font-style: oblique;
+    }
+
+    &:hover {
+        border-color: var(--chatbox-input-border-hover);
+    }
+
+    &:focus-within {
+        border-color: var(--chatbox-input-border-focus);
+        box-shadow: 0 0 0 1px rgba(231, 193, 144, 0.18), inset 0 1px 0 rgba(255, 244, 223, 0.05);
+    }
+
+    @include transition(border-color $button_hover_animation_time ease-in-out);
+}
+
+.containerHelp {
+    flex-shrink: 0;
+    flex-grow: 0;
+
+    min-height: unset;
+    height: initial;
+
+    color: var(--chatbox-input-help);
+    font-size: .8em;
+    text-align: right;
+    margin: -3px 2px 2px 2.5em;
+
+    @include text-dotdotdot();
+    @include transition($button_hover_animation_time ease-in-out);
+
+    max-height: 2em; /* for a smooth transition */
+    &.hidden {
+        max-height: 0;
+    }
+}

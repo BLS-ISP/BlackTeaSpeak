@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "strictPropertyInitialization": false,
+    "useUnknownInCatchVariables": false,
+    "noUncheckedSideEffectImports": false,
+    "skipLibCheck": true,
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "jsx": "react",
+    "experimentalDecorators": true,
+    "declarationDir": "../../declarations/shared-app/",
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "esModuleInterop": true,
+    "paths": {
+      "tc-shared/*": ["../js/*"],
+      "tc-loader": ["../../loader/exports/loader.d.ts"],
+      "svg-sprites/*": ["../svg-sprites/*"],
+      "vendor/xbbcode/*": ["../../vendor/xbbcode/src/*"],
+      "tc-events": ["../../vendor/TeaEventBus/src/index.ts"],
+      "tc-services": ["../../vendor/TeaClientServices/src/index.ts"]
+    }
+  },
+  "exclude": [
+    "../js/workers"
+  ],
+  "include": [
+    "../types",
+    "../js/proto.ts",
+    "../js/main.tsx",
+    "../backend.d",
+    "../js/**/*.ts",
+    "../../webpack/build-definitions.d.ts",
+    "../../vendor/TeaEventBus/src/**/*.ts",
+    "../../vendor/TeaClientServices/src/**/*.ts"
+  ]
+}

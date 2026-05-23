@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Template modal newcomer</title>
+</head>
+<body>
+    <script class="jsrender-template" id="tmpl_newcomer" type="text/html">
+        <div> <!-- required for the renderer -->
+            <div class="container-header">
+                <div class="eyebrow">{{tr "Quick launch checklist" /}}</div>
+                <div class="step-track">
+                    <div class="step-header step-welcome" data-step="welcome">
+                        <span class="index">01</span>
+                        <span class="label">{{tr "Welcome" /}}</span>
+                        <span class="detail">{{tr "See what this guide covers" /}}</span>
+                    </div>
+                    <div class="step-header step-microphone" data-step="microphone">
+                        <span class="index">02</span>
+                        <span class="label">{{tr "Microphone" /}}</span>
+                        <span class="detail">{{tr "Pick the right input and test it" /}}</span>
+                    </div>
+                    <div class="step-header step-identity" data-step="identity">
+                        <span class="index">03</span>
+                        <span class="label">{{tr "Identity" /}}</span>
+                        <span class="detail">{{tr "Choose how the server recognizes you" /}}</span>
+                    </div>
+                    <div class="step-header step-finish" data-step="finish">
+                        <span class="index">04</span>
+                        <span class="label">{{tr "Finish" /}}</span>
+                        <span class="detail">{{tr "You are ready to join" /}}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="container-body">
+                <div class="body">
+                    <div class="step step-welcome">
+                        <div class="hero hero-welcome">
+                            <div class="hero-media">
+                                <div class="logo-panel">
+                                    <div class="logo">
+                                        <img src="img/blackteaspeak_cup_animated.png" alt="BlackTeaSpeak cup">
+                                    </div>
+                                    <div class="status-card">
+                                        <span class="kicker">{{tr "Ready in a minute" /}}</span>
+                                        <strong>{{tr "Voice, identity and permissions" /}}</strong>
+                                        <span>{{tr "Everything essential before you join the server." /}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hero-copy">
+                                <span class="eyebrow">{{tr "BlackTeaSpeak Web" /}}</span>
+                                <h1>{{tr "Set up once, then get straight into the conversation." /}}</h1>
+                                <p class="lead">{{tr "This quick pass covers the essentials and leaves the fine-tuning for later, where it belongs." /}}</p>
+
+                                <div class="feature-grid">
+                                    <div class="feature-card">
+                                        <span class="feature-tag">{{tr "Voice" /}}</span>
+                                        <strong>{{tr "Device check" /}}</strong>
+                                        <p>{{tr "Confirm the correct microphone and make sure your level is coming through." /}}</p>
+                                    </div>
+                                    <div class="feature-card">
+                                        <span class="feature-tag">{{tr "Identity" /}}</span>
+                                        <strong>{{tr "Profile basics" /}}</strong>
+                                        <p>{{tr "Pick the profile and identity style the server should use for you." /}}</p>
+                                    </div>
+                                    <div class="feature-card">
+                                        <span class="feature-tag">{{tr "Flow" /}}</span>
+                                        <strong>{{tr "No dead ends" /}}</strong>
+                                        <p>{{tr "You can skip the guide at any point and come back later from Tools and Settings." /}}</p>
+                                    </div>
+                                </div>
+
+                                <div class="note">{{tr "Use the guide now, refine the details later. Nothing here locks you into a permanent choice." /}}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="step step-microphone">
+                        <div class="step-shell">
+                            <div class="step-intro">
+                                <span class="eyebrow">{{tr "Step 1" /}}</span>
+                                <h1>{{tr "Make sure your microphone is ready." /}}</h1>
+                                <p>{{tr "Choose the right input device, test the signal and use the guided help if your browser blocks microphone access." /}}</p>
+                            </div>
+                            <div class="step-host"></div>
+                        </div>
+                    </div>
+                    <div class="step step-identity">
+                        <div class="step-shell">
+                            <div class="step-intro">
+                                <span class="eyebrow">{{tr "Step 2" /}}</span>
+                                <h1>{{tr "Choose how the server should recognize you." /}}</h1>
+                                <p>{{tr "Profiles store your display name and the identity method used when you connect to a server." /}}</p>
+                            </div>
+                            {{include tmpl="tmpl_settings-profiles" /}}
+                        </div>
+                    </div>
+                    <div class="step step-finish">
+                        <div class="hero hero-finish">
+                            <div class="hero-media">
+                                <div class="logo-panel">
+                                    <div class="logo">
+                                        <img src="img/blackteaspeak_cup_animated.png" alt="BlackTeaSpeak cup">
+                                    </div>
+                                    <div class="status-card">
+                                        <span class="kicker">{{tr "All set" /}}</span>
+                                        <strong>{{tr "You can enter the client now" /}}</strong>
+                                        <span>{{tr "All core settings stay available after this guide closes." /}}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="hero-copy">
+                                <span class="eyebrow">{{tr "Setup complete" /}}</span>
+                                <h1>{{tr "You are ready to join BlackTeaSpeak Web." /}}</h1>
+                                <p class="lead">{{tr "The client is configured well enough to get you connected. You can keep refining profiles, devices and advanced options whenever you need them." /}}</p>
+
+                                <div class="summary-grid">
+                                    <div class="summary-card">
+                                        <span class="feature-tag">{{tr "Microphone" /}}</span>
+                                        <strong>{{tr "Configured" /}}</strong>
+                                        <p>{{tr "You can revisit device selection and push-to-talk settings whenever needed." /}}</p>
+                                    </div>
+                                    <div class="summary-card">
+                                        <span class="feature-tag">{{tr "Identity" /}}</span>
+                                        <strong>{{tr "Profiles available" /}}</strong>
+                                        <p>{{tr "Your nickname and identity options remain available in the settings menu." /}}</p>
+                                    </div>
+                                    <div class="summary-card">
+                                        <span class="feature-tag">{{tr "Settings" /}}</span>
+                                        <strong>{{tr "Nothing hidden" /}}</strong>
+                                        <p>{{tr "Open Tools and Settings at any time if you want to change the setup later." /}}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="buttons">
+                <div class="button-copy">
+                    <span class="copy-label">{{tr "Quick setup" /}}</span>
+                    <span class="copy-text">{{tr "You can reopen these settings later from the Tools menu if you want to adjust anything." /}}</span>
+                </div>
+                <div class="button-actions">
+                    <button class="btn btn-red button-last-step">error: last step</button>
+                    <button class="btn btn-green button-next-step">error: next step</button>
+                </div>
+            </div>
+        </div>
+    </script>
+</body>
+</html>

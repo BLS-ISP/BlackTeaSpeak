@@ -1,0 +1,4 @@
+﻿  Deprecation Warning on line 93, column 24 of file:///D:/projekt/BlackTeaSpeak/TeaWeb-modern/shared/js/ui/frames/side/MusicPlaylistRenderer.scss:93:24:
+  Deprecation Warning on line 94, column 27 of file:///D:/projekt/BlackTeaSpeak/TeaWeb-modern/shared/js/ui/frames/side/MusicPlaylistRenderer.scss:94:27:
+  Child [1mmini-css-extract-plugin D:\projekt\BlackTeaSpeak\TeaWeb-modern\node_modules\css-loader\dist\cjs.js??ruleSet[1].rules[0].use[1]!D:\projekt\BlackTeaSpeak\TeaWeb-modern\node_modules\postcss-loader\dist\cjs.js??ruleSet[1].rules[0].use[2]!D:\projekt\BlackTeaSpeak\TeaWeb-modern\node_modules\sass-loader\dist\cjs.js??ruleSet[1].rules[0].use[3]!D:\projekt\BlackTeaSpeak\TeaWeb-modern\shared\js\ui\frames\side\MusicPlaylistRenderer.scss[39m[22m compiled with [1m[33m2 warnings[39m[22m
+webpack 5.90.0 compiled with [1m[33m2 warnings[39m[22m in 40635 ms

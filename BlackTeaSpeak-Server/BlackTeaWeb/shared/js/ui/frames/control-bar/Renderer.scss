@@ -1,0 +1,59 @@
+﻿@use "../../../../css/static/globals" as *;
+
+/* Variables */
+html:root {
+    --menu-bar-background: rgba(19, 20, 24, 0.98);
+    --menu-bar-divider: rgba(255, 255, 255, 0.08);
+}
+
+/* max height is 2em */
+.controlBar {
+    display: flex;
+    flex-direction: row;
+    gap: .1rem;
+
+    @include user-select(none);
+
+    height: 100%;
+    align-items: center;
+    background: var(--menu-bar-background);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.16);
+    padding: .32rem .45rem;
+
+    /* tmp fix for ultra small devices */
+    overflow-y: visible;
+
+    .divider {
+        flex-grow: 0;
+        flex-shrink: 0;
+
+        width: 1px;
+        height: 70%;
+        margin: 0 .2rem;
+        background: var(--menu-bar-divider);
+    }
+
+    .spacer {
+        flex-grow: 1;
+        flex-shrink: 1;
+
+        min-width: 0;
+    }
+}
+
+@media all and (max-width: 300px) {
+    .controlBar.mode-channel-popout {
+        .hideSmallPopout {
+            display: none!important;
+        }
+    }
+}
+
+@media all and (max-width: 640px) {
+    .controlBar {
+        padding: .25rem .35rem;
+        gap: .08rem;
+    }
+}

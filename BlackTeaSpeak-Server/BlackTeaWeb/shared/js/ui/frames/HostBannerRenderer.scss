@@ -1,0 +1,86 @@
+﻿@use "../../../css/static/globals" as *;
+
+.container {
+    position: relative;
+    overflow: hidden;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+
+    flex-shrink: 0;
+    user-select: none;
+
+    .withBackground {
+        background-color: var(--hostbanner-background);
+        border-top-left-radius: 5px;
+        border-top-right-radius: 5px;
+        -moz-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.25);
+        -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.25);
+        box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.25);
+        padding-bottom: 5px;
+    }
+}
+
+.containerImage {
+    height: 0;
+    width: 100%;
+
+    flex-grow: 1;
+    flex-shrink: 1;
+    min-height: 0;
+
+    text-align: center;
+
+    &.clickable {
+        cursor: pointer;
+    }
+
+    /* We're disabling the transition since it only works on appearing not on disappearing */
+
+    &.state-error {
+        > img {
+            visibility: hidden;
+        }
+    }
+
+    &.state-loaded {
+        height: 9em;
+    }
+
+    &.mode-original {
+        /* do not adjust */
+        display: block;
+    }
+
+    &.mode-resize {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+
+        > img {
+            object-fit: contain;
+            max-height: 100%;
+
+            /* better adoptable mode */
+            width: min-content;
+        }
+    }
+
+    &.mode-resize-ratio {
+        display: flex;
+
+        height: 100%;
+        width: 100%;
+
+        > img {
+            object-fit: contain;
+
+            max-height: 100%;
+            max-width: 100%;
+
+            min-width: 100%;
+            min-height: 100%;
+        }
+    }
+}

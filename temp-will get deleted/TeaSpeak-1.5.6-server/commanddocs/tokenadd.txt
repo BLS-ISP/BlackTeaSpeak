@@ -1,0 +1,13 @@
+Usage: tokenadd [token_description={description}] [token_max_uses={max uses}] [token_expired={unix expire timestamp}]
+                [[action_type={type}] [action_id1={first parameter}] [action_id2={second parameter}] [action_text={text parameter}] | ...]
+
+Permissions:
+  b_virtualserver_token_limit
+
+Description:
+  Create a new token with the defined characteristics
+
+Example:
+  tokenadd token_description=My\sDesc token_max_uses=1 action_type=2 action_id1=10 | action_type=2 action_id1=2 | action_type=2 action_id1=3
+  action_id=11 token=tOm5TsoWkjPNvVQOggoDWoyMdZ5HpX3u token_id=7|action_id=12
+  error id=0 msg=ok|id=0 msg=ok|id=4864 msg=Invalid\sgroup\sid

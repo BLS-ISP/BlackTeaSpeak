@@ -1,0 +1,11 @@
+environment/
+generated/
+declarations/
+
+app/**/*.css
+app/**/*.css.map
+
+app/**/*.js
+app/**/*.js.map
+
+!app/legacy/audio-lib/worker/async_require.js
