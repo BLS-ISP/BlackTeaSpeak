@@ -12,11 +12,11 @@ import {settings, Settings} from "tc-shared/settings";
 import * as log from "tc-shared/log";
 import {LogCategory, logDebug, logError, logInfo, logTrace, logWarn} from "tc-shared/log";
 import {AbstractCommandHandlerBoss} from "tc-shared/connection/AbstractCommandHandler";
-import {WrappedWebSocket} from "./WrappedWebSocket";
+import {WrappedWebTransport} from "../../../shared/js/connection/wtransport/WebTransportConnection";
 import {AbstractVoiceConnection} from "tc-shared/connection/VoiceConnection";
 import {parseCommand} from "./CommandParser";
 import {ServerAddress} from "tc-shared/tree/Server";
-import {RtpVoiceConnection} from "../voice/Connection";
+import {WebCodecVoiceConnection} from "../voice/WebCodecVoiceConnection";
 import {VideoConnection} from "tc-shared/connection/VideoConnection";
 import {ServerFeature} from "tc-shared/connection/ServerFeatures";
 import {RTCConnection} from "tc-shared/connection/rtc/Connection";
@@ -40,13 +40,13 @@ export class ServerConnection extends AbstractServerConnection {
     private commandHandlerBoss: ServerConnectionCommandBoss;
     private defaultCommandHandler: ConnectionCommandHandler;
 
-    private socket: WrappedWebSocket;
+    private socket: WrappedWebTransport;
     private connectCancelCallback: () => void;
 
     private returnListeners: ReturnListener<CommandResult>[] = [];
 
     private rtcConnection: RTCConnection;
-    private voiceConnection: RtpVoiceConnection;
+    private voiceConnection: WebCodecVoiceConnection;
     private videoConnection: RtpVideoConnection;
 
     private pingStatistics = {
@@ -74,7 +74,7 @@ export class ServerConnection extends AbstractServerConnection {
         this.command_helper.initialize();
 
         this.rtcConnection = new RTCConnection(this, true);
-        this.voiceConnection = new RtpVoiceConnection(this, this.rtcConnection);
+        this.voiceConnection = new WebCodecVoiceConnection(this);
         this.videoConnection = new RtpVideoConnection(this.rtcConnection);
     }
 
@@ -131,8 +131,7 @@ export class ServerConnection extends AbstractServerConnection {
         this.handshakeHandler = handshake;
         this.handshakeHandler.setConnection(this);
 
-        /* The direct one connect directly to the target address. The other via the .con-gate.work */
-        let availableSockets: WrappedWebSocket[] = [];
+        let availableSockets: WrappedWebTransport[] = [];
 
         proxySocket:
         if(!isLoopbackAddress && !settings.getValue(Settings.KEY_CONNECT_NO_DNSPROXY)) {
@@ -147,16 +146,14 @@ export class ServerConnection extends AbstractServerConnection {
                 break proxySocket;
             }
 
-            availableSockets.push(new WrappedWebSocket({
+            availableSockets.push(new WrappedWebTransport({
                 host: host,
-                port: address.port,
-                secure: true
+                port: address.port
             }))
         }
-        availableSockets.push(new WrappedWebSocket({
+        availableSockets.push(new WrappedWebTransport({
             host: address.host,
-            port: address.port,
-            secure: true
+            port: address.port
         }));
 
         let timeoutRaised = false;
@@ -211,6 +208,7 @@ export class ServerConnection extends AbstractServerConnection {
             }
 
             this.socket = finished;
+            this.voiceConnection.setTransport(this.socket);
 
             /* abort any other ongoing connection attempts, we already succeeded */
             availableSockets.forEach(e => e.closeConnection());

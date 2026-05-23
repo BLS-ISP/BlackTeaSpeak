@@ -68,7 +68,7 @@ async fn connect_to_server(
     app_handle: tauri::AppHandle,
 ) -> Result<String, String> {
     let (ip, port_str) = address.split_once(':').unwrap_or((&address, "9987"));
-    let tcp_port = if port_str == "9987" { "9988" } else { port_str };
+    let tcp_port = port_str;
     let tcp_address = format!("{}:{}", ip, tcp_port);
     let udp_address = format!("{}:{}", ip, port_str);
 
@@ -277,7 +277,7 @@ async fn connect_to_server(
                             res_packet_id, 0, res_flags, &res_header, &payload_with_mac, &secret_recv, true
                         ) {
                             let packet_type = res_flags & 0x0F;
-                            if packet_type == 0x0A { // Voice
+                            if packet_type == 0x0A || packet_type == 0x01 { // Voice or Whisper
                                 let _ = tx_opus_in.send(decrypted);
                             }
                         }
@@ -288,18 +288,26 @@ async fn connect_to_server(
 
         let socket_send = socket_arc.clone();
         let secret_send = shared_secret_clone;
-        // UDP Sender Loop (for Voice)
+        // UDP Sender Loop (for Voice and Keepalive)
         tokio::spawn(async move {
             let mut next_packet_id: u16 = 4; 
-            while let Some(opus_data) = rx_opus_out.recv().await {
-                let flags: u8 = 0x0A; // Voice packet
+            loop {
+                let (flags, payload_bytes) = match tokio::time::timeout(std::time::Duration::from_secs(15), rx_opus_out.recv()).await {
+                    Ok(Some((is_whisper, opus_data))) => (if is_whisper { 0x01 } else { 0x0A }, opus_data),
+                    Ok(None) => break, // Channel closed
+                    Err(_) => {
+                        // Timeout: Send keepalive packet
+                        (0x00, vec![])
+                    }
+                };
+
                 let mut header = [0u8; 5];
                 header[0..2].copy_from_slice(&next_packet_id.to_be_bytes());
-                header[2..4].copy_from_slice(&0u16.to_be_bytes()); // client_id not needed for outbound, just dummy 0
+                header[2..4].copy_from_slice(&0u16.to_be_bytes()); // client_id not needed for outbound
                 header[4] = flags;
 
                 let encrypted = crate::btea::encrypt_btea_packet(
-                    next_packet_id, 0, flags, &header, &opus_data, &secret_send, false
+                    next_packet_id, 0, flags, &header, &payload_bytes, &secret_send, false
                 );
 
                 let mut final_packet = Vec::with_capacity(13 + encrypted.len() - 8);
@@ -422,6 +430,17 @@ async fn set_ptt_state(pressed: bool, state: State<'_, AppState>) -> Result<(), 
     }
 }
 
+#[tauri::command]
+async fn set_whisper_state(active: bool, state: State<'_, AppState>) -> Result<(), String> {
+    let mut am_lock = state.audio_manager.lock().await;
+    if let Some(am) = am_lock.as_mut() {
+        am.is_whisper_active.store(active, std::sync::atomic::Ordering::Relaxed);
+        Ok(())
+    } else {
+        Err("Not connected".into())
+    }
+}
+
 #[derive(serde::Serialize)]
 pub struct AudioDevices {
     pub inputs: Vec<String>,
@@ -504,6 +523,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_http::init())
         .manage(AppState::new())
         .invoke_handler(tauri::generate_handler![
             connect_to_server,
@@ -514,6 +534,8 @@ pub fn run() {
             save_config,
             toggle_microphone,
             toggle_speaker,
+            set_ptt_state,
+            set_whisper_state,
             get_audio_devices,
             update_audio_settings,
             update_live_audio_settings,

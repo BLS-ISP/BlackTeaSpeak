@@ -36,4 +36,8 @@ cpal = "0.17.3"
 audiopus = "0.2.0"
 ringbuf = "0.5.0"
 tauri-plugin-global-shortcut = "2.3.1"
+reqwest = { version = "0.13.3", features = ["rustls", "stream"] }
+tauri-plugin-http = { version = "2.5.9", features = ["dangerous-settings"] }
+ureq = "3.3.0"
+rustls = { version = "0.23.40", features = ["ring"] }
 

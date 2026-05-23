@@ -118,6 +118,7 @@ impl DesktopTcpTransportServer {
             }
             match self.listener.accept() {
                 Ok((mut stream, _)) => {
+                    let _ = stream.set_nonblocking(false);
                     let runtime = Arc::clone(&self.runtime);
                     let clients = Arc::clone(&self.clients);
                     let shared_secrets = Arc::clone(&self.shared_secrets);
@@ -340,6 +341,7 @@ impl DesktopTcpTransportServer {
                         {
                             let mut rt = runtime.lock().unwrap();
                             let (_, _notifs) = handler.handle_command("quit", &mut rt);
+                            rt.remove_session_client(client_id, 8, "disconnected".to_string());
                             {
                                 let mut state_lock = shared_state.write().unwrap();
                                 *state_lock = handler.session.clone();

@@ -7,7 +7,7 @@ use std::time::Duration;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let server_addr = "127.0.0.1:9988";
+    let server_addr = "127.0.0.1:9987";
     let mut socket = TcpStream::connect(server_addr).await?;
 
     println!("Connecting to BTEA server at {}", server_addr);

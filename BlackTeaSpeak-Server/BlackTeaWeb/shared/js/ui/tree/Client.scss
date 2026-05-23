@@ -1,4 +1,4 @@
-﻿@use "../../../css/static/globals" as *;
+@use "../../../css/static/globals" as *;
 
 html:root {
     --channel-tree-name-edit-color: #f4ead7;
@@ -15,8 +15,25 @@ html:root {
     align-items: center;
     gap: .15rem;
 
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+        background-color: hsla(220, 20%, 30%, 0.3);
+        transform: translateX(2px);
+    }
+
     > div {
         margin-right: .18em;
+    }
+
+    /* Glowing accent ring animation for speaking clients */
+    &.is-speaking .statusIcon {
+        position: relative;
+        border-radius: 50%;
+        box-shadow: 0 0 0 0 hsla(250, 80%, 65%, 0.7);
+        animation: pulse-glow 1.5s infinite;
     }
 
     .statusIcon {
@@ -116,5 +133,20 @@ html:root {
                 width: 100%;
             }
         }
+    }
+}
+
+@keyframes pulse-glow {
+    0% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 hsla(250, 80%, 65%, 0.7);
+    }
+    70% {
+        transform: scale(1);
+        box-shadow: 0 0 0 6px hsla(250, 80%, 65%, 0);
+    }
+    100% {
+        transform: scale(0.95);
+        box-shadow: 0 0 0 0 hsla(250, 80%, 65%, 0);
     }
 }

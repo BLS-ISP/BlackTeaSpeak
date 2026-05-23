@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
+import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
 import { parseTs3Response } from './ts3parser';
 import { Identity } from './App';
 import { SettingsModal } from './SettingsModal';
+import { GroupManagerModal } from './GroupManagerModal';
+import { BanManagerModal } from './BanManagerModal';
+import { TokenManagerModal } from './TokenManagerModal';
+import { ChannelEditModal } from './ChannelEditModal';
+import { PermissionEditorModal } from './PermissionEditorModal';
 import { register, unregister, isRegistered } from '@tauri-apps/plugin-global-shortcut';
 
-import { Channel, Client, ChatMessage } from './types';
+import { Channel, Client, ChatMessage, FileEntry } from './types';
 import { ChannelTree } from './ChannelTree';
 import { InfoPane } from './InfoPane';
 import { ChatPane } from './ChatPane';
@@ -29,6 +35,14 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isGroupManagerOpen, setIsGroupManagerOpen] = useState(false);
+  const [isBanManagerOpen, setIsBanManagerOpen] = useState(false);
+  const [isTokenManagerOpen, setIsTokenManagerOpen] = useState(false);
+  const [channelEditTarget, setChannelEditTarget] = useState<{cid?: string, cpid?: string} | null>(null);
+  const [permissionTarget, setPermissionTarget] = useState<{type: 'server' | 'channel' | 'client' | 'group', targetId: string} | null>(null);
+
+  const [channelFiles, setChannelFiles] = useState<FileEntry[]>([]);
+  const pendingTransfers = useRef<Map<string, { type: 'upload' | 'download', file?: File, fileEntry?: FileEntry }>>(new Map());
 
   useEffect(() => {
     let unlisten: () => void;
@@ -38,7 +52,6 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       unlisten = await listen<string>('server_event', (event) => {
         console.log('Raw event:', event.payload);
         const parsed = parseTs3Response(event.payload);
-        console.log('Parsed:', parsed);
         
         for (const row of parsed) {
           if (row.command === 'initserver') {
@@ -46,10 +59,8 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
               setMyClientId(row.args.client_id);
             }
           } else if (row.args.client_id && row.command === 'unknown') {
-            // "whoami" returns a raw row with client_id
             setMyClientId(row.args.client_id);
           } else if (row.command === 'channellist') {
-            console.log('Adding channel:', row.args);
             setChannels(prev => {
               const existing = prev.find(c => c.cid === row.args.cid);
               if (existing) return prev;
@@ -90,6 +101,7 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
                   client_nickname: row.args.client_nickname || c.client_nickname,
                   client_input_muted: row.args.client_input_muted !== undefined ? row.args.client_input_muted === '1' : c.client_input_muted,
                   client_output_muted: row.args.client_output_muted !== undefined ? row.args.client_output_muted === '1' : c.client_output_muted,
+                  is_talking: row.args.client_is_talking !== undefined ? row.args.client_is_talking === '1' : c.is_talking,
                 };
               }
               return c;
@@ -107,16 +119,37 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
               message: row.args.msg || ''
             };
             setChatMessages(prev => [...prev, newMsg]);
+          } else if ((row.command === 'unknown' || row.command === 'ftgetfilelist') && row.args.name && row.args.size && row.args.datetime && row.args.type) {
+            setChannelFiles(prev => {
+              const file: FileEntry = {
+                name: row.args.name,
+                size: parseInt(row.args.size),
+                datetime: parseInt(row.args.datetime),
+                type: parseInt(row.args.type),
+                empty: row.args.empty === '1'
+              };
+              if (prev.find(f => f.name === file.name)) return prev;
+              return [...prev, file];
+            });
+          } else if (row.args.ftkey && row.args.port && row.args.clientftfid) {
+            const transfer = pendingTransfers.current.get(row.args.clientftfid);
+            if (transfer) {
+              pendingTransfers.current.delete(row.args.clientftfid);
+              executeFileTransfer(transfer, row.args.ftkey, parseInt(row.args.port));
+            }
           }
         }
       });
 
       unlistenDisconnect = await listen('server_disconnect', () => {
-        console.log('Server disconnected');
         onDisconnect();
       });
 
-      // Now that listeners are registered, send commands!
+      invoke('send_command', { command: 'servernotifyregister event=server' }).catch(console.error);
+      invoke('send_command', { command: 'servernotifyregister event=channel id=0' }).catch(console.error);
+      invoke('send_command', { command: 'servernotifyregister event=textserver' }).catch(console.error);
+      invoke('send_command', { command: 'servernotifyregister event=textchannel' }).catch(console.error);
+      invoke('send_command', { command: 'servernotifyregister event=textprivate' }).catch(console.error);
       invoke('send_command', { command: 'whoami' }).catch(console.error);
       invoke('send_command', { command: 'channellist' }).catch(console.error);
       invoke('send_command', { command: 'clientlist' }).catch(console.error);
@@ -130,8 +163,74 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
     };
   }, []);
 
+  const executeFileTransfer = async (transfer: any, ftkey: string, port: number) => {
+    const baseUrl = `https://127.0.0.1:${port}`;
+    try {
+      if (transfer.type === 'upload' && transfer.file) {
+        await tauriFetch(`${baseUrl}/upload?transfer-key=${ftkey}`, {
+          method: 'POST',
+          body: transfer.file,
+          headers: { 'Content-Type': 'application/octet-stream' },
+          danger: { acceptInvalidCerts: true }
+        });
+        refreshFiles();
+      } else if (transfer.type === 'download' && transfer.fileEntry) {
+        const resp = await tauriFetch(`${baseUrl}/download?transfer-key=${ftkey}`, {
+          danger: { acceptInvalidCerts: true }
+        });
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = transfer.fileEntry.name;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    } catch (e) {
+      console.error("File transfer failed:", e);
+      alert("File transfer failed: " + e);
+    }
+  };
+
+  const handleUploadFile = (file: File) => {
+    if (!selectedChannel) return;
+    const clientftfid = Math.floor(Math.random() * 10000).toString();
+    pendingTransfers.current.set(clientftfid, { type: 'upload', file });
+    invoke('send_command', { command: `ftinitupload clientftfid=${clientftfid} name=\\/${escapeTs3String(file.name)} cid=${selectedChannel.cid} size=${file.size} overwrite=1 resume=0` });
+  };
+
+  const handleDownloadFile = (entry: FileEntry) => {
+    if (!selectedChannel) return;
+    const clientftfid = Math.floor(Math.random() * 10000).toString();
+    pendingTransfers.current.set(clientftfid, { type: 'download', fileEntry: entry });
+    invoke('send_command', { command: `ftinitdownload clientftfid=${clientftfid} name=\\/${escapeTs3String(entry.name)} cid=${selectedChannel.cid} cpw= seekpos=0 proto=0` });
+  };
+
+  const handleDeleteFile = (entry: FileEntry) => {
+    if (!selectedChannel) return;
+    if (confirm(`Delete file ${entry.name}?`)) {
+      invoke('send_command', { command: `ftdeletefile cid=${selectedChannel.cid} cpw= name=\\/${escapeTs3String(entry.name)}` });
+      setTimeout(refreshFiles, 500);
+    }
+  };
+
+  const refreshFiles = () => {
+    if (selectedChannel) {
+      setChannelFiles([]);
+      invoke('send_command', { command: `ftgetfilelist cid=${selectedChannel.cid} cpw= path=\\/` });
+    }
+  };
+
+  const handleChannelSelect = (channel: Channel) => {
+    setSelectedChannel(channel);
+    setSelectedClient(undefined);
+    setChannelFiles([]);
+    invoke('send_command', { command: `ftgetfilelist cid=${channel.cid} cpw= path=\\/` });
+  };
+
   useEffect(() => {
     let activeShortcut = '';
+    let activeWhisperShortcut = '';
 
     async function setupHotkey() {
       if (identity.voice_transmission_mode !== 'push_to_talk' || !identity.ptt_hotkey) {
@@ -153,20 +252,56 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
           }
         });
         activeShortcut = shortcut;
-        console.log(`Registered PTT hotkey: ${shortcut}`);
       } catch (err) {
         console.error("Failed to register global hotkey:", err);
       }
     }
 
+    async function setupWhisperHotkey() {
+      if (!identity.whisper_hotkey) return;
+      try {
+        const shortcut = identity.whisper_hotkey;
+        const registered = await isRegistered(shortcut);
+        if (registered) await unregister(shortcut);
+        await register(shortcut, async (event) => {
+          if (event.state === 'Pressed') {
+            await invoke('set_whisper_state', { active: true });
+          } else if (event.state === 'Released') {
+            await invoke('set_whisper_state', { active: false });
+          }
+        });
+        activeWhisperShortcut = shortcut;
+        
+        if (identity.whisper_targets) {
+          const clientTargetStr = identity.whisper_targets.client_ids.length > 0 
+            ? `target=client target_id=${identity.whisper_targets.client_ids.join(',')}`
+            : '';
+          const channelTargetStr = identity.whisper_targets.channel_ids.length > 0
+            ? `target=channel target_id=${identity.whisper_targets.channel_ids.join(',')}`
+            : '';
+          if (clientTargetStr) {
+            invoke('send_command', { command: `desktopwhisperset ${clientTargetStr}` }).catch(console.error);
+          } else if (channelTargetStr) {
+            invoke('send_command', { command: `desktopwhisperset ${channelTargetStr}` }).catch(console.error);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to register whisper hotkey:", err);
+      }
+    }
+
     setupHotkey();
+    setupWhisperHotkey();
 
     return () => {
       if (activeShortcut) {
         unregister(activeShortcut).catch(console.error);
       }
+      if (activeWhisperShortcut) {
+        unregister(activeWhisperShortcut).catch(console.error);
+      }
     };
-  }, [identity.voice_transmission_mode, identity.ptt_hotkey]);
+  }, [identity.voice_transmission_mode, identity.ptt_hotkey, identity.whisper_hotkey, identity.whisper_targets]);
 
   const handleDisconnect = async () => {
     try {
@@ -174,7 +309,7 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       onDisconnect();
     } catch (e) {
       console.error(e);
-      onDisconnect(); // Disconnect UI anyway
+      onDisconnect();
     }
   };
 
@@ -206,12 +341,55 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       .catch(console.error);
   };
 
+  const handleContextMenuAction = (action: string, type: 'channel' | 'client' | 'server', target: any) => {
+    if (type === 'server') {
+      if (action === 'channel_create_root') {
+        setChannelEditTarget({ cpid: '0' });
+      } else if (action === 'manage_tokens') {
+        setIsTokenManagerOpen(true);
+      } else if (action === 'manage_bans') {
+        setIsBanManagerOpen(true);
+      } else if (action === 'manage_groups') {
+        setIsGroupManagerOpen(true);
+      } else if (action === 'permissions_server') {
+        setPermissionTarget({ type: 'server', targetId: '0' });
+      }
+    } else if (type === 'channel') {
+      const channel = target as Channel;
+      if (action === 'channel_create') {
+        setChannelEditTarget({ cpid: channel.cid });
+      } else if (action === 'channel_edit') {
+        setChannelEditTarget({ cid: channel.cid });
+      } else if (action === 'channel_delete') {
+        if (confirm(`Delete channel ${channel.channel_name}?`)) {
+          invoke('send_command', { command: `channeldelete cid=${channel.cid} force=1` });
+        }
+      } else if (action === 'permissions_channel') {
+        setPermissionTarget({ type: 'channel', targetId: channel.cid });
+      }
+    } else if (type === 'client') {
+      const client = target as Client;
+      if (action === 'client_kick_channel') {
+        invoke('send_command', { command: `clientkick reasonid=4 clid=${client.clid}` });
+      } else if (action === 'client_kick_server') {
+        invoke('send_command', { command: `clientkick reasonid=5 clid=${client.clid}` });
+      } else if (action === 'client_ban') {
+        const time = prompt("Enter ban time in seconds (0 for permanent):", "0");
+        const reason = prompt("Enter ban reason:");
+        if (time !== null) {
+          invoke('send_command', { command: `banclient clid=${client.clid} time=${time} banreason=${escapeTs3String(reason || '')}` });
+        }
+      } else if (action === 'permissions_client') {
+        setPermissionTarget({ type: 'client', targetId: client.clid });
+      }
+    }
+  };
+
   const handleSendMessage = (targetMode: number, target: string, message: string) => {
     const escapedMsg = escapeTs3String(message);
     invoke('send_command', { command: `sendtextmessage targetmode=${targetMode} target=${target} msg=${escapedMsg}` })
       .catch(console.error);
       
-    // Optimistically add own message
     const newMsg: ChatMessage = {
       id: Math.random().toString(),
       timestamp: Date.now(),
@@ -221,11 +399,6 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       message: message
     };
     setChatMessages(prev => [...prev, newMsg]);
-  };
-
-  const handleChannelClick = (channel: Channel) => {
-    setSelectedClient(undefined);
-    setSelectedChannel(channel);
   };
 
   const handleClientClick = (client: Client) => {
@@ -242,16 +415,25 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
             <ChannelTree 
               channels={channels} 
               clients={clients} 
-              myClientId={myClientId}
+              myClientId={myClientId} 
               onChannelDoubleClick={handleChannelDoubleClick}
-              onChannelClick={handleChannelClick}
               onClientClick={handleClientClick}
+              onChannelClick={handleChannelSelect}
+              onContextMenuAction={handleContextMenuAction}
             />
             {channels.length === 0 && <p className="loading-text">Loading channels...</p>}
           </div>
 
           <div className="info-area">
-            <InfoPane selectedChannel={selectedChannel} selectedClient={selectedClient} />
+            <InfoPane 
+            selectedChannel={selectedChannel} 
+            selectedClient={selectedClient} 
+            channelFiles={channelFiles}
+            onUploadFile={handleUploadFile}
+            onDownloadFile={handleDownloadFile}
+            onDeleteFile={handleDeleteFile}
+            onRefreshFiles={refreshFiles}
+          />
           </div>
         </div>
 
@@ -270,6 +452,21 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
         <button className={`btn-icon ${isSpeakerMuted ? 'muted' : ''}`} onClick={handleToggleSpeaker}>
           {isSpeakerMuted ? '🔈 Speaker Muted' : '🔊 Speaker Active'}
         </button>
+        <button className="btn-icon" onClick={() => {
+          const key = prompt("Enter Privilege Key to use:");
+          if (key) invoke('send_command', { command: `tokenuse token=${key}` });
+        }}>
+          🔑 Use Token
+        </button>
+        <button className="btn-icon" onClick={() => setIsTokenManagerOpen(true)}>
+          🛡️ Manage Tokens
+        </button>
+        <button className="btn-icon" onClick={() => setIsBanManagerOpen(true)}>
+          🔨 Bans
+        </button>
+        <button className="btn-icon" onClick={() => setIsGroupManagerOpen(true)}>
+          👥 Groups
+        </button>
         <button className="btn-icon" onClick={() => setIsSettingsOpen(true)}>
           ⚙️ Settings
         </button>
@@ -278,11 +475,39 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
         </button>
       </div>
       
+      {isTokenManagerOpen && (
+        <TokenManagerModal onClose={() => setIsTokenManagerOpen(false)} />
+      )}
+
+      {channelEditTarget && (
+        <ChannelEditModal 
+          cid={channelEditTarget.cid} 
+          cpid={channelEditTarget.cpid} 
+          onClose={() => setChannelEditTarget(null)} 
+        />
+      )}
+
+      {isBanManagerOpen && (
+        <BanManagerModal onClose={() => setIsBanManagerOpen(false)} />
+      )}
+
+      {isGroupManagerOpen && (
+        <GroupManagerModal onClose={() => setIsGroupManagerOpen(false)} />
+      )}
+
       {isSettingsOpen && (
         <SettingsModal 
           onClose={() => setIsSettingsOpen(false)} 
           identity={identity} 
           onIdentityUpdated={onIdentityUpdated} 
+        />
+      )}
+
+      {permissionTarget && (
+        <PermissionEditorModal
+          type={permissionTarget.type}
+          targetId={permissionTarget.targetId}
+          onClose={() => setPermissionTarget(null)}
         />
       )}
     </div>

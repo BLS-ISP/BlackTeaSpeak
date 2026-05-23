@@ -1347,8 +1347,31 @@ impl BaselineRuntime {
         true
     }
 
-    pub fn remove_session_client(&mut self, client_id: u64) {
-        self.store.online_clients.remove(&client_id);
+    pub fn remove_session_client(&mut self, client_id: u64, reason_id: u32, reason_message: String) {
+        if let Some(client) = self.store.online_clients.remove(&client_id) {
+            let client_type = client.extra_properties.get("client_type_exact")
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(client.client_type);
+            let presence = crate::transport::SessionPresence {
+                client_id: client.id,
+                login_name: client.nickname.clone(),
+                unique_identifier: client.unique_identifier.clone(),
+                client_type,
+                server_id: client.server_id,
+                channel_id: client.channel_id,
+            };
+            let notif = crate::transport::TransportNotification::ClientLeftView {
+                presence,
+                to_channel_id: None,
+                reason_id,
+                reason_message,
+                invoker_id: 0,
+                invoker_name: String::new(),
+                invoker_uid: String::new(),
+                ban_time: None,
+            };
+            self.broadcast_event(client.server_id, &notif);
+        }
         for bot in self.store.music_bots.values_mut() {
             if bot.linked_client_id == Some(client_id) {
                 bot.linked_client_id = None;
@@ -1429,7 +1452,7 @@ impl BaselineRuntime {
         let zombie_timeout_seconds = 300;
         
         // Find zombie clients
-        let zombie_clients: Vec<u64> = self.store.online_clients
+        let zombie_clients: Vec<(u64, u32, u32)> = self.store.online_clients
             .iter()
             .filter(|(_, client)| {
                 // Keep query clients alive if needed, but for now we timeout anyone inactive for 5 minutes
@@ -1437,15 +1460,14 @@ impl BaselineRuntime {
                 // Client type 0 is normal client, type 1 is query client
                 now.saturating_sub(client.last_seen_at) > zombie_timeout_seconds && client.client_type != 2
             })
-            .map(|(id, _)| *id)
+            .map(|(id, client)| (*id, client.server_id, client.channel_id))
             .collect();
             
         // Remove them
-        for client_id in zombie_clients {
-            if let Some(client) = self.store.online_clients.remove(&client_id) {
-                // Clean up any temporary channels created by them
-                self.cleanup_temporary_channel(client.server_id, client.channel_id);
-            }
+        for (client_id, server_id, channel_id) in zombie_clients {
+            self.remove_session_client(client_id, 3, "timeout".to_string());
+            // Clean up any temporary channels created by them
+            self.cleanup_temporary_channel(server_id, channel_id);
         }
         
         // Clean up temporary channels that might be empty or only contain a music bot
@@ -3688,7 +3710,7 @@ impl BaselineRuntime {
                     return response;
                 }
 
-                self.remove_session_client(target_snapshot.id);
+                self.remove_session_client(target_snapshot.id, 5, reason_message.clone());
                 QueryResponse::ok()
             }
             _ => QueryResponse::error(512, "reasonid must be 4 or 5"),
@@ -3752,8 +3774,8 @@ impl BaselineRuntime {
             return self.insufficient_permission_response("i_client_ban_max_bantime");
         }
 
-        let ban_id = self.register_active_ban(&target_snapshot, requested_ban_time, ban_reason);
-        self.remove_session_client(target_snapshot.id);
+        let ban_id = self.register_active_ban(&target_snapshot, requested_ban_time, ban_reason.clone());
+        self.remove_session_client(target_snapshot.id, 6, ban_reason);
 
         let mut row = BTreeMap::new();
         row.insert(String::from("banid"), ban_id.to_string());
@@ -5432,6 +5454,9 @@ impl BaselineRuntime {
             return QueryResponse::error(768, "target channel not found");
         }
 
+        if let Some(target_client) = self.store.online_clients.get_mut(&session.client_id) {
+            target_client.channel_id = target_channel_id;
+        }
         session.current_channel_id = Some(target_channel_id);
         QueryResponse::ok()
     }

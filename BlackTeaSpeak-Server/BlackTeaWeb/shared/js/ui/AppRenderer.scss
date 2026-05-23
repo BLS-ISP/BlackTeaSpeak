@@ -1,4 +1,4 @@
-﻿@use "../../css/static/globals" as *;
+@use "../../css/static/globals" as *;
 
 .app {
     display: flex;
@@ -59,14 +59,23 @@
     flex-direction: row;
     justify-content: stretch;
 
-    background: var(--app-background);
+    background: var(--surface-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
     min-height: 23rem;
     flex-grow: 1;
     min-width: 0;
     overflow: hidden;
     border-radius: 16px;
-    border: 1px solid var(--panel-border);
-    box-shadow: var(--panel-shadow);
+    border: 1px solid var(--surface-glass-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    &:hover {
+        box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+        border-color: hsla(220, 20%, 40%, 0.5);
+    }
 }
 
 .channelTree {
@@ -92,8 +101,8 @@
     min-width: 340px;
     width: clamp(340px, 30vw, 420px);
     flex: 0 0 auto;
-    background: var(--side-background);
-    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+    border-left: 1px solid var(--surface-glass-border);
 }
 
 .containerLog {
@@ -105,12 +114,22 @@
     flex-grow: 1;
 
     min-height: 8rem;
-    background: var(--server-log-background);
+    
+    background: var(--surface-glass);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+
     border-radius: 14px;
-    border: 1px solid var(--panel-border);
-    box-shadow: var(--panel-shadow);
+    border: 1px solid var(--surface-glass-border);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
     overflow: hidden;
     position: relative;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    &:hover {
+        box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+        border-color: hsla(220, 20%, 40%, 0.5);
+    }
 }
 
 @media all and (max-width: 1200px) {

@@ -16,6 +16,15 @@ html:root {
     cursor: pointer;
     gap: .18rem;
 
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+        background-color: hsla(220, 20%, 30%, 0.3);
+        transform: translateX(2px);
+    }
+
     .containerArrow {
         width: 1.1em;
         margin-left: -1.05em;
@@ -69,8 +78,8 @@ html:root {
         .channelName {
             line-height: 1.2em;
             font-size: .93em;
-            font-weight: 600;
-            letter-spacing: .01em;
+            font-weight: 500;
+            letter-spacing: .02em;
 
             align-self: center;
             color: var(--channel-tree-entry-color);

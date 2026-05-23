@@ -25,6 +25,11 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
   const [vadThreshold, setVadThreshold] = useState(identity.voice_activation_threshold ?? 0.05);
   const [pttHotkey, setPttHotkey] = useState(identity.ptt_hotkey || '');
   const [isRecordingHotkey, setIsRecordingHotkey] = useState(false);
+
+  const [whisperHotkey, setWhisperHotkey] = useState(identity.whisper_hotkey || '');
+  const [isRecordingWhisperHotkey, setIsRecordingWhisperHotkey] = useState(false);
+  const [whisperClientIds, setWhisperClientIds] = useState(identity.whisper_targets?.client_ids?.join(',') || '');
+  const [whisperChannelIds, setWhisperChannelIds] = useState(identity.whisper_targets?.channel_ids?.join(',') || '');
   
   const [inputLevel, setInputLevel] = useState(0);
   const [outputLevel, setOutputLevel] = useState(0);
@@ -66,6 +71,11 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
       voice_transmission_mode: mode,
       voice_activation_threshold: vadThreshold,
       ptt_hotkey: pttHotkey || undefined,
+      whisper_hotkey: whisperHotkey || undefined,
+      whisper_targets: {
+        client_ids: whisperClientIds.split(',').map(s => s.trim()).filter(Boolean),
+        channel_ids: whisperChannelIds.split(',').map(s => s.trim()).filter(Boolean)
+      }
     };
 
     try {
@@ -79,6 +89,8 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
           transmission_mode: mode,
           vad_threshold: vadThreshold,
           ptt_hotkey: pttHotkey || null,
+          whisper_hotkey: whisperHotkey || null,
+          whisper_targets: newIdentity.whisper_targets || null,
         }
       });
 
@@ -119,6 +131,23 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
     keys.push(mainKey);
     setPttHotkey(keys.join('+'));
     setIsRecordingHotkey(false);
+  };
+
+  const handleWhisperHotkeyRecord = (e: React.KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
+    let keys = [];
+    if (e.ctrlKey) keys.push('Control');
+    if (e.altKey) keys.push('Alt');
+    if (e.shiftKey) keys.push('Shift');
+    if (e.metaKey) keys.push('Super');
+    let mainKey = e.key;
+    if (mainKey === ' ') mainKey = 'Space';
+    if (mainKey.length === 1) mainKey = mainKey.toUpperCase();
+    keys.push(mainKey);
+    setWhisperHotkey(keys.join('+'));
+    setIsRecordingWhisperHotkey(false);
   };
 
   return (
@@ -194,6 +223,35 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
               </button>
             </>
           )}
+        </div>
+
+        <div className="settings-group">
+          <label>Whisper Setup</label>
+          <label>Whisper Hotkey</label>
+          <button 
+            className="btn-secondary" 
+            onClick={() => setIsRecordingWhisperHotkey(true)}
+            onKeyDown={isRecordingWhisperHotkey ? handleWhisperHotkeyRecord : undefined}
+            style={{ textAlign: 'left', background: isRecordingWhisperHotkey ? 'var(--accent-color)' : '' }}
+          >
+            {isRecordingWhisperHotkey ? "Press any key combination..." : (whisperHotkey || "Click to bind a hotkey")}
+          </button>
+          
+          <label>Target Client IDs (comma separated)</label>
+          <input 
+            type="text" 
+            placeholder="e.g. 1, 5, 12" 
+            value={whisperClientIds} 
+            onChange={e => setWhisperClientIds(e.target.value)} 
+          />
+          
+          <label>Target Channel IDs (comma separated)</label>
+          <input 
+            type="text" 
+            placeholder="e.g. 2, 8" 
+            value={whisperChannelIds} 
+            onChange={e => setWhisperChannelIds(e.target.value)} 
+          />
         </div>
 
         <div className="settings-actions">

@@ -17,6 +17,8 @@ export type Identity = {
   voice_transmission_mode?: string;
   voice_activation_threshold?: number;
   ptt_hotkey?: string;
+  whisper_hotkey?: string;
+  whisper_targets?: { client_ids: string[], channel_ids: string[] };
 };
 
 type Favorite = {
@@ -189,15 +191,11 @@ function App() {
 
   if (isConnected) {
     return (
-      <div className="app-container">
-        <div className="main-content full-width-content">
-          <ConnectedView 
-            onDisconnect={handleDisconnect} 
-            identity={activeIdentity!}
-            onIdentityUpdated={(newIdent) => setActiveIdentity(newIdent)}
-          />
-        </div>
-      </div>
+      <ConnectedView 
+        onDisconnect={handleDisconnect} 
+        identity={activeIdentity!}
+        onIdentityUpdated={(newIdent) => setActiveIdentity(newIdent)}
+      />
     );
   }
 

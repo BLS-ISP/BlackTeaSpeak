@@ -13,8 +13,9 @@ pub struct AudioManager {
     pub is_mic_muted: Arc<AtomicBool>,
     pub is_speaker_muted: Arc<AtomicBool>,
     pub is_ptt_pressed: Arc<AtomicBool>,
+    pub is_whisper_active: Arc<AtomicBool>,
     pub tx_opus_in: UnboundedSender<Vec<u8>>,
-    pub tx_opus_out: UnboundedSender<Vec<u8>>,
+    pub tx_opus_out: UnboundedSender<(bool, Vec<u8>)>,
     
     pub input_amp: Arc<AtomicU32>,
     pub output_amp: Arc<AtomicU32>,
@@ -48,17 +49,18 @@ fn get_device_name(dev: &cpal::Device) -> String {
 }
 
 impl AudioManager {
-    pub fn new(app_handle: Option<tauri::AppHandle>) -> Result<(Self, UnboundedReceiver<Vec<u8>>), String> {
+    pub fn new(app_handle: Option<tauri::AppHandle>) -> Result<(Self, UnboundedReceiver<(bool, Vec<u8>)>), String> {
         let is_mic_muted = Arc::new(AtomicBool::new(false));
         let is_speaker_muted = Arc::new(AtomicBool::new(false));
         let is_ptt_pressed = Arc::new(AtomicBool::new(false));
+        let is_whisper_active = Arc::new(AtomicBool::new(false));
         
         let input_amp = Arc::new(AtomicU32::new(f32_to_bits(1.0)));
         let output_amp = Arc::new(AtomicU32::new(f32_to_bits(1.0)));
         let vad_threshold = Arc::new(AtomicU32::new(f32_to_bits(0.05)));
         let transmission_mode = Arc::new(Mutex::new(String::from("voice_activation")));
 
-        let (tx_opus_out_sender, tx_opus_out_receiver) = unbounded_channel::<Vec<u8>>();
+        let (tx_opus_out_sender, tx_opus_out_receiver) = unbounded_channel::<(bool, Vec<u8>)>();
         let (tx_opus_in_sender, mut rx_opus_in_receiver) = unbounded_channel::<Vec<u8>>();
 
         let (prod, cons) = unbounded_channel::<f32>();
@@ -88,6 +90,7 @@ impl AudioManager {
             is_mic_muted,
             is_speaker_muted,
             is_ptt_pressed,
+            is_whisper_active,
             tx_opus_in: tx_opus_in_sender,
             tx_opus_out: tx_opus_out_sender,
             input_amp,
@@ -174,6 +177,7 @@ impl AudioManager {
 
         let mic_muted = self.is_mic_muted.clone();
         let ptt_pressed = self.is_ptt_pressed.clone();
+        let whisper_active = self.is_whisper_active.clone();
         let input_amp = self.input_amp.clone();
         let vad_threshold = self.vad_threshold.clone();
         let transmission_mode = self.transmission_mode.clone();
@@ -196,8 +200,9 @@ impl AudioManager {
                 let mode = transmission_mode.lock().unwrap().clone();
                 let is_ptt = mode == "push_to_talk";
                 let is_vad = mode == "voice_activation";
+                let is_whisper = whisper_active.load(Ordering::Relaxed);
                 
-                if is_ptt && !ptt_pressed.load(Ordering::Relaxed) {
+                if !is_whisper && is_ptt && !ptt_pressed.load(Ordering::Relaxed) {
                     return;
                 }
 
@@ -219,7 +224,7 @@ impl AudioManager {
                     }
                 }
 
-                if is_vad && rms < thresh {
+                if !is_whisper && is_vad && rms < thresh {
                     return; // Below threshold, do not transmit
                 }
 
@@ -230,7 +235,7 @@ impl AudioManager {
                     let mut out_payload = vec![0u8; 4000];
                     if let Ok(len) = encoder.encode_float(&frame, &mut out_payload) {
                         out_payload.truncate(len);
-                        let _ = tx_opus.send(out_payload);
+                        let _ = tx_opus.send((is_whisper, out_payload));
                     }
                 }
             },

@@ -40,7 +40,7 @@ use crate::runtime::{
 };
 use crate::transport::{SessionPresence, TransportNotification};
 
-pub const DEFAULT_TEAWEB_BIND: &str = "127.0.0.1:9987";
+pub const DEFAULT_TEAWEB_BIND: &str = "127.0.0.1:9988";
 
 const LOCALHOST_CERTIFICATE_NAMES: [&str; 2] = ["localhost", "127.0.0.1"];
 
@@ -1278,8 +1278,9 @@ impl BlackTeaWebTransportServer {
                         }
                     }
                     
-                    let mut wt_payload = Vec::with_capacity(1 + payload.len());
+                    let mut wt_payload = Vec::with_capacity(1 + 8 + payload.len());
                     wt_payload.push(packet_type);
+                    wt_payload.extend_from_slice(&sender_client_id.to_le_bytes());
                     wt_payload.extend_from_slice(&payload);
                     for conn in targets {
                         let _ = conn.send_datagram(wt_payload.clone());
@@ -2421,23 +2422,7 @@ fn handle_client(
         let mut runtime = runtime
             .lock()
             .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
-        if let Some(disconnect_presence) = disconnect_presence
-                .as_ref()
-                .map(session_presence_from_blackteaweb_presence)
-        {
-            let notif = TransportNotification::ClientLeftView {
-                presence: disconnect_presence.clone(),
-                to_channel_id: None,
-                reason_id: disconnect_reason_id,
-                reason_message: disconnect_reason_message.to_string(),
-                invoker_id: 0,
-                invoker_name: String::new(),
-                invoker_uid: String::new(),
-                ban_time: None,
-            };
-            runtime.broadcast_event(disconnect_presence.server_id, &notif);
-        }
-        runtime.remove_session_client(session.client_id);
+        runtime.remove_session_client(session.client_id, disconnect_reason_id, disconnect_reason_message.to_string());
     }
     let disconnect_cleanup_notifications = {
         let mut runtime = runtime
@@ -3619,21 +3604,28 @@ pub fn generate_localhost_tls_assets(
         })?;
     }
 
-    let generated = generate_simple_self_signed(
+    let mut params = rcgen::CertificateParams::new(
         LOCALHOST_CERTIFICATE_NAMES
             .into_iter()
             .map(String::from)
             .collect::<Vec<_>>(),
-    )
-    .context("failed to generate localhost BlackTeaWeb certificate")?;
+    )?;
+    
+    // WebTransport requires certificates to be valid for at most 14 days
+    // when using serverCertificateHashes.
+    params.not_before = rcgen::date_time_ymd(2026, 5, 20);
+    params.not_after = rcgen::date_time_ymd(2026, 5, 28);
 
-    fs::write(certificate_path, generated.cert.pem()).with_context(|| {
+    let key_pair = rcgen::KeyPair::generate().context("failed to generate key pair")?;
+    let generated_cert = params.self_signed(&key_pair).context("failed to generate localhost BlackTeaWeb certificate")?;
+
+    fs::write(certificate_path, generated_cert.pem()).with_context(|| {
         format!(
             "failed to write BlackTeaWeb certificate PEM {}",
             certificate_path.display()
         )
     })?;
-    fs::write(private_key_path, generated.key_pair.serialize_pem()).with_context(|| {
+    fs::write(private_key_path, key_pair.serialize_pem()).with_context(|| {
         format!(
             "failed to write BlackTeaWeb private key PEM {}",
             private_key_path.display()
@@ -3678,16 +3670,22 @@ fn load_tls_config_from_files(
 }
 
 fn generate_fallback_tls_config() -> Result<Arc<ServerConfig>> {
-    let generated = generate_simple_self_signed(
+    let mut params = rcgen::CertificateParams::new(
         LOCALHOST_CERTIFICATE_NAMES
             .into_iter()
             .map(String::from)
             .collect::<Vec<_>>(),
-    )
-    .context("failed to generate fallback BlackTeaWeb certificate")?;
-    let certificate = generated.cert.der().clone();
-    let private_key =
-        PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(generated.key_pair.serialize_der()));
+    )?;
+    
+    params.not_before = rcgen::date_time_ymd(2026, 5, 20);
+    params.not_after = rcgen::date_time_ymd(2026, 5, 28);
+
+    let key_pair = rcgen::KeyPair::generate().context("failed to generate key pair")?;
+    let generated_cert = params.self_signed(&key_pair).context("failed to generate fallback BlackTeaWeb certificate")?;
+    
+    let certificate = generated_cert.der().clone();
+    let private_key = PrivateKeyDer::Pkcs8(PrivatePkcs8KeyDer::from(key_pair.serialize_der()));
+    
     let tls_config = ServerConfig::builder()
         .with_no_client_auth()
         .with_single_cert(vec![certificate], private_key)
@@ -9404,23 +9402,7 @@ async fn handle_wtransport_client(
         let mut rt = runtime
             .lock()
             .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
-        if let Some(disconnect_presence) = disconnect_presence
-                .as_ref()
-                .map(session_presence_from_blackteaweb_presence)
-        {
-            let notif = TransportNotification::ClientLeftView {
-                presence: disconnect_presence.clone(),
-                to_channel_id: None,
-                reason_id: disconnect_reason_id,
-                reason_message: disconnect_reason_message.to_string(),
-                invoker_id: 0,
-                invoker_name: String::new(),
-                invoker_uid: String::new(),
-                ban_time: None,
-            };
-            rt.broadcast_event(disconnect_presence.server_id, &notif);
-        }
-        rt.remove_session_client(session.client_id);
+        rt.remove_session_client(session.client_id, disconnect_reason_id, disconnect_reason_message.to_string());
     }
     let disconnect_cleanup_notifications = {
         let mut rt = runtime

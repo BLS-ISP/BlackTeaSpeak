@@ -3978,6 +3978,14 @@
         "sender_unique_id": "desktop-1",
         "sender_name": "Query",
         "message": "Hello World"
+      },
+      {
+        "conversation_id": 2,
+        "timestamp": 1779567800505,
+        "sender_database_id": 0,
+        "sender_unique_id": "desktop-1",
+        "sender_name": "Query",
+        "message": "Hello World"
       }
     ]
   },
@@ -3987,7 +3995,7 @@
       "id": 1,
       "server_id": 1,
       "client_database_id": 42,
-      "linked_client_id": 12,
+      "linked_client_id": null,
       "playlist_id": 1,
       "current_song_id": 0,
       "next_song_id": 1,
@@ -4007,7 +4015,7 @@
   "tokens": {},
   "session_snapshots": {},
   "next_client_database_id": 100,
-  "next_conversation_timestamp": 1779472270457,
+  "next_conversation_timestamp": 1779567800506,
   "next_token_id": 1,
   "next_token_action_id": 1
 }

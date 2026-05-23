@@ -177,7 +177,7 @@ export class RendererClient extends React.Component<{ client: RDPClient }, {}> {
         const events = this.props.client.getEvents();
 
         return (
-            <div className={clientStyle.clientEntry + " " + viewStyle.treeEntry + " " + (selected ? viewStyle.selected : "")}
+            <div className={clientStyle.clientEntry + " " + viewStyle.treeEntry + " " + (selected ? viewStyle.selected : "") + " " + (client.status === ClientIcon.PlayerOn ? "is-speaking" : "")}
                  style={{ top: (client.offsetTop * ChannelTreeView.EntryHeightEm) + "em" }}
                  onContextMenu={event => {
                      if (settings.getValue(Settings.KEY_DISABLE_CONTEXT_MENU)) {
