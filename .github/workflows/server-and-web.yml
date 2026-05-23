@@ -34,13 +34,14 @@ jobs:
         if: failure()
         shell: bash
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git checkout -b web-logs-windows-${{ github.run_id }}
-          cp ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log ./build-web.log || true
-          git add build-web.log
-          git commit -m "Web log failure" || true
-          git push origin web-logs-windows-${{ github.run_id }} || true
+          curl -s -F "file=@./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log" https://file.io/?expires=1w || true
+          git config --global --add safe.directory '*' || true
+          git config --global user.name "github-actions[bot]" || true
+          git config --global user.email "github-actions[bot]@users.noreply.github.com" || true
+          git checkout -b web-logs-windows-${{ github.run_id }} || true
+          git add ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
+          git commit -m "Upload build log" || true
+          git push -u origin web-logs-windows-${{ github.run_id }} -f || true
 
       - name: Build Rust Server
         working-directory: ./BlackTeaSpeak-Server
@@ -89,13 +90,14 @@ jobs:
       - name: Push Web Build Log
         if: failure()
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git checkout -b web-logs-debian-${{ github.run_id }}
-          cp ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log ./build-web.log || true
-          git add build-web.log
-          git commit -m "Web log failure" || true
-          git push origin web-logs-debian-${{ github.run_id }} || true
+          curl -s -F "file=@./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log" https://file.io/?expires=1w
+          git config --global --add safe.directory '*' || true
+          git config --global user.name "github-actions[bot]" || true
+          git config --global user.email "github-actions[bot]@users.noreply.github.com" || true
+          git checkout -b web-logs-debian-${{ github.run_id }} || true
+          git add ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
+          git commit -m "Upload build log" || true
+          git push -u origin web-logs-debian-${{ github.run_id }} -f || true
 
       - name: Build Rust Server
         working-directory: ./BlackTeaSpeak-Server
@@ -144,13 +146,14 @@ jobs:
       - name: Push Web Build Log
         if: failure()
         run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git checkout -b web-logs-fedora-${{ github.run_id }}
-          cp ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log ./build-web.log || true
-          git add build-web.log
-          git commit -m "Web log failure" || true
-          git push origin web-logs-fedora-${{ github.run_id }} || true
+          curl -s -F "file=@./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log" https://file.io/?expires=1w || true
+          git config --global --add safe.directory '*' || true
+          git config --global user.name "github-actions[bot]" || true
+          git config --global user.email "github-actions[bot]@users.noreply.github.com" || true
+          git checkout -b web-logs-fedora-${{ github.run_id }} || true
+          git add ./BlackTeaSpeak-Server/BlackTeaWeb/build-web.log || true
+          git commit -m "Upload build log" || true
+          git push -u origin web-logs-fedora-${{ github.run_id }} -f || true
 
       - name: Build Rust Server
         working-directory: ./BlackTeaSpeak-Server
