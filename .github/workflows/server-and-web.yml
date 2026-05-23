@@ -15,12 +15,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Checkout Submodules
-        shell: bash
-        run: |
-          git config --global --add safe.directory '*' || true
-          cd BlackTeaSpeak-Server/BlackTeaWeb && git submodule update --init --recursive
+        with:
+          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -76,11 +72,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Checkout Submodules
-        run: |
-          git config --global --add safe.directory '*' || true
-          cd BlackTeaSpeak-Server/BlackTeaWeb && git submodule update --init --recursive
+        with:
+          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -136,11 +129,8 @@ jobs:
 
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Checkout Submodules
-        run: |
-          git config --global --add safe.directory '*' || true
-          cd BlackTeaSpeak-Server/BlackTeaWeb && git submodule update --init --recursive
+        with:
+          submodules: recursive
 
       - name: Setup Node.js
         uses: actions/setup-node@v4

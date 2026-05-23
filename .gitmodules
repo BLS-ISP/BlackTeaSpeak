@@ -1,0 +1,12 @@
+[submodule "BlackTeaSpeak-Server/BlackTeaWeb/vendor/xbbcode"]
+	path = BlackTeaSpeak-Server/BlackTeaWeb/vendor/xbbcode
+	url = https://github.com/WolverinDEV/XBBCode.git
+[submodule "BlackTeaSpeak-Server/BlackTeaWeb/web/native-codec/libraries/opus"]
+	path = BlackTeaSpeak-Server/BlackTeaWeb/web/native-codec/libraries/opus
+	url = https://github.com/xiph/opus.git
+[submodule "BlackTeaSpeak-Server/BlackTeaWeb/vendor/TeaEventBus"]
+	path = BlackTeaSpeak-Server/BlackTeaWeb/vendor/TeaEventBus
+	url = https://github.com/WolverinDEV/TeaEventBus.git
+[submodule "BlackTeaSpeak-Server/BlackTeaWeb/vendor/TeaClientServices"]
+	path = BlackTeaSpeak-Server/BlackTeaWeb/vendor/TeaClientServices
+	url = https://github.com/WolverinDEV/TeaClientServices.git
