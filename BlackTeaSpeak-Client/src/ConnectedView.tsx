@@ -39,7 +39,7 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
   const [isBanManagerOpen, setIsBanManagerOpen] = useState(false);
   const [isTokenManagerOpen, setIsTokenManagerOpen] = useState(false);
   const [channelEditTarget, setChannelEditTarget] = useState<{cid?: string, cpid?: string} | null>(null);
-  const [permissionTarget, setPermissionTarget] = useState<{type: 'server' | 'channel' | 'client' | 'group', targetId: string} | null>(null);
+  const [permissionTarget, setPermissionTarget] = useState<{type: 'servergroup' | 'channelgroup' | 'client' | 'channel', targetId: string} | null>(null);
 
   const [channelFiles, setChannelFiles] = useState<FileEntry[]>([]);
   const pendingTransfers = useRef<Map<string, { type: 'upload' | 'download', file?: File, fileEntry?: FileEntry }>>(new Map());
@@ -352,7 +352,7 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       } else if (action === 'manage_groups') {
         setIsGroupManagerOpen(true);
       } else if (action === 'permissions_server') {
-        setPermissionTarget({ type: 'server', targetId: '0' });
+        setPermissionTarget({ type: 'servergroup', targetId: '0' });
       }
     } else if (type === 'channel') {
       const channel = target as Channel;
