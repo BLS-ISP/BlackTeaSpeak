@@ -56,7 +56,7 @@ jobs:
       - name: Install Dependencies
         run: |
           apt-get update
-          apt-get install -y libwebkit2gtk-4.0-dev build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev
+          apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev libasound2-dev libopus-dev
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
@@ -94,7 +94,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          dnf install -y webkit2gtk4.0-devel gcc gcc-c++ make openssl-devel gtk3-devel libappindicator-gtk3-devel librsvg2-devel curl wget file alsa-lib-devel
+          dnf install -y webkit2gtk4.1-devel gcc gcc-c++ make openssl-devel gtk3-devel libappindicator-gtk3-devel librsvg2-devel curl wget file alsa-lib-devel opus-devel pkgconf-pkg-config
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 

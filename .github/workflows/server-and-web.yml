@@ -24,7 +24,7 @@ jobs:
       - name: Build Web Client
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
-          npm install
+          npm install --legacy-peer-deps
           npm run build-web
 
       - name: Build Rust Server
@@ -68,7 +68,7 @@ jobs:
       - name: Build Web Client
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
-          npm install
+          npm install --legacy-peer-deps
           npm run build-web
 
       - name: Build Rust Server
@@ -112,7 +112,7 @@ jobs:
       - name: Build Web Client
         working-directory: ./BlackTeaSpeak-Server/BlackTeaWeb
         run: |
-          npm install
+          npm install --legacy-peer-deps
           npm run build-web
 
       - name: Build Rust Server
