@@ -1,0 +1,70 @@
+import "./shared";
+import * as loader from "../loader/loader";
+import {ApplicationLoader} from "../loader/loader";
+import {loadManifest, loadManifestTarget} from "../maifest";
+
+loader.register_task(loader.Stage.INITIALIZING, {
+    name: "secure tester",
+    function: async () => {
+        /* we need https or localhost to use some things like the storage API */
+        if(typeof isSecureContext === "undefined") {
+            (window as any)["isSecureContext"] = location.protocol !== 'https:' || location.hostname === 'localhost';
+        }
+
+        if(!isSecureContext) {
+            loader.critical_error("BlackTeaSpeak Web can't run on unsecured pages.", "App requires to be loaded via HTTPS!");
+            throw "App requires a secure context!"
+        }
+    },
+    priority: 20
+});
+
+loader.register_task(loader.Stage.JAVASCRIPT, {
+    name: "manifest",
+    function: async taskId => {
+        loader.setCurrentTaskName(taskId, "manifest");
+        await loadManifest();
+        await loadManifestTarget(__build.entry_chunk_name, taskId);
+    },
+    priority: 10
+});
+
+loader.register_task(loader.Stage.SETUP, {
+    name: "page setup",
+    function: async () => {
+        const body = document.body;
+
+        /* template containers */
+        {
+            const container = document.createElement("div");
+            container.setAttribute('id', "templates");
+            body.append(container);
+        }
+
+        /* sounds container */
+        {
+            const container = document.createElement("div");
+            container.setAttribute('id', "sounds");
+            body.append(container);
+        }
+    },
+    priority: 10
+});
+
+/* test if we're getting loaded within a TeaClient preview window */
+loader.register_task(loader.Stage.SETUP, {
+    name: "TeaClient tester",
+    function: async () => {
+        if(typeof __teaclient_preview_notice !== "undefined" && typeof __teaclient_preview_error !== "undefined") {
+            loader.critical_error("Why are you opening BlackTeaSpeak Web inside TeaClient?!");
+            throw "we're already a TeaClient!";
+        }
+    },
+    priority: 100
+});
+
+export default class implements ApplicationLoader {
+    execute() {
+        loader.execute_managed(true);
+    }
+}
