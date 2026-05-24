@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { listen } from '@tauri-apps/api/event';
+
 import { invoke } from '@tauri-apps/api/core';
 import { ServerGroup, ChannelGroup } from './types';
-import { parseTs3Response, escapeTs3String } from './ts3parser';
+import { escapeTs3String } from './ts3parser';
 import { PermissionEditor } from './PermissionEditorModal';
+import { Dialogs } from './ui/Dialogs';
+import { Toast } from './ui/Toast';
+import { eventBus } from './EventBus';
 
 interface GroupManagerModalProps {
   onClose: () => void;
@@ -15,33 +18,37 @@ export function GroupManagerModal({ onClose }: GroupManagerModalProps) {
   const [channelGroups, setChannelGroups] = useState<ChannelGroup[]>([]);
   const [editingTarget, setEditingTarget] = useState<{type: 'servergroup'|'channelgroup', id: string} | null>(null);
 
+  const [, setWaitingForRefresh] = useState(false);
+
   useEffect(() => {
-    let unlisten: () => void;
-
-    async function setup() {
-      unlisten = await listen<string>('server_event', (event) => {
-        const parsed = parseTs3Response(event.payload);
-        for (const row of parsed) {
-          if (row.command === 'servergrouplist') {
-            setServerGroups(prev => {
-              if (prev.find(g => g.sgid === row.args.sgid)) return prev;
-              return [...prev, row.args as unknown as ServerGroup];
-            });
-          } else if (row.command === 'channelgrouplist') {
-            setChannelGroups(prev => {
-              if (prev.find(g => g.cgid === row.args.cgid)) return prev;
-              return [...prev, row.args as unknown as ChannelGroup];
-            });
-          }
+    const unsubscribe = eventBus.subscribe((rows) => {
+      for (const row of rows) {
+        if (row.command === 'servergrouplist') {
+          setServerGroups(prev => {
+            if (prev.find(g => g.sgid === row.args.sgid)) return prev;
+            return [...prev, row.args as any as ServerGroup];
+          });
+        } else if (row.command === 'channelgrouplist') {
+          setChannelGroups(prev => {
+            if (prev.find(g => g.cgid === row.args.cgid)) return prev;
+            return [...prev, row.args as any as ChannelGroup];
+          });
+        } else if (row.command === 'error' && row.args.msg === 'ok') {
+          setWaitingForRefresh(waiting => {
+            if (waiting) {
+              refreshGroups();
+              return false;
+            }
+            return waiting;
+          });
         }
-      });
+      }
+    });
 
-      refreshGroups();
-    }
-    setup();
+    refreshGroups();
 
     return () => {
-      if (unlisten) unlisten();
+      unsubscribe();
     };
   }, []);
 
@@ -52,33 +59,37 @@ export function GroupManagerModal({ onClose }: GroupManagerModalProps) {
     invoke('send_command', { command: 'channelgrouplist' }).catch(console.error);
   };
 
-  const handleAddServerGroup = () => {
-    const name = prompt("Enter Server Group Name:");
+  const handleAddServerGroup = async () => {
+    const name = await Dialogs.prompt("Add Server Group", "Enter Server Group Name:");
     if (name) {
       invoke('send_command', { command: `servergroupadd name=${escapeTs3String(name)} type=1` });
-      setTimeout(refreshGroups, 500);
+      setWaitingForRefresh(true);
+      Toast.success("Server Group added");
     }
   };
 
-  const handleAddChannelGroup = () => {
-    const name = prompt("Enter Channel Group Name:");
+  const handleAddChannelGroup = async () => {
+    const name = await Dialogs.prompt("Add Channel Group", "Enter Channel Group Name:");
     if (name) {
       invoke('send_command', { command: `channelgroupadd name=${escapeTs3String(name)} type=1` });
-      setTimeout(refreshGroups, 500);
+      setWaitingForRefresh(true);
+      Toast.success("Channel Group added");
     }
   };
 
-  const handleDeleteServerGroup = (sgid: string) => {
-    if (confirm("Are you sure you want to delete this Server Group?")) {
+  const handleDeleteServerGroup = async (sgid: string) => {
+    if (await Dialogs.confirm("Delete Group", "Are you sure you want to delete this Server Group?")) {
       invoke('send_command', { command: `servergroupdel sgid=${sgid} force=1` });
-      setTimeout(refreshGroups, 500);
+      setWaitingForRefresh(true);
+      Toast.success("Server Group deleted");
     }
   };
 
-  const handleDeleteChannelGroup = (cgid: string) => {
-    if (confirm("Are you sure you want to delete this Channel Group?")) {
+  const handleDeleteChannelGroup = async (cgid: string) => {
+    if (await Dialogs.confirm("Delete Group", "Are you sure you want to delete this Channel Group?")) {
       invoke('send_command', { command: `channelgroupdel cgid=${cgid} force=1` });
-      setTimeout(refreshGroups, 500);
+      setWaitingForRefresh(true);
+      Toast.success("Channel Group deleted");
     }
   };
 

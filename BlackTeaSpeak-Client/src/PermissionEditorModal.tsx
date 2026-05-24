@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { listen } from '@tauri-apps/api/event';
+
 import { invoke } from '@tauri-apps/api/core';
 import { Permission } from './types';
-import { parseTs3Response, escapeTs3String } from './ts3parser';
+import { escapeTs3String } from './ts3parser';
+import { Dialogs } from './ui/Dialogs';
+import { Toast } from './ui/Toast';
+import { eventBus } from './EventBus';
 
 interface PermissionEditorModalProps {
   targetType: 'servergroup' | 'channelgroup' | 'client' | 'channel';
@@ -13,46 +16,51 @@ interface PermissionEditorModalProps {
 export function PermissionEditor({ targetType, targetId }: Omit<PermissionEditorModalProps, 'onClose'>) {
   const [permissions, setPermissions] = useState<Permission[]>([]);
 
+  const [, setWaitingForRefresh] = useState(false);
+
   useEffect(() => {
-    let unlisten: () => void;
+    const unsubscribe = eventBus.subscribe((rows) => {
+      for (const row of rows) {
+        const commandMatch = 
+          (targetType === 'servergroup' && row.command === 'servergrouppermlist') ||
+          (targetType === 'channelgroup' && row.command === 'channelgrouppermlist') ||
+          (targetType === 'client' && row.command === 'clientpermlist') ||
+          (targetType === 'channel' && row.command === 'channelpermlist');
 
-    async function setup() {
-      unlisten = await listen<string>('server_event', (event) => {
-        const parsed = parseTs3Response(event.payload);
-        for (const row of parsed) {
-          const commandMatch = 
-            (targetType === 'servergroup' && row.command === 'servergrouppermlist') ||
-            (targetType === 'channelgroup' && row.command === 'channelgrouppermlist') ||
-            (targetType === 'client' && row.command === 'clientpermlist') ||
-            (targetType === 'channel' && row.command === 'channelpermlist');
+        if (commandMatch) {
+          setPermissions(prev => {
+            const existingIndex = prev.findIndex(p => p.permid === row.args.permid || p.permname === row.args.permname);
+            const newPerm = {
+              permid: row.args.permid || '',
+              permname: row.args.permsid || row.args.permname || `id_${row.args.permid}`,
+              permvalue: row.args.permvalue || '0',
+              permskip: row.args.permskip === '1',
+              permnegated: row.args.permnegated === '1'
+            };
 
-          if (commandMatch) {
-            setPermissions(prev => {
-              const existingIndex = prev.findIndex(p => p.permid === row.args.permid || p.permname === row.args.permname);
-              const newPerm = {
-                permid: row.args.permid || '',
-                permname: row.args.permsid || row.args.permname || `id_${row.args.permid}`,
-                permvalue: row.args.permvalue || '0',
-                permskip: row.args.permskip === '1',
-                permnegated: row.args.permnegated === '1'
-              };
-
-              if (existingIndex !== -1) {
-                const copy = [...prev];
-                copy[existingIndex] = newPerm;
-                return copy;
-              }
-              return [...prev, newPerm];
-            });
-          }
+            if (existingIndex !== -1) {
+              const copy = [...prev];
+              copy[existingIndex] = newPerm;
+              return copy;
+            }
+            return [...prev, newPerm];
+          });
+        } else if (row.command === 'error' && row.args.msg === 'ok') {
+          setWaitingForRefresh(waiting => {
+            if (waiting) {
+              refreshPermissions();
+              return false;
+            }
+            return waiting;
+          });
         }
-      });
-      refreshPermissions();
-    }
-    setup();
+      }
+    });
+
+    refreshPermissions();
 
     return () => {
-      if (unlisten) unlisten();
+      unsubscribe();
     };
   }, [targetType, targetId]);
 
@@ -64,27 +72,30 @@ export function PermissionEditor({ targetType, targetId }: Omit<PermissionEditor
     if (targetType === 'channel') invoke('send_command', { command: `channelpermlist cid=${targetId}` });
   };
 
-  const handleAddPerm = () => {
-    const name = prompt("Enter Permission Name (e.g. b_serverinstance_help_view):");
-    const val = prompt("Enter Permission Value (e.g. 1):", "1");
+  const handleAddPerm = async () => {
+    const name = await Dialogs.prompt("Add Permission", "Enter Permission Name (e.g. b_serverinstance_help_view):");
+    if (!name) return;
+    const val = await Dialogs.prompt("Permission Value", "Enter Permission Value (e.g. 1):", "1");
     if (name && val) {
       const escName = escapeTs3String(name);
       if (targetType === 'servergroup') invoke('send_command', { command: `servergroupaddperm sgid=${targetId} permsid=${escName} permvalue=${val} permnegated=0 permskip=0` });
       if (targetType === 'channelgroup') invoke('send_command', { command: `channelgroupaddperm cgid=${targetId} permsid=${escName} permvalue=${val} permnegated=0 permskip=0` });
       if (targetType === 'client') invoke('send_command', { command: `clientaddperm cldbid=${targetId} permsid=${escName} permvalue=${val} permnegated=0 permskip=0` });
       if (targetType === 'channel') invoke('send_command', { command: `channeladdperm cid=${targetId} permsid=${escName} permvalue=${val}` });
-      setTimeout(refreshPermissions, 500);
+      setWaitingForRefresh(true);
+      Toast.success(`Permission ${name} added`);
     }
   };
 
-  const handleDeletePerm = (permname: string) => {
-    if (confirm(`Remove permission ${permname}?`)) {
+  const handleDeletePerm = async (permname: string) => {
+    if (await Dialogs.confirm("Remove Permission", `Remove permission ${permname}?`)) {
       const escName = escapeTs3String(permname);
       if (targetType === 'servergroup') invoke('send_command', { command: `servergroupdelperm sgid=${targetId} permsid=${escName}` });
       if (targetType === 'channelgroup') invoke('send_command', { command: `channelgroupdelperm cgid=${targetId} permsid=${escName}` });
       if (targetType === 'client') invoke('send_command', { command: `clientdelperm cldbid=${targetId} permsid=${escName}` });
       if (targetType === 'channel') invoke('send_command', { command: `channeldelperm cid=${targetId} permsid=${escName}` });
-      setTimeout(refreshPermissions, 500);
+      setWaitingForRefresh(true);
+      Toast.success(`Permission ${permname} removed`);
     }
   };
 

@@ -15,6 +15,8 @@ struct UdpClientSession {
     pub client_id: u64,
     pub last_seen: Instant,
     pub next_packet_id: u16,
+    pub is_talking: bool,
+    pub last_talk_millis: Instant,
 }
 
 pub struct DesktopTransportServer {
@@ -111,11 +113,21 @@ impl DesktopTransportServer {
                                         false, // is_server_to_client
                                     ) {
                                         // Update session mapping
-                                        addr_to_session.entry(addr).and_modify(|s| s.last_seen = Instant::now()).or_insert(UdpClientSession {
+                                        let mut newly_talking = false;
+                                        addr_to_session.entry(addr).and_modify(|s| {
+                                            s.last_seen = Instant::now();
+                                        }).or_insert(UdpClientSession {
                                             client_id: client_id_u64,
                                             last_seen: Instant::now(),
                                             next_packet_id: 0,
+                                            is_talking: false,
+                                            last_talk_millis: Instant::now(),
                                         });
+                                        
+                                        {
+                                            let mut rt = self.runtime.lock().unwrap();
+                                            rt.mark_client_seen(client_id_u64);
+                                        }
                                         
                                         let packet_type = flags & 0x0F;
                                         if packet_type == 0x0A || packet_type == 0x0B {
@@ -126,7 +138,22 @@ impl DesktopTransportServer {
                                                 snapshot.map(|c| c.channel_id)
                                             };
                                             
-                                            if let Some(_cid) = channel_id {
+                                            if let Some(cid) = channel_id {
+                                                // Talk status logic
+                                                if let Some(session) = addr_to_session.get_mut(&addr) {
+                                                    session.last_talk_millis = Instant::now();
+                                                    if !session.is_talking {
+                                                        session.is_talking = true;
+                                                        let rt_guard = self.runtime.lock().unwrap();
+                                                        rt_guard.broadcast_event(self.server_id, &crate::transport::TransportNotification::TalkStatus {
+                                                            server_id: self.server_id,
+                                                            channel_id: cid,
+                                                            client_id: client_id_u64,
+                                                            is_talking: true,
+                                                        });
+                                                    }
+                                                }
+
                                                 Self::broadcast_media(
                                                     &socket,
                                                     &mut addr_to_session,
@@ -145,7 +172,23 @@ impl DesktopTransportServer {
                             }
                         }
                     }
-                    _ = tokio::time::sleep(Duration::from_millis(200)) => {}
+                    _ = tokio::time::sleep(Duration::from_millis(200)) => {
+                        let now = Instant::now();
+                        for session in addr_to_session.values_mut() {
+                            if session.is_talking && now.duration_since(session.last_talk_millis) > Duration::from_millis(500) {
+                                session.is_talking = false;
+                                let rt_guard = self.runtime.lock().unwrap();
+                                if let Some(c) = rt_guard.online_client_snapshot(self.server_id, session.client_id) {
+                                    rt_guard.broadcast_event(self.server_id, &crate::transport::TransportNotification::TalkStatus {
+                                        server_id: self.server_id,
+                                        channel_id: c.channel_id,
+                                        client_id: session.client_id,
+                                        is_talking: false,
+                                    });
+                                }
+                            }
+                        }
+                    }
                 }
                 
                 let now = Instant::now();

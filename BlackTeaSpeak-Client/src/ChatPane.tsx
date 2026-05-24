@@ -6,9 +6,10 @@ interface ChatPaneProps {
   onSendMessage: (targetMode: number, target: string, message: string) => void;
   myClientId: string;
   currentChannelId: string;
+  currentClientId?: string;
 }
 
-export function ChatPane({ messages, onSendMessage, myClientId, currentChannelId }: ChatPaneProps) {
+export function ChatPane({ messages, onSendMessage, myClientId, currentChannelId, currentClientId }: ChatPaneProps) {
   const [activeTab, setActiveTab] = useState<number>(3); // 3 = Server, 2 = Channel
   const [inputText, setInputText] = useState('');
 
@@ -20,7 +21,7 @@ export function ChatPane({ messages, onSendMessage, myClientId, currentChannelId
 
     let target = '0';
     if (activeTab === 2) target = currentChannelId;
-    if (activeTab === 1) target = '0'; // Would be specific client id
+    if (activeTab === 1) target = currentClientId || '0';
 
     onSendMessage(activeTab, target, inputText);
     setInputText('');
@@ -40,6 +41,14 @@ export function ChatPane({ messages, onSendMessage, myClientId, currentChannelId
           onClick={() => setActiveTab(2)}
         >
           Channel
+        </button>
+        <button 
+          className={`chat-tab ${activeTab === 1 ? 'active' : ''}`}
+          onClick={() => setActiveTab(1)}
+          disabled={!currentClientId}
+          title={!currentClientId ? "Select a client first" : ""}
+        >
+          Private
         </button>
       </div>
       

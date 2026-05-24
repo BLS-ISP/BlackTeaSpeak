@@ -22,7 +22,7 @@ export function ChannelTree({ channels, clients, myClientId, onChannelDoubleClic
 
   const handleContextMenu = (e: React.MouseEvent, type: 'channel' | 'client' | 'server', target: any) => {
     e.preventDefault();
-    setContextMenu({ x: e.pageX, y: e.pageY, type, target });
+    setContextMenu({ x: e.clientX, y: e.clientY, type, target });
   };
   
   // Helper to render a single channel and its clients + subchannels
@@ -57,7 +57,7 @@ export function ChannelTree({ channels, clients, myClientId, onChannelDoubleClic
           </div>
         ))}
 
-        {subChannels.map(sub => renderChannel(sub, 1))}
+        {subChannels.map(sub => renderChannel(sub, depth + 1))}
       </div>
     );
   };
@@ -83,9 +83,10 @@ export function ChannelTree({ channels, clients, myClientId, onChannelDoubleClic
         <div 
           className="context-menu" 
           style={{ 
-            position: 'absolute', 
+            position: 'fixed', 
             top: contextMenu.y, 
             left: contextMenu.x, 
+            zIndex: 1000
           }}
         >
           {contextMenu.type === 'server' && (

@@ -278,9 +278,14 @@ impl DesktopTcpTransportServer {
                             if let Some(decrypted) = crate::desktop_crypto::decrypt_btea_packet(
                                 packet_id, res_client_id as u32, flags, &header, &payload_with_mac, &shared_secret, false
                             ) {
+                                {
+                                    let mut rt = runtime.lock().unwrap();
+                                    rt.mark_client_seen(client_id);
+                                }
                                 let packet_type = flags & 0x0F;
                                 if packet_type == 0x02 { // Command
                                     if let Ok(cmd_str) = String::from_utf8(decrypted) {
+                                        let is_quit = cmd_str.trim() == "quit";
                                         let (resp_lines, _notifs) = {
                                             let mut rt = runtime.lock().unwrap();
                                             handler.handle_command(&cmd_str, &mut rt)
@@ -288,6 +293,9 @@ impl DesktopTcpTransportServer {
                                         {
                                             let mut state_lock = shared_state.write().unwrap();
                                             *state_lock = handler.session.clone();
+                                        }
+                                        if is_quit {
+                                            break;
                                         }
                                         
 

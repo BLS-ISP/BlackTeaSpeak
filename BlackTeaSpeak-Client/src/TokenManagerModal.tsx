@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { listen } from '@tauri-apps/api/event';
+
 import { invoke } from '@tauri-apps/api/core';
 import { Token } from './types';
-import { parseTs3Response, escapeTs3String } from './ts3parser';
+import { escapeTs3String } from './ts3parser';
+import { Dialogs } from './ui/Dialogs';
+import { Toast } from './ui/Toast';
+import { eventBus } from './EventBus';
 
 interface TokenManagerModalProps {
   onClose: () => void;
@@ -11,27 +14,32 @@ interface TokenManagerModalProps {
 export function TokenManagerModal({ onClose }: TokenManagerModalProps) {
   const [tokens, setTokens] = useState<Token[]>([]);
 
-  useEffect(() => {
-    let unlisten: () => void;
+  const [, setWaitingForRefresh] = useState(false);
 
-    async function setup() {
-      unlisten = await listen<string>('server_event', (event) => {
-        const parsed = parseTs3Response(event.payload);
-        for (const row of parsed) {
-          if (row.command === 'tokenlist') {
-            setTokens(prev => {
-              if (prev.find(t => t.token === row.args.token)) return prev;
-              return [...prev, row.args as unknown as Token];
-            });
-          }
+  useEffect(() => {
+    const unsubscribe = eventBus.subscribe((rows) => {
+      for (const row of rows) {
+        if (row.command === 'tokenlist') {
+          setTokens(prev => {
+            if (prev.find(t => t.token === row.args.token)) return prev;
+            return [...prev, row.args as any as Token];
+          });
+        } else if (row.command === 'error' && row.args.msg === 'ok') {
+          setWaitingForRefresh(waiting => {
+            if (waiting) {
+              refreshTokens();
+              return false;
+            }
+            return waiting;
+          });
         }
-      });
-      refreshTokens();
-    }
-    setup();
+      }
+    });
+
+    refreshTokens();
 
     return () => {
-      if (unlisten) unlisten();
+      unsubscribe();
     };
   }, []);
 
@@ -40,22 +48,28 @@ export function TokenManagerModal({ onClose }: TokenManagerModalProps) {
     invoke('send_command', { command: 'tokenlist' }).catch(console.error);
   };
 
-  const handleAddToken = () => {
-    const type = prompt("Type (0 = Server Group, 1 = Channel Group):", "0");
-    const id1 = prompt("Group ID:");
-    const id2 = prompt("Channel ID (0 if Server Group):", "0");
-    const desc = prompt("Description:");
+  const handleAddToken = async () => {
+    const type = await Dialogs.prompt("Token Type", "Type (0 = Server Group, 1 = Channel Group):", "0");
+    if (type === null) return;
+    const id1 = await Dialogs.prompt("Group ID", "Group ID:");
+    if (id1 === null) return;
+    const id2 = await Dialogs.prompt("Channel ID", "Channel ID (0 if Server Group):", "0");
+    if (id2 === null) return;
+    const desc = await Dialogs.prompt("Description", "Description:");
+    if (desc === null) return;
 
     if (type && id1) {
       invoke('send_command', { command: `tokenadd tokentype=${type} tokenid1=${id1} tokenid2=${id2 || 0} tokendescription=${escapeTs3String(desc || '')}` });
-      setTimeout(refreshTokens, 500);
+      setWaitingForRefresh(true);
+      Toast.success("Privilege Key created");
     }
   };
 
-  const handleDeleteToken = (token: string) => {
-    if (confirm("Delete this privilege key?")) {
+  const handleDeleteToken = async (token: string) => {
+    if (await Dialogs.confirm("Delete Token", "Delete this privilege key?")) {
       invoke('send_command', { command: `tokendelete token=${token}` });
-      setTimeout(refreshTokens, 500);
+      setWaitingForRefresh(true);
+      Toast.success("Privilege Key deleted");
     }
   };
 

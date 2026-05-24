@@ -529,6 +529,23 @@ fn frame_broadcasts_from_transport_notifications(
                 )
                 .expect("notifychannelmoved should encode"),
             }],
+            TransportNotification::TalkStatus {
+                server_id,
+                channel_id: _,
+                client_id,
+                is_talking,
+            } => vec![BlackTeaWebFrameBroadcast::Server {
+                server_id: *server_id,
+                exclude_client_id: origin_client_id,
+                frame: command_frame(
+                    "notifytalkstatus",
+                    vec![row_map([
+                        ("clid", client_id.to_string()),
+                        ("status", if *is_talking { "1".to_string() } else { "0".to_string() }),
+                    ])],
+                )
+                .expect("notifytalkstatus should encode"),
+            }],
             TransportNotification::TextMessage {
                 target,
                 invoker_id,
@@ -2276,6 +2293,7 @@ fn handle_client(
                     let mut runtime = runtime
                         .lock()
                         .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
+                    runtime.mark_client_seen(session.client_id);
                     session.handle_text_frame(text.as_ref(), &mut runtime)?
                 };
                 let after_presence = session.presence();
@@ -2368,6 +2386,9 @@ fn handle_client(
                 last_activity = Instant::now();
                 if blackteaweb_trace_enabled() {
                     eprintln!("[blackteaweb:{connection_id}] ping {} bytes", payload.len());
+                }
+                if let Ok(mut rt) = runtime.lock() {
+                    rt.mark_client_seen(session.client_id);
                 }
                 websocket
                     .send(Message::Pong(payload))
@@ -9227,7 +9248,8 @@ async fn handle_wtransport_client(
                         }
                     }
                     if let Some(sid) = server_id {
-                        let rt = datagram_runtime.lock().unwrap();
+                        let mut rt = datagram_runtime.lock().unwrap();
+                        rt.mark_client_seen(client_id);
                         rt.route_btea_media_to_webtransport(sid, client_id, packet_type, payload);
                         rt.route_btea_media_to_desktop(sid, client_id, packet_type, payload);
                     }
@@ -9288,6 +9310,7 @@ async fn handle_wtransport_client(
                     let mut rt = runtime
                         .lock()
                         .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
+                    rt.mark_client_seen(session.client_id);
                     session.handle_text_frame(text, &mut rt)?
                 };
                 let after_presence = session.presence();

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Channel, Client, FileEntry } from './types';
+import { eventBus } from './EventBus';
 
 interface InfoPaneProps {
   selectedChannel?: Channel;
@@ -13,6 +14,27 @@ interface InfoPaneProps {
 
 export function InfoPane({ selectedChannel, selectedClient, channelFiles, onUploadFile, onDownloadFile, onDeleteFile, onRefreshFiles }: InfoPaneProps) {
   const [activeTab, setActiveTab] = useState<'details'|'files'>('details');
+  const [clientInfo, setClientInfo] = useState<any>({});
+
+  useEffect(() => {
+    if (selectedClient) {
+      const unsubscribe = eventBus.subscribe((rows) => {
+        for (const row of rows) {
+          if (row.command === 'clientinfo' || row.command === 'clientgetids') {
+            setClientInfo((prev: any) => ({ ...prev, ...row.args }));
+          }
+        }
+      });
+      
+      import('@tauri-apps/api/core').then(({ invoke }) => {
+        invoke('send_command', { command: `clientinfo clid=${selectedClient.clid}` }).catch(console.error);
+        invoke('send_command', { command: `clientgetids cluid=${(selectedClient as any).client_unique_identifier || ''}` }).catch(console.error);
+      });
+
+      return () => { unsubscribe(); };
+    }
+  }, [selectedClient]);
+
   if (selectedClient) {
     return (
       <div className="info-pane">
@@ -25,7 +47,12 @@ export function InfoPane({ selectedChannel, selectedClient, channelFiles, onUplo
             <span>Type:</span>
             <span>{selectedClient.client_type === '0' ? 'Normal Client' : 'Server Query'}</span>
           </div>
-          {/* We will add more details here later when clientinfo response is parsed */}
+          {Object.entries(clientInfo).map(([key, value]) => (
+            <div key={key} className="info-row">
+              <span>{key}:</span>
+              <span>{String(value)}</span>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -109,30 +136,24 @@ function MusicBotsPanel() {
   const [playlists, setPlaylists] = useState<any[]>([]);
 
   useEffect(() => {
-    let unlisten: () => void;
-    import('@tauri-apps/api/event').then(({ listen }) => {
-      listen<string>('server_event', (event) => {
-        import('./ts3parser').then(({ parseTs3Response }) => {
-          const parsed = parseTs3Response(event.payload);
-          for (const row of parsed) {
-            if (row.command === 'musicbotlist') {
-              setBots(prev => {
-                if (prev.find(b => b.bot_id === row.args.bot_id)) return prev;
-                return [...prev, row.args];
-              });
-            } else if (row.command === 'playlistlist') {
-              setPlaylists(prev => {
-                if (prev.find(p => p.id === row.args.id)) return prev;
-                return [...prev, row.args];
-              });
-            }
-          }
-        });
-      }).then(u => unlisten = u);
+    const unsubscribe = eventBus.subscribe((rows) => {
+      for (const row of rows) {
+        if (row.command === 'musicbotlist') {
+          setBots(prev => {
+            if (prev.find(b => b.bot_id === row.args.bot_id)) return prev;
+            return [...prev, row.args];
+          });
+        } else if (row.command === 'playlistlist') {
+          setPlaylists(prev => {
+            if (prev.find(p => p.id === row.args.id)) return prev;
+            return [...prev, row.args];
+          });
+        }
+      }
     });
 
     refreshBots();
-    return () => { if (unlisten) unlisten(); };
+    return () => { unsubscribe(); };
   }, []);
 
   const refreshBots = () => {

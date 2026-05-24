@@ -15,7 +15,7 @@ pub fn encrypt_btea_packet(
     payload: &[u8],
     session_secret: &[u8],
     is_server_to_client: bool,
-) -> Vec<u8> {
+) -> Result<Vec<u8>, String> {
     let mut tmp_to_hash = Vec::with_capacity(6 + session_secret.len());
     tmp_to_hash.push(if is_server_to_client { 0x30 } else { 0x31 });
     tmp_to_hash.push(packet_type_raw & 0x0F);
@@ -39,7 +39,7 @@ pub fn encrypt_btea_packet(
         aad: header,
     };
 
-    let encrypted = cipher.encrypt(nonce, aead_payload).unwrap_or_default();
+    let encrypted = cipher.encrypt(nonce, aead_payload).map_err(|e| format!("Encryption error: {:?}", e))?;
     
     let mac = &encrypted[encrypted.len() - 16..encrypted.len() - 8];
     
@@ -47,7 +47,7 @@ pub fn encrypt_btea_packet(
     result.extend_from_slice(mac);
     result.extend_from_slice(&encrypted[..encrypted.len() - 16]);
     
-    result
+    Ok(result)
 }
 
 pub fn decrypt_btea_packet(

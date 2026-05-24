@@ -182,9 +182,25 @@ impl AudioManager {
         let vad_threshold = self.vad_threshold.clone();
         let transmission_mode = self.transmission_mode.clone();
         let tx_opus = self.tx_opus_out.clone();
+        let last_talking_status = std::sync::Arc::new(std::sync::Mutex::new(false));
 
-        let encoder = Encoder::new(SampleRate::Hz48000, Channels::Mono, Application::Voip)
-            .map_err(|e| format!("Failed to create Opus encoder: {:?}", e))?;
+        let (tx_raw_audio, mut rx_raw_audio) = unbounded_channel::<(bool, Vec<f32>)>();
+        let tx_opus_for_thread = self.tx_opus_out.clone();
+
+        std::thread::spawn(move || {
+            if let Ok(mut encoder) = Encoder::new(SampleRate::Hz48000, Channels::Mono, Application::Voip) {
+                let runtime = tokio::runtime::Runtime::new().unwrap();
+                runtime.block_on(async move {
+                    while let Some((is_whisper, frame)) = rx_raw_audio.recv().await {
+                        let mut out_payload = vec![0u8; 4000];
+                        if let Ok(len) = encoder.encode_float(&frame, &mut out_payload) {
+                            out_payload.truncate(len);
+                            let _ = tx_opus_for_thread.send((is_whisper, out_payload));
+                        }
+                    }
+                });
+            }
+        });
         
         let frame_size = 960;
         let mut input_buffer: Vec<f32> = Vec::new();
@@ -224,7 +240,21 @@ impl AudioManager {
                     }
                 }
 
+                let mut is_talking_now = true;
                 if !is_whisper && is_vad && rms < thresh {
+                    is_talking_now = false;
+                }
+                
+                if let Some(app) = &app_handle {
+                    if let Ok(mut last_status) = last_talking_status.lock() {
+                        if *last_status != is_talking_now {
+                            let _ = app.emit("is_transmitting", is_talking_now);
+                            *last_status = is_talking_now;
+                        }
+                    }
+                }
+
+                if !is_talking_now {
                     return; // Below threshold, do not transmit
                 }
 
@@ -232,11 +262,7 @@ impl AudioManager {
                 
                 while input_buffer.len() >= frame_size {
                     let frame: Vec<f32> = input_buffer.drain(0..frame_size).collect();
-                    let mut out_payload = vec![0u8; 4000];
-                    if let Ok(len) = encoder.encode_float(&frame, &mut out_payload) {
-                        out_payload.truncate(len);
-                        let _ = tx_opus.send((is_whisper, out_payload));
-                    }
+                    let _ = tx_raw_audio.send((is_whisper, frame));
                 }
             },
             |err| eprintln!("Input stream error: {}", err),

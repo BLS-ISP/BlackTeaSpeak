@@ -33,3 +33,6 @@ blackteaspeak.db-wal
 server_key.pem
 host_key.pem
 *.log
+
+runtime-state.json
+target-*/

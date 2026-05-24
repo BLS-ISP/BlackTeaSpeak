@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
-import { listen } from '@tauri-apps/api/event';
+
 import { invoke } from '@tauri-apps/api/core';
 import { Ban } from './types';
-import { parseTs3Response, escapeTs3String } from './ts3parser';
+import { escapeTs3String } from './ts3parser';
+import { Dialogs } from './ui/Dialogs';
+import { Toast } from './ui/Toast';
+import { eventBus } from './EventBus';
 
 interface BanManagerModalProps {
   onClose: () => void;
@@ -11,27 +14,32 @@ interface BanManagerModalProps {
 export function BanManagerModal({ onClose }: BanManagerModalProps) {
   const [bans, setBans] = useState<Ban[]>([]);
 
-  useEffect(() => {
-    let unlisten: () => void;
+  const [, setWaitingForRefresh] = useState(false);
 
-    async function setup() {
-      unlisten = await listen<string>('server_event', (event) => {
-        const parsed = parseTs3Response(event.payload);
-        for (const row of parsed) {
-          if (row.command === 'banlist') {
-            setBans(prev => {
-              if (prev.find(b => b.banid === row.args.banid)) return prev;
-              return [...prev, row.args as unknown as Ban];
-            });
-          }
+  useEffect(() => {
+    const unsubscribe = eventBus.subscribe((rows) => {
+      for (const row of rows) {
+        if (row.command === 'banlist') {
+          setBans(prev => {
+            if (prev.find(b => b.banid === row.args.banid)) return prev;
+            return [...prev, row.args as any as Ban];
+          });
+        } else if (row.command === 'error' && row.args.msg === 'ok') {
+          setWaitingForRefresh(waiting => {
+            if (waiting) {
+              refreshBans();
+              return false;
+            }
+            return waiting;
+          });
         }
-      });
-      refreshBans();
-    }
-    setup();
+      }
+    });
+    
+    refreshBans();
 
     return () => {
-      if (unlisten) unlisten();
+      unsubscribe();
     };
   }, []);
 
@@ -40,15 +48,15 @@ export function BanManagerModal({ onClose }: BanManagerModalProps) {
     invoke('send_command', { command: 'banlist' }).catch(console.error);
   };
 
-  const handleAddBan = () => {
-    const ip = prompt("Enter IP to ban (optional):");
-    const uid = prompt("Enter UID to ban (optional):");
-    const name = prompt("Enter Name to ban (optional):");
-    const time = prompt("Enter time in seconds (0 = perm):", "0");
-    const reason = prompt("Enter ban reason:");
+  const handleAddBan = async () => {
+    const ip = await Dialogs.prompt("Add Ban", "Enter IP to ban (optional):");
+    const uid = await Dialogs.prompt("Add Ban", "Enter UID to ban (optional):");
+    const name = await Dialogs.prompt("Add Ban", "Enter Name to ban (optional):");
+    const time = await Dialogs.prompt("Ban Time", "Enter time in seconds (0 = perm):", "0");
+    const reason = await Dialogs.prompt("Ban Reason", "Enter ban reason:");
 
     if (!ip && !uid && !name) {
-      alert("You must provide at least one of IP, UID, or Name.");
+      Toast.error("You must provide at least one of IP, UID, or Name.");
       return;
     }
 
@@ -60,13 +68,15 @@ export function BanManagerModal({ onClose }: BanManagerModalProps) {
     if (reason) cmd += ` banreason=${escapeTs3String(reason)}`;
 
     invoke('send_command', { command: cmd });
-    setTimeout(refreshBans, 500);
+    setWaitingForRefresh(true);
+    Toast.success("Ban added");
   };
 
-  const handleDeleteBan = (banid: string) => {
-    if (confirm(`Remove ban #${banid}?`)) {
+  const handleDeleteBan = async (banid: string) => {
+    if (await Dialogs.confirm("Remove Ban", `Remove ban #${banid}?`)) {
       invoke('send_command', { command: `bandel banid=${banid}` });
-      setTimeout(refreshBans, 500);
+      setWaitingForRefresh(true);
+      Toast.success(`Ban #${banid} removed`);
     }
   };
 

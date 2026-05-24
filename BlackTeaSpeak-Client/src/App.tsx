@@ -116,6 +116,7 @@ function App() {
   }
 
   function handleDisconnect() {
+    invoke("disconnect").catch(console.error);
     setIsConnected(false);
     setStatus("Disconnected.");
   }
@@ -193,7 +194,7 @@ function App() {
     return (
       <ConnectedView 
         onDisconnect={handleDisconnect} 
-        identity={activeIdentity!}
+        identity={activeIdentity || ({} as Identity)}
         onIdentityUpdated={(newIdent) => setActiveIdentity(newIdent)}
       />
     );

@@ -3986,6 +3986,54 @@
         "sender_unique_id": "desktop-1",
         "sender_name": "Query",
         "message": "Hello World"
+      },
+      {
+        "conversation_id": 0,
+        "timestamp": 1779622996262,
+        "sender_database_id": 0,
+        "sender_unique_id": "desktop-4",
+        "sender_name": "Query",
+        "message": "test"
+      },
+      {
+        "conversation_id": 1,
+        "timestamp": 1779623008809,
+        "sender_database_id": 0,
+        "sender_unique_id": "desktop-4",
+        "sender_name": "Query",
+        "message": "test"
+      },
+      {
+        "conversation_id": 0,
+        "timestamp": 1779623381250,
+        "sender_database_id": 0,
+        "sender_unique_id": "desktop-1",
+        "sender_name": "Query",
+        "message": "test"
+      },
+      {
+        "conversation_id": 1,
+        "timestamp": 1779623383901,
+        "sender_database_id": 0,
+        "sender_unique_id": "desktop-1",
+        "sender_name": "Query",
+        "message": "test"
+      },
+      {
+        "conversation_id": 0,
+        "timestamp": 1779623750206,
+        "sender_database_id": 0,
+        "sender_unique_id": "desktop-1",
+        "sender_name": "Query",
+        "message": "test"
+      },
+      {
+        "conversation_id": 0,
+        "timestamp": 1779624273086,
+        "sender_database_id": 0,
+        "sender_unique_id": "desktop-1",
+        "sender_name": "Query",
+        "message": "test"
       }
     ]
   },
@@ -4010,12 +4058,72 @@
       "permissions": {},
       "client_permissions": [],
       "queue": []
+    },
+    "2": {
+      "id": 2,
+      "server_id": 1,
+      "client_database_id": 100,
+      "linked_client_id": null,
+      "playlist_id": 2,
+      "current_song_id": 0,
+      "next_song_id": 1,
+      "state": "stopped",
+      "player_volume": "1",
+      "playlist_title": "",
+      "playlist_description": "",
+      "playlist_flag_delete_played": false,
+      "playlist_flag_finished": false,
+      "playlist_replay_mode": 0,
+      "playlist_max_songs": 0,
+      "permissions": {},
+      "client_permissions": [],
+      "queue": []
+    },
+    "3": {
+      "id": 3,
+      "server_id": 1,
+      "client_database_id": 101,
+      "linked_client_id": null,
+      "playlist_id": 3,
+      "current_song_id": 0,
+      "next_song_id": 1,
+      "state": "stopped",
+      "player_volume": "1",
+      "playlist_title": "",
+      "playlist_description": "",
+      "playlist_flag_delete_played": false,
+      "playlist_flag_finished": false,
+      "playlist_replay_mode": 0,
+      "playlist_max_songs": 0,
+      "permissions": {},
+      "client_permissions": [],
+      "queue": []
+    },
+    "4": {
+      "id": 4,
+      "server_id": 1,
+      "client_database_id": 102,
+      "linked_client_id": null,
+      "playlist_id": 4,
+      "current_song_id": 0,
+      "next_song_id": 1,
+      "state": "stopped",
+      "player_volume": "1",
+      "playlist_title": "",
+      "playlist_description": "",
+      "playlist_flag_delete_played": false,
+      "playlist_flag_finished": false,
+      "playlist_replay_mode": 0,
+      "playlist_max_songs": 0,
+      "permissions": {},
+      "client_permissions": [],
+      "queue": []
     }
   },
   "tokens": {},
   "session_snapshots": {},
-  "next_client_database_id": 100,
-  "next_conversation_timestamp": 1779567800506,
+  "next_client_database_id": 103,
+  "next_conversation_timestamp": 1779624273087,
   "next_token_id": 1,
   "next_token_action_id": 1
 }

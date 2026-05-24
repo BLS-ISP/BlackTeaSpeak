@@ -45,7 +45,7 @@ body {
 .app-container {
   display: flex;
   height: 100vh;
-  width: 100vw;
+  width: 100%;
   position: relative;
 }
 
@@ -79,7 +79,9 @@ body {
 
 /* Sidebar (Home View) */
 .sidebar {
-  width: 280px;
+  width: 300px;
+  max-width: 30vw;
+  flex-shrink: 0;
   background: rgba(9, 9, 11, 0.8);
   backdrop-filter: blur(24px);
   border-right: 1px solid var(--glass-border);
@@ -156,10 +158,58 @@ button { font-family: inherit; }
   cursor: pointer; transition: all 0.3s ease;
 }
 .btn-secondary:hover { background: var(--glass-hover); transform: translateY(-2px); }
+.btn-danger {
+  background: linear-gradient(135deg, var(--danger-color), var(--danger-hover));
+  border: none; border-radius: 12px; padding: 12px 24px; color: white; font-weight: 600; font-size: 15px;
+  cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
+}
+.btn-danger:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(244, 63, 94, 0.4); }
+
+/* Toasts */
+.toast-container {
+  position: fixed; top: 24px; right: 24px; z-index: 99999; display: flex; flex-direction: column; gap: 12px;
+}
+.toast {
+  background: var(--bg-gradient); border: 1px solid var(--glass-border); border-radius: 12px;
+  padding: 16px 24px; color: white; box-shadow: var(--shadow-lg); backdrop-filter: blur(20px);
+  animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1); min-width: 250px;
+}
+.toast-error { border-left: 4px solid var(--danger-color); }
+.toast-success { border-left: 4px solid var(--success-color); }
+.toast-info { border-left: 4px solid var(--accent-color); }
+@keyframes slideInRight {
+  0% { transform: translateX(100%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+/* Modal Inputs */
+.modal-input {
+  width: 100%; box-sizing: border-box; background: var(--input-bg); border: 1px solid var(--glass-border);
+  border-radius: 12px; padding: 14px 16px; color: var(--text-primary); font-size: 15px;
+  margin-bottom: 16px; transition: all 0.3s ease; outline: none;
+}
+.modal-input:focus { border-color: var(--accent-color); box-shadow: 0 0 0 3px var(--accent-light); }
+.prompt-modal { max-width: 400px; }
+
+/* VU Meter */
+.vu-meter {
+  height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; margin-top: 8px; width: 100%;
+}
+.vu-meter-fill {
+  height: 100%; background: linear-gradient(90deg, var(--success-color), var(--warning-color), var(--danger-color));
+  transition: width 0.1s linear; width: 0%;
+}
+
+/* Settings Group */
+.settings-group {
+  display: flex; flex-direction: column; gap: 16px; padding: 20px;
+  background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; margin-bottom: 16px;
+}
+.settings-group h3 { margin: 0; font-size: 16px; color: var(--accent-color); border-bottom: 1px solid var(--glass-border); padding-bottom: 8px; }
 
 /* TS3 Connected Layout */
 .connected-layout {
-  display: flex; flex-direction: column; height: 100vh; width: 100vw; z-index: 10;
+  display: flex; flex-direction: column; height: 100vh; width: 100%; z-index: 10;
 }
 .main-area {
   display: flex; flex-direction: column; flex-grow: 1; padding: 24px; gap: 24px; overflow: hidden;
@@ -395,7 +445,7 @@ button { font-family: inherit; }
 }
 
 /* Chat Pane */
-.chat-pane { height: 260px; display: flex; flex-direction: column; }
+.chat-pane { height: 30vh; min-height: 200px; max-height: 350px; flex-shrink: 0; display: flex; flex-direction: column; }
 .chat-tabs {
   display: flex; background: rgba(0,0,0,0.2); border-bottom: 1px solid var(--glass-border);
 }

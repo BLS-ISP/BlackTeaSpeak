@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { escapeTs3String } from './ts3parser';
+import { Toast } from './ui/Toast';
+import { eventBus } from './EventBus';
 
 interface ChannelEditModalProps {
   cid?: string; // If provided, we edit.
@@ -16,23 +18,19 @@ export function ChannelEditModal({ cid, cpid, onClose }: ChannelEditModalProps) 
   const [loading, setLoading] = useState(!!cid);
 
   useEffect(() => {
-    let unlisten: () => void;
+    let unsubscribe: () => void;
+    
     if (cid) {
-      import('@tauri-apps/api/event').then(({ listen }) => {
-        listen<string>('server_event', (event) => {
-          import('./ts3parser').then(({ parseTs3Response }) => {
-            const parsed = parseTs3Response(event.payload);
-            for (const row of parsed) {
-              if (row.command === 'channelinfo') {
-                setName(row.args.channel_name || '');
-                setTopic(row.args.channel_topic || '');
-                setDescription(row.args.channel_description || '');
-                setMaxClients(row.args.channel_maxclients || '-1');
-                setLoading(false);
-              }
-            }
-          });
-        }).then(u => unlisten = u);
+      unsubscribe = eventBus.subscribe((rows) => {
+        for (const row of rows) {
+          if (row.command === 'channelinfo') {
+            setName(row.args.channel_name || '');
+            setTopic(row.args.channel_topic || '');
+            setDescription(row.args.channel_description || '');
+            setMaxClients(row.args.channel_maxclients || '-1');
+            setLoading(false);
+          }
+        }
       });
       
       import('@tauri-apps/api/core').then(({ invoke }) => {
@@ -40,12 +38,12 @@ export function ChannelEditModal({ cid, cpid, onClose }: ChannelEditModalProps) 
       });
     }
 
-    return () => { if (unlisten) unlisten(); };
+    return () => { if (unsubscribe) unsubscribe(); };
   }, [cid]);
 
   const handleSave = () => {
     if (!name.trim()) {
-      alert("Channel name is required.");
+      Toast.error("Channel name is required.");
       return;
     }
 
@@ -61,7 +59,7 @@ export function ChannelEditModal({ cid, cpid, onClose }: ChannelEditModalProps) 
       invoke('send_command', { command: cmd }).then(() => {
         onClose();
       }).catch(e => {
-        alert("Error saving channel: " + e);
+        Toast.error("Error saving channel: " + e);
       });
     });
   };

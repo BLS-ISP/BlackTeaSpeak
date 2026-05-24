@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { fetch as tauriFetch } from '@tauri-apps/plugin-http';
-import { parseTs3Response } from './ts3parser';
 import { Identity } from './App';
+import { eventBus } from './EventBus';
 import { SettingsModal } from './SettingsModal';
 import { GroupManagerModal } from './GroupManagerModal';
 import { BanManagerModal } from './BanManagerModal';
@@ -17,6 +17,8 @@ import { ChannelTree } from './ChannelTree';
 import { InfoPane } from './InfoPane';
 import { ChatPane } from './ChatPane';
 import { escapeTs3String } from './ts3parser';
+import { Toast } from './ui/Toast';
+import { Dialogs } from './ui/Dialogs';
 
 interface ConnectedViewProps {
   onDisconnect: () => void;
@@ -28,6 +30,7 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
   const [channels, setChannels] = useState<Channel[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [myClientId, setMyClientId] = useState<string>('');
+  const myClientIdRef = useRef<string>('');
   const [selectedChannel, setSelectedChannel] = useState<Channel | undefined>(undefined);
   const [selectedClient, setSelectedClient] = useState<Client | undefined>(undefined);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -45,71 +48,81 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
   const pendingTransfers = useRef<Map<string, { type: 'upload' | 'download', file?: File, fileEntry?: FileEntry }>>(new Map());
 
   useEffect(() => {
-    let unlisten: () => void;
-    let unlistenDisconnect: () => void;
+    let unlistenDisconnect: (() => void) | undefined;
 
-    async function setup() {
-      unlisten = await listen<string>('server_event', (event) => {
-        console.log('Raw event:', event.payload);
-        const parsed = parseTs3Response(event.payload);
-        
-        for (const row of parsed) {
-          if (row.command === 'initserver') {
-            if (row.args.client_id) {
-              setMyClientId(row.args.client_id);
-            }
-          } else if (row.args.client_id && row.command === 'unknown') {
+    const unsubscribe = eventBus.subscribe((rows) => {
+      for (const row of rows) {
+        if (row.command === 'initserver') {
+          if (row.args.client_id) {
             setMyClientId(row.args.client_id);
-          } else if (row.command === 'channellist') {
-            setChannels(prev => {
-              const existing = prev.find(c => c.cid === row.args.cid);
-              if (existing) return prev;
-              return [...prev, row.args as unknown as Channel];
-            });
-          } else if (row.command === 'clientlist' || row.command === 'notifycliententerview') {
-            setClients(prev => {
-              const cid = row.args.cid || row.args.ctid;
-              const clid = row.args.clid;
-              const existing = prev.findIndex(c => c.clid === clid);
-              const newClient = {
-                clid,
-                cid,
-                client_nickname: row.args.client_nickname,
-                client_type: row.args.client_type,
-                client_input_muted: row.args.client_input_muted === '1',
-                client_output_muted: row.args.client_output_muted === '1',
-              } as Client;
+            myClientIdRef.current = row.args.client_id;
+          }
+        } else if (row.args.client_id && row.command === 'unknown') {
+          setMyClientId(row.args.client_id);
+          myClientIdRef.current = row.args.client_id;
+        } else if (row.command === 'channellist' || row.command === 'notifychannelcreated') {
+          if (row.command === 'channellist') {
+             console.log("RECEIVED CHANNELLIST", row);
+          }
+          setChannels(prev => {
+            const existing = prev.find(c => c.cid === row.args.cid);
+            if (existing) {
+              return prev.map(c => c.cid === row.args.cid ? { ...c, ...row.args } as any as Channel : c);
+            }
+            return [...prev, row.args as any as Channel];
+          });
+        } else if (row.command === 'notifychanneledited') {
+          setChannels(prev => prev.map(c => 
+            c.cid === row.args.cid ? { ...c, ...row.args } as any as Channel : c
+          ));
+        } else if (row.command === 'notifychanneldeleted') {
+          setChannels(prev => prev.filter(c => c.cid !== row.args.cid));
+        } else if (row.command === 'clientlist' || row.command === 'notifycliententerview') {
+          setClients(prev => {
+            const cid = row.args.cid || row.args.ctid;
+            const clid = row.args.clid;
+            const existing = prev.findIndex(c => c.clid === clid);
+            const newClient = {
+              clid,
+              cid,
+              client_nickname: row.args.client_nickname,
+              client_type: row.args.client_type,
+              client_input_muted: row.args.client_input_muted === '1',
+              client_output_muted: row.args.client_output_muted === '1',
+            } as Client;
 
-              if (existing !== -1) {
-                const newClients = [...prev];
-                newClients[existing] = newClient;
-                return newClients;
-              }
-              return [...prev, newClient];
-            });
-          } else if (row.command === 'notifyclientleftview') {
-            setClients(prev => prev.filter(c => c.clid !== row.args.clid));
-          } else if (row.command === 'notifyclientmoved') {
-            setClients(prev => prev.map(c => 
-              c.clid === row.args.clid ? { ...c, cid: row.args.ctid } : c
-            ));
-          } else if (row.command === 'notifyclientupdated') {
-            setClients(prev => prev.map(c => {
-              if (c.clid === row.args.clid) {
-                return {
-                  ...c,
-                  client_nickname: row.args.client_nickname || c.client_nickname,
-                  client_input_muted: row.args.client_input_muted !== undefined ? row.args.client_input_muted === '1' : c.client_input_muted,
-                  client_output_muted: row.args.client_output_muted !== undefined ? row.args.client_output_muted === '1' : c.client_output_muted,
-                  is_talking: row.args.client_is_talking !== undefined ? row.args.client_is_talking === '1' : c.is_talking,
-                };
-              }
-              return c;
-            }));
-          } else if (row.command === 'notifytalkstatus') {
-            const isTalking = row.args.status === '1';
-            setClients(prev => prev.map(c => c.clid === row.args.clid ? { ...c, is_talking: isTalking } : c));
-          } else if (row.command === 'notifytextmessage') {
+            if (existing !== -1) {
+              const newClients = [...prev];
+              newClients[existing] = newClient;
+              return newClients;
+            }
+            return [...prev, newClient];
+          });
+        } else if (row.command === 'notifyclientleftview') {
+          setClients(prev => prev.filter(c => c.clid !== row.args.clid));
+        } else if (row.command === 'notifyclientmoved') {
+          setClients(prev => prev.map(c => 
+            c.clid === row.args.clid ? { ...c, cid: row.args.ctid } : c
+          ));
+        } else if (row.command === 'notifyclientupdated') {
+          setClients(prev => prev.map(c => {
+            if (c.clid === row.args.clid) {
+              return {
+                ...c,
+                client_nickname: row.args.client_nickname || c.client_nickname,
+                client_input_muted: row.args.client_input_muted !== undefined ? row.args.client_input_muted === '1' : c.client_input_muted,
+                client_output_muted: row.args.client_output_muted !== undefined ? row.args.client_output_muted === '1' : c.client_output_muted,
+                is_talking: row.args.client_is_talking !== undefined ? row.args.client_is_talking === '1' : c.is_talking,
+              };
+            }
+            return c;
+          }));
+        } else if (row.command === 'notifytalkstatus') {
+          const isTalking = row.args.status === '1';
+          setClients(prev => prev.map(c => c.clid === row.args.clid ? { ...c, is_talking: isTalking } : c));
+        } else if (row.command === 'notifytextmessage') {
+          // Ignore server echo of our own messages since we add them locally
+          if (row.args.invokerid !== myClientIdRef.current) {
             const newMsg: ChatMessage = {
               id: Math.random().toString(),
               timestamp: Date.now(),
@@ -119,31 +132,35 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
               message: row.args.msg || ''
             };
             setChatMessages(prev => [...prev, newMsg]);
-          } else if ((row.command === 'unknown' || row.command === 'ftgetfilelist') && row.args.name && row.args.size && row.args.datetime && row.args.type) {
-            setChannelFiles(prev => {
-              const file: FileEntry = {
-                name: row.args.name,
-                size: parseInt(row.args.size),
-                datetime: parseInt(row.args.datetime),
-                type: parseInt(row.args.type),
-                empty: row.args.empty === '1'
-              };
-              if (prev.find(f => f.name === file.name)) return prev;
-              return [...prev, file];
-            });
-          } else if (row.args.ftkey && row.args.port && row.args.clientftfid) {
-            const transfer = pendingTransfers.current.get(row.args.clientftfid);
-            if (transfer) {
-              pendingTransfers.current.delete(row.args.clientftfid);
-              executeFileTransfer(transfer, row.args.ftkey, parseInt(row.args.port));
-            }
+          }
+        } else if ((row.command === 'unknown' || row.command === 'ftgetfilelist') && row.args.name && row.args.size && row.args.datetime && row.args.type) {
+          setChannelFiles(prev => {
+            const file: FileEntry = {
+              name: row.args.name,
+              size: parseInt(row.args.size),
+              datetime: parseInt(row.args.datetime),
+              type: parseInt(row.args.type),
+              empty: row.args.empty === '1'
+            };
+            if (prev.find(f => f.name === file.name)) return prev;
+            return [...prev, file];
+          });
+        } else if (row.args.ftkey && row.args.port && row.args.clientftfid) {
+          const transfer = pendingTransfers.current.get(row.args.clientftfid);
+          if (transfer) {
+            pendingTransfers.current.delete(row.args.clientftfid);
+            executeFileTransfer(transfer, row.args.ftkey, parseInt(row.args.port));
           }
         }
-      });
+      }
+    });
 
+    const setup = async () => {
       unlistenDisconnect = await listen('server_disconnect', () => {
         onDisconnect();
       });
+
+      await eventBus.waitForReady();
 
       invoke('send_command', { command: 'servernotifyregister event=server' }).catch(console.error);
       invoke('send_command', { command: 'servernotifyregister event=channel id=0' }).catch(console.error);
@@ -153,15 +170,27 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       invoke('send_command', { command: 'whoami' }).catch(console.error);
       invoke('send_command', { command: 'channellist' }).catch(console.error);
       invoke('send_command', { command: 'clientlist' }).catch(console.error);
-    }
+    };
 
     setup();
 
     return () => {
-      if (unlisten) unlisten();
+      unsubscribe();
       if (unlistenDisconnect) unlistenDisconnect();
     };
   }, []);
+
+  useEffect(() => {
+    let unlistenTransmit: (() => void) | undefined;
+    listen<boolean>('is_transmitting', (e) => {
+      const isTransmitting = e.payload;
+      setClients(prev => prev.map(c => c.clid === myClientIdRef.current ? { ...c, is_talking: isTransmitting } : c));
+    }).then(f => unlistenTransmit = f).catch(console.error);
+
+    return () => {
+      if (unlistenTransmit) unlistenTransmit();
+    };
+  }, [identity]);
 
   const executeFileTransfer = async (transfer: any, ftkey: string, port: number) => {
     const baseUrl = `https://127.0.0.1:${port}`;
@@ -188,7 +217,7 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       }
     } catch (e) {
       console.error("File transfer failed:", e);
-      alert("File transfer failed: " + e);
+      Toast.error("File transfer failed: " + e);
     }
   };
 
@@ -206,11 +235,12 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
     invoke('send_command', { command: `ftinitdownload clientftfid=${clientftfid} name=\\/${escapeTs3String(entry.name)} cid=${selectedChannel.cid} cpw= seekpos=0 proto=0` });
   };
 
-  const handleDeleteFile = (entry: FileEntry) => {
+  const handleDeleteFile = async (entry: FileEntry) => {
     if (!selectedChannel) return;
-    if (confirm(`Delete file ${entry.name}?`)) {
+    if (await Dialogs.confirm('Delete File', `Are you sure you want to delete ${entry.name}?`)) {
       invoke('send_command', { command: `ftdeletefile cid=${selectedChannel.cid} cpw= name=\\/${escapeTs3String(entry.name)}` });
       setTimeout(refreshFiles, 500);
+      Toast.success(`File ${entry.name} deleted.`);
     }
   };
 
@@ -341,7 +371,7 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       .catch(console.error);
   };
 
-  const handleContextMenuAction = (action: string, type: 'channel' | 'client' | 'server', target: any) => {
+  const handleContextMenuAction = async (action: string, type: 'channel' | 'client' | 'server', target: any) => {
     if (type === 'server') {
       if (action === 'channel_create_root') {
         setChannelEditTarget({ cpid: '0' });
@@ -361,8 +391,9 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       } else if (action === 'channel_edit') {
         setChannelEditTarget({ cid: channel.cid });
       } else if (action === 'channel_delete') {
-        if (confirm(`Delete channel ${channel.channel_name}?`)) {
+        if (await Dialogs.confirm('Delete Channel', `Are you sure you want to delete ${channel.channel_name}?`)) {
           invoke('send_command', { command: `channeldelete cid=${channel.cid} force=1` });
+          Toast.success("Channel deleted");
         }
       } else if (action === 'permissions_channel') {
         setPermissionTarget({ type: 'channel', targetId: channel.cid });
@@ -374,11 +405,12 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
       } else if (action === 'client_kick_server') {
         invoke('send_command', { command: `clientkick reasonid=5 clid=${client.clid}` });
       } else if (action === 'client_ban') {
-        const time = prompt("Enter ban time in seconds (0 for permanent):", "0");
-        const reason = prompt("Enter ban reason:");
-        if (time !== null) {
-          invoke('send_command', { command: `banclient clid=${client.clid} time=${time} banreason=${escapeTs3String(reason || '')}` });
-        }
+        const time = await Dialogs.prompt("Ban Time", "Enter ban time in seconds (0 for permanent):", "0");
+        if (time === null) return;
+        const reason = await Dialogs.prompt("Ban Reason", "Enter ban reason:");
+        if (reason === null) return;
+        invoke('send_command', { command: `banclient clid=${client.clid} time=${time} banreason=${escapeTs3String(reason)}` });
+        Toast.success("Client banned");
       } else if (action === 'permissions_client') {
         setPermissionTarget({ type: 'client', targetId: client.clid });
       }
@@ -442,6 +474,7 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
           onSendMessage={handleSendMessage} 
           myClientId={myClientId}
           currentChannelId={clients.find(c => c.clid === myClientId)?.cid || '0'}
+          currentClientId={selectedClient?.clid}
         />
       </div>
 
@@ -452,9 +485,12 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
         <button className={`btn-icon ${isSpeakerMuted ? 'muted' : ''}`} onClick={handleToggleSpeaker}>
           {isSpeakerMuted ? '🔈 Speaker Muted' : '🔊 Speaker Active'}
         </button>
-        <button className="btn-icon" onClick={() => {
-          const key = prompt("Enter Privilege Key to use:");
-          if (key) invoke('send_command', { command: `tokenuse token=${key}` });
+        <button className="btn-icon" onClick={async () => {
+          const key = await Dialogs.prompt("Use Privilege Key", "Enter Privilege Key to use:");
+          if (key) {
+            invoke('send_command', { command: `tokenuse token=${key}` });
+            Toast.info("Token use requested");
+          }
         }}>
           🔑 Use Token
         </button>

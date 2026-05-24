@@ -19,6 +19,14 @@ pub struct Identity {
     pub voice_transmission_mode: Option<String>, // "voice_activation", "push_to_talk", "continuous"
     pub voice_activation_threshold: Option<f32>,
     pub ptt_hotkey: Option<String>,
+    pub whisper_hotkey: Option<String>,
+    pub whisper_targets: Option<WhisperTargets>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct WhisperTargets {
+    pub client_ids: Vec<String>,
+    pub channel_ids: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

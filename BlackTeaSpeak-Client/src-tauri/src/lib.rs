@@ -46,6 +46,8 @@ fn generate_identity(name: String) -> Result<Identity, String> {
         voice_transmission_mode: Some("voice_activation".to_string()),
         voice_activation_threshold: Some(0.05),
         ptt_hotkey: None,
+        whisper_hotkey: None,
+        whisper_targets: None,
     })
 }
 
@@ -144,7 +146,7 @@ async fn connect_to_server(
         
         let encrypted_out = crate::btea::encrypt_btea_packet(
             packet_id, 0, 0x02, &header, payload_bytes, &secret, false
-        );
+        )?;
         
         let mut final_packet = Vec::with_capacity(13 + encrypted_out.len() - 8);
         final_packet.extend_from_slice(&encrypted_out[0..8]);
@@ -306,9 +308,15 @@ async fn connect_to_server(
                 header[2..4].copy_from_slice(&0u16.to_be_bytes()); // client_id not needed for outbound
                 header[4] = flags;
 
-                let encrypted = crate::btea::encrypt_btea_packet(
+                let encrypted = match crate::btea::encrypt_btea_packet(
                     next_packet_id, 0, flags, &header, &payload_bytes, &secret_send, false
-                );
+                ) {
+                    Ok(e) => e,
+                    Err(err) => {
+                        println!("Failed to encrypt UDP packet: {}", err);
+                        continue;
+                    }
+                };
 
                 let mut final_packet = Vec::with_capacity(13 + encrypted.len() - 8);
                 final_packet.extend_from_slice(&encrypted[0..8]);
@@ -342,7 +350,7 @@ async fn send_command(command: String, state: State<'_, AppState>) -> Result<(),
         
         let encrypted_out = crate::btea::encrypt_btea_packet(
             packet_id, 0, 0x02, &header, payload, &secret, false
-        );
+        )?;
         let mut final_packet = Vec::with_capacity(13 + encrypted_out.len() - 8);
         final_packet.extend_from_slice(&encrypted_out[0..8]);
         final_packet.extend_from_slice(&header);
@@ -376,7 +384,7 @@ async fn disconnect(state: State<'_, AppState>) -> Result<(), String> {
         
         let encrypted_out = crate::btea::encrypt_btea_packet(
             packet_id, 0, 0x02, &header, payload, &secret, false
-        );
+        )?;
         let mut final_packet = Vec::with_capacity(13 + encrypted_out.len() - 8);
         final_packet.extend_from_slice(&encrypted_out[0..8]);
         final_packet.extend_from_slice(&header);
@@ -538,8 +546,7 @@ pub fn run() {
             set_whisper_state,
             get_audio_devices,
             update_audio_settings,
-            update_live_audio_settings,
-            set_ptt_state
+            update_live_audio_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

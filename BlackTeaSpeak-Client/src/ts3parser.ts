@@ -1,6 +1,11 @@
-export function parseTs3Response(response: string) {
+export interface Ts3ResponseRow {
+  command: string;
+  args: Record<string, string>;
+}
+
+export function parseTs3Response(response: string): Ts3ResponseRow[] {
   const lines = response.split('\n');
-  const parsedRows: any[] = [];
+  const parsedRows: Ts3ResponseRow[] = [];
   let currentCommand = "unknown";
 
   for (let line of lines) {
@@ -30,12 +35,12 @@ export function parseTs3Response(response: string) {
           const key = part.substring(0, equalsIdx);
           let value = part.substring(equalsIdx + 1);
           value = value
+            .replaceAll('\\\\', '\\')
             .replaceAll('\\s', ' ')
             .replaceAll('\\p', '|')
             .replaceAll('\\n', '\n')
             .replaceAll('\\r', '\r')
-            .replaceAll('\\/', '/')
-            .replaceAll('\\\\', '\\');
+            .replaceAll('\\/', '/');
           args[key] = value;
         } else {
           args[part] = "true";

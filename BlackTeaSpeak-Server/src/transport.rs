@@ -104,6 +104,12 @@ pub enum TransportNotification {
         invoker_id: u64,
         invoker_name: String,
     },
+    TalkStatus {
+        server_id: u32,
+        channel_id: u32,
+        client_id: u64,
+        is_talking: bool,
+    },
     TextMessage {
         target: TextMessageTarget,
         invoker_id: u64,
@@ -723,6 +729,13 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
                         | NotificationEventKind::TextPrivate => false,
                     }
             }),
+        TransportNotification::TalkStatus {
+            server_id,
+            channel_id,
+            ..
+        } => {
+            session.selected_virtual_server_id == Some(*server_id) && session.current_channel_id == Some(*channel_id)
+        }
         TransportNotification::ClientPoke {
             server_id,
             target_client_id,
@@ -989,6 +1002,17 @@ pub fn render_notification(notification: &TransportNotification) -> String {
         } => render_message_owned(
             "notifyserveredited",
             server_edited_fields(before, after, *invoker_id, invoker_name),
+        ),
+        TransportNotification::TalkStatus {
+            client_id,
+            is_talking,
+            ..
+        } => render_message(
+            "notifytalkstatus",
+            &[
+                ("clid", client_id.to_string()),
+                ("status", if *is_talking { "1".to_string() } else { "0".to_string() }),
+            ],
         ),
         TransportNotification::TextMessage {
             target,
