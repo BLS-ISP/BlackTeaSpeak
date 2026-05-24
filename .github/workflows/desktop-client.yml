@@ -82,8 +82,8 @@ jobs:
         run: npm install > tauri-build.log 2>&1
 
       - name: Build Tauri Application
-        working-directory: ./BlackTeaSpeak-Client/src-tauri
-        run: cargo tauri build >> ../tauri-build.log 2>&1
+        working-directory: ./BlackTeaSpeak-Client
+        run: npm run tauri build > tauri-build.log 2>&1
 
       - name: Push Tauri Build Log
         if: failure()
@@ -133,8 +133,8 @@ jobs:
         run: npm install > tauri-build.log 2>&1
 
       - name: Build Tauri Application
-        working-directory: ./BlackTeaSpeak-Client/src-tauri
-        run: cargo tauri build >> ../tauri-build.log 2>&1
+        working-directory: ./BlackTeaSpeak-Client
+        run: npm run tauri build > tauri-build.log 2>&1
 
       - name: Push Tauri Build Log
         if: failure()
