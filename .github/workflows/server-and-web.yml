@@ -70,6 +70,9 @@ jobs:
       - name: Install Git, Zip, and Build Tools
         run: apt-get update && apt-get install -y git curl sudo zip build-essential pkg-config libssl-dev python3
 
+      - name: Fix Dubious Ownership
+        run: git config --global --add safe.directory '*'
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
@@ -126,6 +129,9 @@ jobs:
     steps:
       - name: Install Git and Zip
         run: dnf install -y git curl sudo zip gcc gcc-c++ make openssl-devel pkgconf-pkg-config python3
+
+      - name: Fix Dubious Ownership
+        run: git config --global --add safe.directory '*'
 
       - name: Checkout code
         uses: actions/checkout@v4
