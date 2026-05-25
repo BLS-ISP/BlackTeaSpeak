@@ -15,6 +15,9 @@ export function ChannelEditModal({ cid, cpid, onClose }: ChannelEditModalProps) 
   const [description, setDescription] = useState('');
   const [password, setPassword] = useState('');
   const [maxClients, setMaxClients] = useState('-1');
+  const [codec, setCodec] = useState('4'); // 4 = Opus Voice, 5 = Opus Music
+  const [codecQuality, setCodecQuality] = useState('10');
+  const [channelType, setChannelType] = useState('permanent'); // temporary, semi, permanent
   const [loading, setLoading] = useState(!!cid);
 
   useEffect(() => {
@@ -28,6 +31,14 @@ export function ChannelEditModal({ cid, cpid, onClose }: ChannelEditModalProps) 
             setTopic(row.args.channel_topic || '');
             setDescription(row.args.channel_description || '');
             setMaxClients(row.args.channel_maxclients || '-1');
+            if (row.args.channel_password) setPassword(row.args.channel_password);
+            if (row.args.channel_codec) setCodec(row.args.channel_codec);
+            if (row.args.channel_codec_quality) setCodecQuality(row.args.channel_codec_quality);
+            
+            if (row.args.channel_flag_permanent === '1') setChannelType('permanent');
+            else if (row.args.channel_flag_semi_permanent === '1') setChannelType('semi');
+            else setChannelType('temporary');
+            
             setLoading(false);
           }
         }
@@ -54,6 +65,12 @@ export function ChannelEditModal({ cid, cpid, onClose }: ChannelEditModalProps) 
     if (password) cmd += ` channel_password=${escapeTs3String(password)}`;
     if (maxClients !== '-1') cmd += ` channel_maxclients=${maxClients} channel_flag_maxclients_unlimited=0`;
     else cmd += ` channel_flag_maxclients_unlimited=1`;
+    
+    cmd += ` channel_codec=${codec} channel_codec_quality=${codecQuality}`;
+    
+    if (channelType === 'permanent') cmd += ` channel_flag_permanent=1 channel_flag_semi_permanent=0`;
+    else if (channelType === 'semi') cmd += ` channel_flag_permanent=0 channel_flag_semi_permanent=1`;
+    else cmd += ` channel_flag_permanent=0 channel_flag_semi_permanent=0`;
 
     import('@tauri-apps/api/core').then(({ invoke }) => {
       invoke('send_command', { command: cmd }).then(() => {
@@ -98,6 +115,32 @@ export function ChannelEditModal({ cid, cpid, onClose }: ChannelEditModalProps) 
         <div className="form-group">
           <label>Max Clients (-1 for unlimited):</label>
           <input type="number" value={maxClients} onChange={e => setMaxClients(e.target.value)} />
+        </div>
+
+        <div className="form-group">
+          <label>Audio Codec:</label>
+          <select value={codec} onChange={e => setCodec(e.target.value)}>
+            <option value="4">Opus Voice</option>
+            <option value="5">Opus Music</option>
+            <option value="0">Speex</option>
+          </select>
+        </div>
+
+        <div className="form-group">
+          <label>Codec Quality (0-10):</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <input type="range" min="0" max="10" value={codecQuality} onChange={e => setCodecQuality(e.target.value)} style={{ flex: 1 }} />
+            <span>{codecQuality}</span>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label>Channel Type:</label>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <label><input type="radio" name="ctype" value="temporary" checked={channelType === 'temporary'} onChange={e => setChannelType(e.target.value)} /> Temporary</label>
+            <label><input type="radio" name="ctype" value="semi" checked={channelType === 'semi'} onChange={e => setChannelType(e.target.value)} /> Semi-Permanent</label>
+            <label><input type="radio" name="ctype" value="permanent" checked={channelType === 'permanent'} onChange={e => setChannelType(e.target.value)} /> Permanent</label>
+          </div>
         </div>
 
         <div className="form-actions">

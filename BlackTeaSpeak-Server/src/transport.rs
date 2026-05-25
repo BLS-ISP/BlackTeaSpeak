@@ -109,6 +109,8 @@ pub enum TransportNotification {
         channel_id: u32,
         client_id: u64,
         is_talking: bool,
+        is_whisper: bool,
+        whisper_targets: Option<crate::models::WhisperTargetSelection>,
     },
     TextMessage {
         target: TextMessageTarget,
@@ -732,9 +734,30 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
         TransportNotification::TalkStatus {
             server_id,
             channel_id,
-            ..
+            client_id,
+            is_talking: _,
+            is_whisper,
+            whisper_targets,
         } => {
-            session.selected_virtual_server_id == Some(*server_id) && session.current_channel_id == Some(*channel_id)
+            if session.selected_virtual_server_id != Some(*server_id) {
+                false
+            } else if *is_whisper {
+                if session.client_id == *client_id {
+                    true
+                } else if let Some(targets) = whisper_targets {
+                    if targets.client_ids.contains(&session.client_id) {
+                        true
+                    } else if let Some(sess_chan_id) = session.current_channel_id {
+                        targets.channel_ids.contains(&sess_chan_id)
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            } else {
+                session.current_channel_id == Some(*channel_id)
+            }
         }
         TransportNotification::ClientPoke {
             server_id,
@@ -1006,12 +1029,14 @@ pub fn render_notification(notification: &TransportNotification) -> String {
         TransportNotification::TalkStatus {
             client_id,
             is_talking,
+            is_whisper,
             ..
         } => render_message(
             "notifytalkstatus",
             &[
                 ("clid", client_id.to_string()),
                 ("status", if *is_talking { "1".to_string() } else { "0".to_string() }),
+                ("isreceivedwhisper", if *is_whisper { "1".to_string() } else { "0".to_string() }),
             ],
         ),
         TransportNotification::TextMessage {

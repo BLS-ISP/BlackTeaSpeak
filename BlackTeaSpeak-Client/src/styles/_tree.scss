@@ -1,0 +1,70 @@
+/* Tree Area */
+.tree-area {
+  flex: 3; min-width: 320px; max-width: 450px; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--bg-secondary);
+  backdrop-filter: blur(24px); border: 1px solid var(--glass-border);
+  border-radius: 24px; box-shadow: var(--shadow-md);
+}
+.tree-area h2 {
+  font-family: var(--font-heading); padding: 24px; margin: 0; font-size: 22px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.channel-tree {
+  flex: 1; padding: 16px; overflow-y: auto;
+}
+.tree-node { margin-bottom: 4px; }
+
+.channel-item {
+  display: flex; align-items: center; padding: 10px 14px; border-radius: 12px;
+  cursor: pointer; font-weight: 600; font-size: 15px; color: var(--text-primary);
+  transition: all 0.2s ease; border: 1px solid transparent;
+}
+.channel-item:hover {
+  background: var(--glass-hover); border-color: rgba(255,255,255,0.05); transform: translateX(2px);
+}
+.channel-item.server-header {
+  font-family: var(--font-heading); font-size: 18px; color: var(--accent-color);
+  background: var(--accent-light); margin-bottom: 12px;
+}
+
+.client-item {
+  display: flex; align-items: center; padding: 8px 14px; border-radius: 10px;
+  cursor: pointer; font-size: 14px; color: var(--text-secondary); transition: all 0.2s ease;
+}
+.client-item:hover { background: var(--glass-hover); color: var(--text-primary); transform: translateX(2px); }
+.client-item.my-client { color: var(--text-primary); font-weight: 600; }
+
+.status-lamp {
+  width: 10px; height: 10px; border-radius: 50%; background: #3f3f46;
+  margin-right: 12px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.4); transition: all 0.3s ease;
+}
+.status-lamp.talking {
+  background: var(--success-color); box-shadow: 0 0 12px var(--success-color), inset 0 1px 2px rgba(255,255,255,0.5);
+}
+.status-lamp.whisper {
+  background: var(--danger-color); box-shadow: 0 0 12px var(--danger-color), inset 0 1px 2px rgba(255,255,255,0.5);
+}
+.mute-icon { margin-left: 8px; font-size: 14px; opacity: 0.8; }
+
+/* Context Menus */
+.context-menu {
+  background: rgba(24, 24, 27, 0.95);
+  backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px; padding: 6px; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+  z-index: 9999; animation: popIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.context-menu-item {
+  padding: 10px 16px; font-size: 14px; border-radius: 8px; cursor: pointer; color: var(--text-primary);
+  transition: background 0.2s; display: flex; align-items: center; gap: 8px;
+}
+.context-menu-item:hover {
+  background: var(--accent-color); color: white;
+}
+.context-menu-divider {
+  height: 1px; background: rgba(255,255,255,0.1); margin: 4px 8px;
+}

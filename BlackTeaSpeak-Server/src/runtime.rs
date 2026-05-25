@@ -298,6 +298,13 @@ pub(crate) struct Channel {
     pub(crate) name: String,
     pub(crate) topic: String,
     pub(crate) description: String,
+    pub(crate) password: String,
+    pub(crate) codec: u32,
+    pub(crate) codec_quality: u32,
+    pub(crate) maxclients: i32,
+    pub(crate) maxfamilyclients: i32,
+    pub(crate) flag_default: bool,
+    pub(crate) flag_password: bool,
     pub(crate) permissions: BTreeMap<String, PermissionAssignment>,
 }
 
@@ -461,8 +468,8 @@ pub(crate) struct Client {
     pub(crate) month_bytes_downloaded: u64,
     pub(crate) total_bytes_uploaded: u64,
     pub(crate) total_bytes_downloaded: u64,
+    pub(crate) client_flag_avatar: String,
 }
-
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OnlineClientSnapshot {
@@ -485,6 +492,7 @@ pub struct OnlineClientSnapshot {
     pub country: String,
     pub connection_ip: String,
     pub server_groups: Vec<u32>,
+    pub client_flag_avatar: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -4138,8 +4146,63 @@ impl BaselineRuntime {
             applied = true;
         }
 
+        let mut avatar_changed = false;
+        if let Some(client_flag_avatar) = request.named_args.get("client_flag_avatar") {
+            if let Some(db_id) = session.client_database_id {
+                if let Some(client) = self.store.clients.get_mut(&db_id) {
+                    client.client_flag_avatar = client_flag_avatar.clone();
+                    let _ = self.db.update_client_avatar(&client.unique_identifier, client_flag_avatar);
+                }
+            }
+            if let Some(snapshot) = self.store.online_clients.get_mut(&session.client_id) {
+                // Wait, online_clients doesn't hold client_flag_avatar, but it's generated from Client struct.
+            }
+            avatar_changed = true;
+            applied = true;
+        }
+
         if !applied {
             return QueryResponse::error(512, "no supported client properties provided");
+        }
+
+        // Broadcast to others
+        if let Some(online_client) = self.store.online_clients.get(&session.client_id) {
+            let row = self.render_client_row(online_client, request, false);
+            let mut update_row = BTreeMap::new();
+            update_row.insert("clid".to_string(), session.client_id.to_string());
+            if request.named_args.contains_key("client_nickname") {
+                update_row.insert("client_nickname".to_string(), session.client_nickname.clone());
+            }
+            if request.named_args.contains_key("client_away") {
+                update_row.insert("client_away".to_string(), if session.client_away { "1".to_string() } else { "0".to_string() });
+            }
+            if request.named_args.contains_key("client_away_message") {
+                update_row.insert("client_away_message".to_string(), session.client_away_message.clone());
+            }
+            if request.named_args.contains_key("client_input_muted") {
+                update_row.insert("client_input_muted".to_string(), if session.client_input_muted { "1".to_string() } else { "0".to_string() });
+            }
+            if request.named_args.contains_key("client_output_muted") {
+                update_row.insert("client_output_muted".to_string(), if session.client_output_muted { "1".to_string() } else { "0".to_string() });
+            }
+            if let Some(avatar) = request.named_args.get("client_flag_avatar") {
+                update_row.insert("client_flag_avatar".to_string(), avatar.clone());
+            }
+            
+            let Some(server_id) = session.selected_virtual_server_id else {
+                return QueryResponse::ok();
+            };
+            self.broadcast_event(
+                server_id,
+                Some(session.client_id),
+                crate::transport::TransportNotification::ClientUpdated {
+                    client_id: session.client_id,
+                    invoker_id: session.client_id,
+                    invoker_name: session.client_nickname.clone(),
+                    invoker_uid: session.unique_identifier.clone(),
+                    properties: update_row,
+                },
+            );
         }
 
         QueryResponse::ok()
@@ -4178,6 +4241,12 @@ impl BaselineRuntime {
             String::from("channel_description"),
             channel.description.clone(),
         );
+        row.insert(String::from("channel_password"), channel.password.clone());
+        row.insert(String::from("channel_codec"), channel.codec.to_string());
+        row.insert(String::from("channel_codec_quality"), channel.codec_quality.to_string());
+        row.insert(String::from("channel_maxclients"), channel.maxclients.to_string());
+        row.insert(String::from("channel_maxfamilyclients"), channel.maxfamilyclients.to_string());
+        
         apply_channel_kind_rows(&mut row, channel.kind);
         row.insert(
             String::from("channel_flag_default"),
@@ -4187,7 +4256,7 @@ impl BaselineRuntime {
                 String::from("0")
             },
         );
-        row.insert(String::from("channel_flag_password"), String::from("0"));
+        row.insert(String::from("channel_flag_password"), if channel.flag_password { String::from("1") } else { String::from("0") });
         row.insert(String::from("channel_needed_talk_power"), String::from("0"));
         row.insert(
             String::from("total_clients"),
@@ -5784,6 +5853,30 @@ impl BaselineRuntime {
         if let Some(channel_description) = request.named_args.get("channel_description") {
             channel.description = channel_description.clone();
         }
+        if let Some(channel_password) = request.named_args.get("channel_password") {
+            channel.password = channel_password.clone();
+            channel.flag_password = !channel.password.is_empty();
+        }
+        if let Some(codec) = request.named_args.get("channel_codec").and_then(|v| v.parse().ok()) {
+            channel.codec = codec;
+        }
+        if let Some(quality) = request.named_args.get("channel_codec_quality").and_then(|v| v.parse().ok()) {
+            channel.codec_quality = quality;
+        }
+        if let Some(maxclients) = request.named_args.get("channel_maxclients").and_then(|v| v.parse().ok()) {
+            channel.maxclients = maxclients;
+        }
+        
+        let mut is_semi = false;
+        let mut is_perm = false;
+        if request.named_args.get("channel_flag_semi_permanent").map(|v| v.as_str()) == Some("1") { is_semi = true; }
+        if request.named_args.get("channel_flag_permanent").map(|v| v.as_str()) == Some("1") { is_perm = true; }
+        if request.named_args.contains_key("channel_flag_semi_permanent") || request.named_args.contains_key("channel_flag_permanent") {
+            channel.kind = ChannelKind::from_flags(is_perm, is_semi);
+        }
+        
+        // Save to DB
+        let _ = self.store.db.save_channel(server_id, channel);
 
         QueryResponse::ok()
     }
@@ -7066,6 +7159,13 @@ impl BaselineRuntime {
         if detailed || request.flags.contains("badges") {
             row.insert(String::from("client_badges"), String::from("compat"));
         }
+        
+        let avatar = if let Some(db_client) = self.store.clients.get(&client.database_id) {
+            db_client.client_flag_avatar.clone()
+        } else {
+            String::new()
+        };
+        row.insert(String::from("client_flag_avatar"), avatar);
 
         row
     }

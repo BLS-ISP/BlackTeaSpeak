@@ -1,0 +1,43 @@
+/* Sidebar (Home View) */
+.sidebar {
+  width: 300px;
+  max-width: 30vw;
+  flex-shrink: 0;
+  background: rgba(9, 9, 11, 0.8);
+  backdrop-filter: blur(24px);
+  border-right: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  padding: 32px 0;
+  z-index: 10;
+}
+.sidebar-header {
+  padding: 0 24px 32px 24px;
+  text-align: center;
+}
+.sidebar-header h1 {
+  font-family: var(--font-heading);
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  background: linear-gradient(135deg, #e2e8f0 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.sidebar-header p {
+  margin: 0; color: var(--text-secondary); font-size: 14px;
+}
+.sidebar-nav {
+  padding: 0 16px; display: flex; flex-direction: column; gap: 8px; flex-grow: 1;
+}
+.sidebar-nav button {
+  background: transparent; border: none; color: var(--text-secondary);
+  text-align: left; padding: 14px 20px; border-radius: 12px; font-size: 15px; font-weight: 500;
+  cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.sidebar-nav button:hover {
+  background: var(--glass-hover); color: var(--text-primary); transform: translateX(4px);
+}
+.sidebar-nav button.active {
+  background: linear-gradient(90deg, var(--accent-color), var(--accent-hover));
+  color: white; box-shadow: 0 4px 15px var(--accent-light);
+}

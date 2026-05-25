@@ -21,6 +21,11 @@ pub struct Identity {
     pub ptt_hotkey: Option<String>,
     pub whisper_hotkey: Option<String>,
     pub whisper_targets: Option<WhisperTargets>,
+    
+    // Advanced Audio Processing
+    pub noise_suppression: Option<bool>,
+    pub auto_gain_control: Option<bool>,
+    pub echo_cancellation: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]

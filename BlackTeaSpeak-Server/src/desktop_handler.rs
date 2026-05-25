@@ -138,6 +138,24 @@ impl DesktopSessionHandler {
                 self.session.whisper_targets = Some(targets);
                 (vec![String::from("error id=0 msg=ok")], vec![])
             }
+            "desktopgetmyperms" => {
+                if let Ok((_actor, actor_permissions)) = runtime.query_actor_effective_permissions(&self.session) {
+                    let mut rows = Vec::new();
+                    for (perm_name, assignment) in actor_permissions {
+                        let mut row = BTreeMap::new();
+                        row.insert("permid".to_string(), runtime.permission_id_for_name(&perm_name).to_string());
+                        row.insert("permname".to_string(), perm_name);
+                        row.insert("permvalue".to_string(), assignment.value.to_string());
+                        row.insert("permskip".to_string(), if assignment.skip { "1".to_string() } else { "0".to_string() });
+                        row.insert("permnegated".to_string(), if assignment.negated { "1".to_string() } else { "0".to_string() });
+                        rows.push(row);
+                    }
+                    let resp = QueryResponse::ok_rows(rows);
+                    (vec![crate::query::render_response(&resp)], vec![])
+                } else {
+                    (vec![String::from("error id=768 msg=client\\snot\\sfound")], vec![])
+                }
+            }
             _ => {
                 if let Some(_server_id) = self.session.selected_virtual_server_id {
                     let session_clone = self.session.clone();

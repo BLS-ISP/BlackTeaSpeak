@@ -113,7 +113,7 @@ pub struct AppState {
     pub session_secret: Mutex<Option<Vec<u8>>>,
     pub socket: Mutex<Option<Arc<UdpSocket>>>,
     pub tcp_writer: Mutex<Option<Arc<tokio::sync::Mutex<(tokio::net::tcp::OwnedWriteHalf, u16, Vec<u8>)>>>>,
-    pub audio_manager: Mutex<Option<crate::audio_manager::AudioManager>>,
+    pub audio_manager: Mutex<Option<crate::audio::AudioManager>>,
 }
 
 impl AppState {

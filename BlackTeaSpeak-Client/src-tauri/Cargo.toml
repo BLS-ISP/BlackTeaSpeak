@@ -40,4 +40,5 @@ reqwest = { version = "0.13.3", features = ["rustls", "stream"] }
 tauri-plugin-http = { version = "2.5.9", features = ["dangerous-settings"] }
 ureq = "3.3.0"
 rustls = { version = "0.23.40", features = ["ring"] }
+nnnoiseless = "0.5.2"
 

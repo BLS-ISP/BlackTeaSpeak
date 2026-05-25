@@ -2,6 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Identity, AppConfig } from './App';
+import { AudioDeviceSettings } from './components/settings/AudioDeviceSettings';
+import { TransmissionSettings } from './components/settings/TransmissionSettings';
+import { WhisperSettings } from './components/settings/WhisperSettings';
+import { AdvancedAudioSettings } from './components/settings/AdvancedAudioSettings';
 
 interface AudioDevices {
   inputs: string[];
@@ -23,11 +27,14 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
   const [outputAmp, setOutputAmp] = useState(identity.output_amplification ?? 1.0);
   const [mode, setMode] = useState(identity.voice_transmission_mode || 'voice_activation');
   const [vadThreshold, setVadThreshold] = useState(identity.voice_activation_threshold ?? 0.05);
+  
+  const [noiseSuppression, setNoiseSuppression] = useState(identity.noise_suppression ?? true);
+  const [autoGainControl, setAutoGainControl] = useState(identity.auto_gain_control ?? true);
+  const [echoCancellation, setEchoCancellation] = useState(identity.echo_cancellation ?? true);
+
   const [pttHotkey, setPttHotkey] = useState(identity.ptt_hotkey || '');
-  const [isRecordingHotkey, setIsRecordingHotkey] = useState(false);
 
   const [whisperHotkey, setWhisperHotkey] = useState(identity.whisper_hotkey || '');
-  const [isRecordingWhisperHotkey, setIsRecordingWhisperHotkey] = useState(false);
   const [whisperClientIds, setWhisperClientIds] = useState(identity.whisper_targets?.client_ids?.join(',') || '');
   const [whisperChannelIds, setWhisperChannelIds] = useState(identity.whisper_targets?.channel_ids?.join(',') || '');
   
@@ -57,9 +64,12 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
         output_amplification: outputAmp,
         transmission_mode: mode,
         vad_threshold: vadThreshold,
+        noise_suppression: noiseSuppression,
+        auto_gain_control: autoGainControl,
+        echo_cancellation: echoCancellation,
       }
     }).catch(console.error);
-  }, [inputAmp, outputAmp, mode, vadThreshold]);
+  }, [inputAmp, outputAmp, mode, vadThreshold, noiseSuppression, autoGainControl, echoCancellation]);
 
   const handleSave = async () => {
     const newIdentity: Identity = {
@@ -75,7 +85,10 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
       whisper_targets: {
         client_ids: whisperClientIds.split(',').map(s => s.trim()).filter(Boolean),
         channel_ids: whisperChannelIds.split(',').map(s => s.trim()).filter(Boolean)
-      }
+      },
+      noise_suppression: noiseSuppression,
+      auto_gain_control: autoGainControl,
+      echo_cancellation: echoCancellation,
     };
 
     try {
@@ -91,6 +104,9 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
           ptt_hotkey: pttHotkey || null,
           whisper_hotkey: whisperHotkey || null,
           whisper_targets: newIdentity.whisper_targets || null,
+          noise_suppression: noiseSuppression,
+          auto_gain_control: autoGainControl,
+          echo_cancellation: echoCancellation,
         }
       });
 
@@ -110,149 +126,39 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
     }
   };
 
-  const handleHotkeyRecord = (e: React.KeyboardEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    // Ignore standalone modifiers
-    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
-
-    let keys = [];
-    if (e.ctrlKey) keys.push('Control');
-    if (e.altKey) keys.push('Alt');
-    if (e.shiftKey) keys.push('Shift');
-    if (e.metaKey) keys.push('Super');
-    
-    // The main key
-    let mainKey = e.key;
-    if (mainKey === ' ') mainKey = 'Space';
-    if (mainKey.length === 1) mainKey = mainKey.toUpperCase();
-    
-    keys.push(mainKey);
-    setPttHotkey(keys.join('+'));
-    setIsRecordingHotkey(false);
-  };
-
-  const handleWhisperHotkeyRecord = (e: React.KeyboardEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (['Control', 'Shift', 'Alt', 'Meta'].includes(e.key)) return;
-    let keys = [];
-    if (e.ctrlKey) keys.push('Control');
-    if (e.altKey) keys.push('Alt');
-    if (e.shiftKey) keys.push('Shift');
-    if (e.metaKey) keys.push('Super');
-    let mainKey = e.key;
-    if (mainKey === ' ') mainKey = 'Space';
-    if (mainKey.length === 1) mainKey = mainKey.toUpperCase();
-    keys.push(mainKey);
-    setWhisperHotkey(keys.join('+'));
-    setIsRecordingWhisperHotkey(false);
-  };
-
   return (
     <div className="settings-modal-overlay">
       <div className="settings-modal">
         <h2>Audio Settings</h2>
-        
-        <div className="settings-group">
-          <label>Microphone</label>
-          <select value={inputDevice} onChange={e => setInputDevice(e.target.value)}>
-            <option value="">Default System Device</option>
-            {devices.inputs.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-          
-          <label>Microphone Amplification ({inputAmp.toFixed(2)}x)</label>
-          <input 
-            type="range" min="0.1" max="5.0" step="0.1" 
-            value={inputAmp} onChange={e => setInputAmp(parseFloat(e.target.value))} 
-          />
-          <div className="vu-meter">
-            <div className="vu-meter-fill" style={{ width: `${Math.min(inputLevel * 200, 100)}%` }}></div>
-            {mode === 'voice_activation' && (
-              <div className="vu-meter-marker" style={{ left: `${Math.min(vadThreshold * 200, 100)}%` }} title="Voice Activation Threshold"></div>
-            )}
-          </div>
-        </div>
+        <AudioDeviceSettings 
+          devices={devices}
+          inputDevice={inputDevice} setInputDevice={setInputDevice}
+          inputAmp={inputAmp} setInputAmp={setInputAmp}
+          inputLevel={inputLevel}
+          outputDevice={outputDevice} setOutputDevice={setOutputDevice}
+          outputAmp={outputAmp} setOutputAmp={setOutputAmp}
+          outputLevel={outputLevel}
+          mode={mode}
+          vadThreshold={vadThreshold}
+        />
 
-        <div className="settings-group">
-          <label>Speaker</label>
-          <select value={outputDevice} onChange={e => setOutputDevice(e.target.value)}>
-            <option value="">Default System Device</option>
-            {devices.outputs.map(d => <option key={d} value={d}>{d}</option>)}
-          </select>
-          
-          <label>Speaker Amplification ({outputAmp.toFixed(2)}x)</label>
-          <input 
-            type="range" min="0.1" max="5.0" step="0.1" 
-            value={outputAmp} onChange={e => setOutputAmp(parseFloat(e.target.value))} 
-          />
-          <div className="vu-meter">
-            <div className="vu-meter-fill" style={{ width: `${Math.min(outputLevel * 200, 100)}%` }}></div>
-          </div>
-        </div>
+        <TransmissionSettings 
+          mode={mode} setMode={setMode}
+          vadThreshold={vadThreshold} setVadThreshold={setVadThreshold}
+          pttHotkey={pttHotkey} setPttHotkey={setPttHotkey}
+        />
 
-        <div className="settings-group">
-          <label>Transmission Mode</label>
-          <select value={mode} onChange={e => setMode(e.target.value)}>
-            <option value="voice_activation">Voice Activation</option>
-            <option value="push_to_talk">Push-To-Talk</option>
-            <option value="continuous">Continuous Transmission</option>
-          </select>
-          
-          {mode === 'voice_activation' && (
-            <>
-              <label>Voice Activation Threshold ({vadThreshold.toFixed(3)})</label>
-              <input 
-                type="range" min="0.001" max="0.5" step="0.005" 
-                value={vadThreshold} onChange={e => setVadThreshold(parseFloat(e.target.value))} 
-              />
-            </>
-          )}
+        <WhisperSettings 
+          whisperHotkey={whisperHotkey} setWhisperHotkey={setWhisperHotkey}
+          whisperClientIds={whisperClientIds} setWhisperClientIds={setWhisperClientIds}
+          whisperChannelIds={whisperChannelIds} setWhisperChannelIds={setWhisperChannelIds}
+        />
 
-          {mode === 'push_to_talk' && (
-            <>
-              <label>Push-To-Talk Hotkey</label>
-              <button 
-                className="btn-secondary" 
-                onClick={() => setIsRecordingHotkey(true)}
-                onKeyDown={isRecordingHotkey ? handleHotkeyRecord : undefined}
-                style={{ textAlign: 'left', background: isRecordingHotkey ? 'var(--accent-color)' : '' }}
-              >
-                {isRecordingHotkey ? "Press any key combination..." : (pttHotkey || "Click to bind a hotkey")}
-              </button>
-            </>
-          )}
-        </div>
-
-        <div className="settings-group">
-          <label>Whisper Setup</label>
-          <label>Whisper Hotkey</label>
-          <button 
-            className="btn-secondary" 
-            onClick={() => setIsRecordingWhisperHotkey(true)}
-            onKeyDown={isRecordingWhisperHotkey ? handleWhisperHotkeyRecord : undefined}
-            style={{ textAlign: 'left', background: isRecordingWhisperHotkey ? 'var(--accent-color)' : '' }}
-          >
-            {isRecordingWhisperHotkey ? "Press any key combination..." : (whisperHotkey || "Click to bind a hotkey")}
-          </button>
-          
-          <label>Target Client IDs (comma separated)</label>
-          <input 
-            type="text" 
-            placeholder="e.g. 1, 5, 12" 
-            value={whisperClientIds} 
-            onChange={e => setWhisperClientIds(e.target.value)} 
-          />
-          
-          <label>Target Channel IDs (comma separated)</label>
-          <input 
-            type="text" 
-            placeholder="e.g. 2, 8" 
-            value={whisperChannelIds} 
-            onChange={e => setWhisperChannelIds(e.target.value)} 
-          />
-        </div>
+        <AdvancedAudioSettings 
+          noiseSuppression={noiseSuppression} setNoiseSuppression={setNoiseSuppression}
+          autoGainControl={autoGainControl} setAutoGainControl={setAutoGainControl}
+          echoCancellation={echoCancellation} setEchoCancellation={setEchoCancellation}
+        />
 
         <div className="settings-actions">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>

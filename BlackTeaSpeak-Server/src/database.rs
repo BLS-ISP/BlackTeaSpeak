@@ -80,10 +80,13 @@ impl Database {
                 client_month_bytes_uploaded INTEGER NOT NULL DEFAULT 0,
                 client_month_bytes_downloaded INTEGER NOT NULL DEFAULT 0,
                 client_total_bytes_uploaded INTEGER NOT NULL DEFAULT 0,
-                client_total_bytes_downloaded INTEGER NOT NULL DEFAULT 0
+                client_total_bytes_downloaded INTEGER NOT NULL DEFAULT 0,
+                client_flag_avatar TEXT NOT NULL DEFAULT ''
             )",
             [],
         )?;
+        
+        let _ = conn.execute("ALTER TABLE clients ADD COLUMN client_flag_avatar TEXT NOT NULL DEFAULT ''", []);
 
         // Server Groups
         conn.execute(
@@ -320,15 +323,24 @@ impl Database {
         conn.execute(
             "INSERT INTO channels (
                 channel_id, server_id, parent_channel_id, channel_order,
-                channel_name, channel_topic, channel_description,
+                channel_name, channel_topic, channel_description, channel_password,
+                channel_codec, channel_codec_quality, channel_maxclients, channel_maxfamilyclients,
+                channel_flag_default, channel_flag_password,
                 channel_flag_permanent, channel_flag_semi_permanent
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16)
             ON CONFLICT(channel_id) DO UPDATE SET
                 parent_channel_id=excluded.parent_channel_id,
                 channel_order=excluded.channel_order,
                 channel_name=excluded.channel_name,
                 channel_topic=excluded.channel_topic,
                 channel_description=excluded.channel_description,
+                channel_password=excluded.channel_password,
+                channel_codec=excluded.channel_codec,
+                channel_codec_quality=excluded.channel_codec_quality,
+                channel_maxclients=excluded.channel_maxclients,
+                channel_maxfamilyclients=excluded.channel_maxfamilyclients,
+                channel_flag_default=excluded.channel_flag_default,
+                channel_flag_password=excluded.channel_flag_password,
                 channel_flag_permanent=excluded.channel_flag_permanent,
                 channel_flag_semi_permanent=excluded.channel_flag_semi_permanent",
             params![
@@ -339,6 +351,13 @@ impl Database {
                 channel.name,
                 channel.topic,
                 channel.description,
+                channel.password,
+                channel.codec,
+                channel.codec_quality,
+                channel.maxclients,
+                channel.maxfamilyclients,
+                if channel.flag_default { 1 } else { 0 },
+                if channel.flag_password { 1 } else { 0 },
                 channel.kind.to_permanent_flag(),
                 channel.kind.to_semi_permanent_flag(),
             ],
@@ -371,7 +390,7 @@ impl Database {
 
     pub fn load_channels(&self) -> Result<std::collections::BTreeMap<u32, Vec<crate::runtime::Channel>>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare("SELECT channel_id, server_id, parent_channel_id, channel_order, channel_name, channel_topic, channel_description, channel_flag_permanent, channel_flag_semi_permanent FROM channels")?;
+        let mut stmt = conn.prepare("SELECT channel_id, server_id, parent_channel_id, channel_order, channel_name, channel_topic, channel_description, channel_password, channel_codec, channel_codec_quality, channel_maxclients, channel_maxfamilyclients, channel_flag_default, channel_flag_password, channel_flag_permanent, channel_flag_semi_permanent FROM channels")?;
         
         let channel_iter = stmt.query_map([], |row| {
             let id: u32 = row.get(0)?;
@@ -381,8 +400,15 @@ impl Database {
             let name: String = row.get(4)?;
             let topic: String = row.get(5)?;
             let description: String = row.get(6)?;
-            let flag_perm: u32 = row.get(7)?;
-            let flag_semi: u32 = row.get(8)?;
+            let password: String = row.get(7)?;
+            let codec: u32 = row.get(8)?;
+            let codec_quality: u32 = row.get(9)?;
+            let maxclients: i32 = row.get(10)?;
+            let maxfamilyclients: i32 = row.get(11)?;
+            let flag_default: u32 = row.get(12)?;
+            let flag_password: u32 = row.get(13)?;
+            let flag_perm: u32 = row.get(14)?;
+            let flag_semi: u32 = row.get(15)?;
 
             let kind = crate::runtime::ChannelKind::from_flags(flag_perm > 0, flag_semi > 0);
 
@@ -394,6 +420,13 @@ impl Database {
                 name,
                 topic,
                 description,
+                password,
+                codec,
+                codec_quality,
+                maxclients,
+                maxfamilyclients,
+                flag_default: flag_default > 0,
+                flag_password: flag_password > 0,
                 permissions: std::collections::BTreeMap::new(),
             }))
         })?;
@@ -654,8 +687,9 @@ impl Database {
                 client_id, client_unique_id, client_nickname, client_description,
                 client_created, client_lastconnected, client_totalconnections,
                 client_month_bytes_uploaded, client_month_bytes_downloaded,
-                client_total_bytes_uploaded, client_total_bytes_downloaded
-            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
+                client_total_bytes_uploaded, client_total_bytes_downloaded,
+                client_flag_avatar
+            ) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
             ON CONFLICT(client_unique_id) DO UPDATE SET
                 client_nickname=excluded.client_nickname,
                 client_description=excluded.client_description,
@@ -664,7 +698,8 @@ impl Database {
                 client_month_bytes_uploaded=excluded.client_month_bytes_uploaded,
                 client_month_bytes_downloaded=excluded.client_month_bytes_downloaded,
                 client_total_bytes_uploaded=excluded.client_total_bytes_uploaded,
-                client_total_bytes_downloaded=excluded.client_total_bytes_downloaded",
+                client_total_bytes_downloaded=excluded.client_total_bytes_downloaded,
+                client_flag_avatar=excluded.client_flag_avatar",
             params![
                 client.database_id as i64,
                 client.unique_identifier,
@@ -677,6 +712,7 @@ impl Database {
                 client.month_bytes_downloaded as i64,
                 client.total_bytes_uploaded as i64,
                 client.total_bytes_downloaded as i64,
+                client.client_flag_avatar,
             ],
         )?;
         Ok(())
@@ -684,7 +720,7 @@ impl Database {
 
     pub fn load_clients(&self) -> Result<std::collections::BTreeMap<u64, crate::runtime::Client>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare("SELECT client_id, client_unique_id, client_nickname, client_description, client_created, client_lastconnected, client_totalconnections, client_month_bytes_uploaded, client_month_bytes_downloaded, client_total_bytes_uploaded, client_total_bytes_downloaded FROM clients")?;
+        let mut stmt = conn.prepare("SELECT client_id, client_unique_id, client_nickname, client_description, client_created, client_lastconnected, client_totalconnections, client_month_bytes_uploaded, client_month_bytes_downloaded, client_total_bytes_uploaded, client_total_bytes_downloaded, client_flag_avatar FROM clients")?;
         
         let client_iter = stmt.query_map([], |row| {
             let database_id: i64 = row.get(0)?;
@@ -698,6 +734,7 @@ impl Database {
             let month_bytes_downloaded: i64 = row.get(8)?;
             let total_bytes_uploaded: i64 = row.get(9)?;
             let total_bytes_downloaded: i64 = row.get(10)?;
+            let client_flag_avatar: Option<String> = row.get(11)?;
 
             Ok(crate::runtime::Client {
                 database_id: database_id as u64,
@@ -711,15 +748,26 @@ impl Database {
                 month_bytes_downloaded: month_bytes_downloaded as u64,
                 total_bytes_uploaded: total_bytes_uploaded as u64,
                 total_bytes_downloaded: total_bytes_downloaded as u64,
+                client_flag_avatar: client_flag_avatar.unwrap_or_default(),
             })
         })?;
 
-        let mut map = std::collections::BTreeMap::new();
+        let mut clients = std::collections::BTreeMap::new();
         for client in client_iter {
             let client = client?;
-            map.insert(client.database_id, client);
+            clients.insert(client.database_id, client);
         }
-        Ok(map)
+
+        Ok(clients)
+    }
+
+    pub fn update_client_avatar(&self, client_unique_id: &str, avatar: &str) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "UPDATE clients SET client_flag_avatar = ?1 WHERE client_unique_id = ?2",
+            params![avatar, client_unique_id],
+        )?;
+        Ok(())
     }
 
     pub fn save_ban(&self, ban: &crate::runtime::ActiveBan) -> Result<()> {

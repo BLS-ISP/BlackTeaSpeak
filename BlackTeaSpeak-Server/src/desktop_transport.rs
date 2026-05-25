@@ -17,6 +17,8 @@ struct UdpClientSession {
     pub next_packet_id: u16,
     pub is_talking: bool,
     pub last_talk_millis: Instant,
+    pub is_whisper: bool,
+    pub whisper_targets: Option<crate::models::WhisperTargetSelection>,
 }
 
 pub struct DesktopTransportServer {
@@ -122,6 +124,8 @@ impl DesktopTransportServer {
                                             next_packet_id: 0,
                                             is_talking: false,
                                             last_talk_millis: Instant::now(),
+                                            is_whisper: false,
+                                            whisper_targets: None,
                                         });
                                         
                                         {
@@ -131,25 +135,30 @@ impl DesktopTransportServer {
                                         
                                         let packet_type = flags & 0x0F;
                                         if packet_type == 0x0A || packet_type == 0x0B {
+                                            let is_whisper = packet_type == 0x0B || packet_type == 0x01 || packet_type == 0x03;
                                             // Find channel id of this client
-                                            let channel_id = {
+                                            let (channel_id, whisper_targets) = {
                                                 let rt_guard = self.runtime.lock().unwrap();
                                                 let snapshot = rt_guard.online_client_snapshot(self.server_id, client_id_u64);
-                                                snapshot.map(|c| c.channel_id)
+                                                (snapshot.as_ref().map(|c| c.channel_id), snapshot.and_then(|c| c.whisper_targets.clone()))
                                             };
                                             
                                             if let Some(cid) = channel_id {
                                                 // Talk status logic
                                                 if let Some(session) = addr_to_session.get_mut(&addr) {
                                                     session.last_talk_millis = Instant::now();
-                                                    if !session.is_talking {
+                                                    if !session.is_talking || session.is_whisper != is_whisper {
                                                         session.is_talking = true;
+                                                        session.is_whisper = is_whisper;
+                                                        session.whisper_targets = whisper_targets.clone();
                                                         let rt_guard = self.runtime.lock().unwrap();
                                                         rt_guard.broadcast_event(self.server_id, &crate::transport::TransportNotification::TalkStatus {
                                                             server_id: self.server_id,
                                                             channel_id: cid,
                                                             client_id: client_id_u64,
                                                             is_talking: true,
+                                                            is_whisper,
+                                                            whisper_targets: whisper_targets.clone(),
                                                         });
                                                     }
                                                 }
@@ -184,6 +193,8 @@ impl DesktopTransportServer {
                                         channel_id: c.channel_id,
                                         client_id: session.client_id,
                                         is_talking: false,
+                                        is_whisper: session.is_whisper,
+                                        whisper_targets: session.whisper_targets.clone(),
                                     });
                                 }
                             }
@@ -223,7 +234,7 @@ impl DesktopTransportServer {
         let sender_snapshot = rt_guard.online_client_snapshot(server_id, sender_client_id);
         let sender_channel_id = sender_snapshot.as_ref().map(|c| c.channel_id).unwrap_or(0);
         let whisper_targets = sender_snapshot.as_ref().and_then(|c| c.whisper_targets.clone());
-        let is_whisper = (flag & 0x0F) == 0x01 || (flag & 0x0F) == 0x03;
+        let is_whisper = (flag & 0x0F) == 0x01 || (flag & 0x0F) == 0x03 || (flag & 0x0F) == 0x0B;
         let packet_type = flag & 0x0F;
 
         let mut recipients = Vec::new();

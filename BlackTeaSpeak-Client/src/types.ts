@@ -15,10 +15,12 @@ export type Client = {
   client_input_muted?: boolean;
   client_output_muted?: boolean;
   is_talking?: boolean;
+  whisper_type?: 'send' | 'receive';
   client_version?: string;
   client_platform?: string;
   client_created?: string;
   connection_connected_time?: string;
+  client_flag_avatar?: string;
 };
 
 export type ChatMessage = {
