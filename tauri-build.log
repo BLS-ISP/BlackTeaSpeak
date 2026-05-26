@@ -1,0 +1,49 @@
+
+> tauri-app@0.1.0 tauri
+> tauri build
+
+        Info Looking up installed tauri packages to check mismatched versions...
+     Running beforeBuildCommand `npm run build`
+
+> tauri-app@0.1.0 build
+> tsc && vite build
+
+src/App.tsx(54,10): error TS6133: 'editingIdentity' is declared but its value is never read.
+src/App.tsx(54,27): error TS6133: 'setEditingIdentity' is declared but its value is never read.
+src/App.tsx(64,41): error TS2304: Cannot find name 'selectedIdentity'.
+src/App.tsx(65,9): error TS2304: Cannot find name 'setSelectedIdentity'.
+src/App.tsx(86,9): error TS6133: 'actIdent' is declared but its value is never read.
+src/App.tsx(92,9): error TS2304: Cannot find name 'setActiveIdentity'.
+src/App.tsx(119,10): error TS2304: Cannot find name 'newIdentityName'.
+src/App.tsx(121,76): error TS2304: Cannot find name 'newIdentityName'.
+src/App.tsx(124,7): error TS2304: Cannot find name 'setNewIdentityName'.
+src/App.tsx(166,19): error TS2304: Cannot find name 'activeIdentity'.
+src/App.tsx(167,42): error TS2304: Cannot find name 'setActiveIdentity'.
+src/Avatar.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/ChannelTree.tsx(173,21): error TS2304: Cannot find name 'invoke'.
+src/ChatPane.tsx(2,23): error TS6133: 'FileEntry' is declared but its value is never read.
+src/components/info/ChannelInfo.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/info/ClientInfo.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/info/ServerInfo.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/permissions/PermissionEditor.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/permissions/PermissionGroup.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/permissions/PermissionRow.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/settings/AdvancedAudioSettings.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/settings/AudioDeviceSettings.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/Sidebar.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/tabs/FavoritesTab.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/ConnectedView.tsx(1,20): error TS6133: 'useRef' is declared but its value is never read.
+src/ControlBar.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/EmojiPicker.tsx(1,1): error TS6192: All imports in import declaration are unused.
+src/FileBrowserModal.tsx(15,23): error TS6133: 'setCurrentPath' is declared but its value is never read.
+src/FileBrowserModal.tsx(43,32): error TS6133: 'serverftfid' is declared but its value is never read.
+src/FileBrowserModal.tsx(44,17): error TS6133: 'isUpload' is declared but its value is never read.
+src/GroupManagerModal.tsx(6,10): error TS2724: '"./PermissionEditorModal"' has no exported member named 'PermissionEditor'. Did you mean 'PermissionEditorModal'?
+src/hooks/usePermissions.ts(5,1): error TS6133: 'Permission' is declared but its value is never read.
+src/hooks/usePermissions.ts(34,66): error TS6133: 'event' is declared but its value is never read.
+src/ModalsContainer.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/PermissionEditorModal.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/RichText.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/SettingsModal.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+beforeBuildCommand `npm run build` failed with exit code 2
+       Error beforeBuildCommand `npm run build` failed with exit code 2
