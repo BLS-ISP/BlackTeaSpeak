@@ -4,6 +4,8 @@ import { FileEntry } from './types';
 import { Dialogs } from './ui/Dialogs';
 import { Toast } from './ui/Toast';
 import { eventBus } from './EventBus';
+import { Folder as FolderIcon } from 'lucide-react';
+
 
 interface FileBrowserModalProps {
   channelId: string;
@@ -197,7 +199,7 @@ export function FileBrowserModal({ channelId, onClose }: FileBrowserModalProps) 
           {files.map((f, idx) => (
             <div key={idx} style={{ display: 'flex', borderBottom: '1px solid #333', padding: '8px', alignItems: 'center' }}>
               <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-                <span style={{ marginRight: '8px', fontSize: '16px' }}>{f.type === 0 ? '📁' : '📄'}</span>
+                <span style={{ marginRight: '8px', fontSize: '16px' }}>{f.type === 0 ? '<FolderIcon />' : '📄'}</span>
                 {f.name}
               </div>
               <div style={{ width: '100px', textAlign: 'right', color: '#888', fontSize: '12px' }}>

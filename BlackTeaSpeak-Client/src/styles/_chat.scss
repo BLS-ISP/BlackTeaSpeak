@@ -26,8 +26,27 @@
 .chat-message .sender { color: var(--accent-color); font-weight: 600; margin-right: 8px; }
 .chat-input-area {
   padding: 16px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--glass-border);
-  display: flex; gap: 12px;
+  display: flex;
+  gap: 8px;
 }
+
+.timestamp {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.text {
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-primary);
+  word-wrap: break-word;
+}
+
+.me .text {
+  color: var(--accent-color);
+}
+
 .chat-input-area button {
   background: var(--accent-color); color: white; border: none; border-radius: 12px;
   padding: 0 24px; font-weight: 600; cursor: pointer; transition: all 0.2s;

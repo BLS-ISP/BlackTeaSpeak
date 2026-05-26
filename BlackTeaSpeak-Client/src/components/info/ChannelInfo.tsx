@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Channel, FileEntry } from '../../types';
+import { Trash as TrashIcon, Download as DownloadIcon, Folder as FolderIcon } from 'lucide-react';
+
 
 interface ChannelInfoProps {
   selectedChannel: Channel;
@@ -49,14 +51,14 @@ export function ChannelInfo({ selectedChannel, channelFiles, onUploadFile, onDow
             <ul className="file-list">
               {channelFiles.map(file => (
                 <li key={file.name} className="file-item">
-                  <span className="file-icon">{file.type === 0 ? '📁' : '📄'}</span>
+                  <span className="file-icon">{file.type === 0 ? '<FolderIcon />' : '📄'}</span>
                   <span className="file-name">{file.name}</span>
                   {file.type === 1 && <span className="file-size">{(file.size / 1024).toFixed(1)} KB</span>}
                   
                   {file.type === 1 && (
                     <div className="file-item-actions">
-                      <button onClick={() => onDownloadFile(file)} title="Download">⬇️</button>
-                      <button onClick={() => onDeleteFile(file)} title="Delete">🗑️</button>
+                      <button onClick={() => onDownloadFile(file)} title="Download"><DownloadIcon /></button>
+                      <button onClick={() => onDeleteFile(file)} title="Delete"><TrashIcon /></button>
                     </div>
                   )}
                 </li>

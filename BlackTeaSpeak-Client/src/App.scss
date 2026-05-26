@@ -6,3 +6,65 @@
 @import './styles/_chat.scss';
 @import './styles/_info.scss';
 @import './styles/_modals.scss';
+
+.status-panel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--glass-bg);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-secondary);
+}
+.status-indicator.connected {
+  background: var(--success-color);
+  box-shadow: 0 0 8px var(--success-color);
+}
+.status-indicator.connecting {
+  background: var(--warning-color);
+  box-shadow: 0 0 8px var(--warning-color);
+  animation: pulse 1s infinite alternate;
+}
+@keyframes pulse {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}
+
+.slide-in {
+  animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes slideIn {
+  from { transform: translateY(10px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--text-secondary);
+  text-align: center;
+  gap: 16px;
+  background: var(--glass-bg);
+  border-radius: var(--radius-lg);
+  border: 1px dashed var(--border-color);
+}
+
+.full-width {
+  width: 100%;
+}
+
+.add-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}

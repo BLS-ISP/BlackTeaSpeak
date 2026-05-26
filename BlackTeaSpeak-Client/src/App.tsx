@@ -50,6 +50,10 @@ function App() {
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   
+  const [selectedIdentity, setSelectedIdentity] = useState<string>("");
+  const [activeIdentity, setActiveIdentity] = useState<Identity | null>(null);
+  const [newIdentityName, setNewIdentityName] = useState("");
+  
   // Edit Identity State
   const [editingIdentity, setEditingIdentity] = useState<Identity | null>(null);
 
@@ -109,8 +113,12 @@ function App() {
     }
   }
 
-  function handleDisconnect() {
-    invoke("disconnect").catch(console.error);
+  async function handleDisconnect() {
+    try {
+      await invoke("disconnect");
+    } catch (e) {
+      console.error(e);
+    }
     setIsConnected(false);
     setStatus("Disconnected.");
   }
@@ -163,7 +171,7 @@ function App() {
     return (
       <ConnectedView 
         onDisconnect={handleDisconnect} 
-        identity={activeIdentity || ({} as Identity)}
+        identity={activeIdentity || config.identities[0] || ({} as Identity)}
         onIdentityUpdated={(newIdent) => setActiveIdentity(newIdent)}
       />
     );

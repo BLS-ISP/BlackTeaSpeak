@@ -3,10 +3,12 @@ import { useState, useEffect } from 'react';
 import { invoke } from '@tauri-apps/api/core';
 import { ServerGroup, ChannelGroup } from './types';
 import { escapeTs3String } from './ts3parser';
-import { PermissionEditor } from './PermissionEditorModal';
+import { PermissionEditor } from './components/permissions/PermissionEditor';
 import { Dialogs } from './ui/Dialogs';
 import { Toast } from './ui/Toast';
 import { eventBus } from './EventBus';
+import { Trash as TrashIcon, X as XIcon } from 'lucide-react';
+
 
 interface GroupManagerModalProps {
   onClose: () => void;
@@ -100,7 +102,7 @@ export function GroupManagerModal({ onClose }: GroupManagerModalProps) {
         
         <div style={{ padding: '24px 32px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0 }}>Server Overview - Groups & Permissions</h2>
-          <button className="btn-icon" onClick={onClose} style={{ padding: '8px', fontSize: '18px' }}>❌</button>
+          <button className="btn-icon" onClick={onClose} style={{ padding: '8px', fontSize: '18px' }}><XIcon /></button>
         </div>
 
         <div style={{ display: 'flex', flexGrow: 1, overflow: 'hidden' }}>
@@ -138,7 +140,7 @@ export function GroupManagerModal({ onClose }: GroupManagerModalProps) {
                         <span className="mono-text">ID: {g.sgid} | Type: {g.type}</span>
                       </div>
                       <div className="card-actions">
-                        <button className="btn-icon muted" onClick={(e) => { e.stopPropagation(); handleDeleteServerGroup(g.sgid); }} title="Delete">🗑️</button>
+                        <button className="btn-icon muted" onClick={(e) => { e.stopPropagation(); handleDeleteServerGroup(g.sgid); }} title="Delete"><TrashIcon /></button>
                       </div>
                     </div>
                   ))}
@@ -160,7 +162,7 @@ export function GroupManagerModal({ onClose }: GroupManagerModalProps) {
                         <span className="mono-text">ID: {g.cgid} | Type: {g.type}</span>
                       </div>
                       <div className="card-actions">
-                        <button className="btn-icon muted" onClick={(e) => { e.stopPropagation(); handleDeleteChannelGroup(g.cgid); }} title="Delete">🗑️</button>
+                        <button className="btn-icon muted" onClick={(e) => { e.stopPropagation(); handleDeleteChannelGroup(g.cgid); }} title="Delete"><TrashIcon /></button>
                       </div>
                     </div>
                   ))}

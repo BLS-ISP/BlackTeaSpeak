@@ -1,8 +1,11 @@
 import { useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/core';
 import { Channel, Client } from './types';
 import { Avatar } from './Avatar';
 import { FileBrowserModal } from './FileBrowserModal';
 import { PermissionEditorModal } from './PermissionEditorModal';
+import { Globe as GlobeIcon, MicOff as MicOffIcon, Headphones as HeadphoneOffIcon, Folder as FolderIcon } from 'lucide-react';
+
 
 interface ChannelTreeProps {
   channels: Channel[];
@@ -45,7 +48,7 @@ export function ChannelTree({ channels, clients, myClientId, onChannelDoubleClic
           onDoubleClick={() => onChannelDoubleClick(channel)}
           onContextMenu={(e) => handleContextMenu(e, 'channel', channel)}
         >
-          <span className="icon">📁</span>
+          <span className="icon"><FolderIcon /></span>
           <span className="name">{channel.channel_name}</span>
         </div>
         
@@ -67,8 +70,8 @@ export function ChannelTree({ channels, clients, myClientId, onChannelDoubleClic
             <span className="name" style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {client.client_nickname}
             </span>
-            {client.client_input_muted && <span className="mute-icon" title="Microphone muted">🎤❌</span>}
-            {client.client_output_muted && <span className="mute-icon" title="Speaker muted">🔊❌</span>}
+            {client.client_input_muted && <span className="mute-icon" title="Microphone muted"><MicOffIcon /></span>}
+            {client.client_output_muted && <span className="mute-icon" title="Speaker muted"><HeadphoneOffIcon /></span>}
           </div>
         ))}
 
@@ -87,7 +90,7 @@ export function ChannelTree({ channels, clients, myClientId, onChannelDoubleClic
         onContextMenu={(e) => handleContextMenu(e, 'server' as any, null)}
       >
         <div className="channel-item server-header">
-          <span className="icon">🌍</span>
+          <span className="icon"><GlobeIcon /></span>
           <span className="name">BlackTeaSpeak Server</span>
         </div>
       </div>

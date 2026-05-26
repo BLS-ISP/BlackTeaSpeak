@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { eventBus } from '../../EventBus';
+import { Dialogs } from '../../ui/Dialogs';
+import { Trash as TrashIcon, Pause as PauseIcon } from 'lucide-react';
+
 
 export function ServerInfo() {
   const [bots, setBots] = useState<any[]>([]);
@@ -43,12 +46,14 @@ export function ServerInfo() {
   };
 
   const handleDeleteBot = (botId: string) => {
-    if(confirm('Delete Music Bot?')) {
-      import('@tauri-apps/api/core').then(({ invoke }) => {
-        invoke('send_command', { command: `musicbotdelete bot_id=${botId}` });
-        setTimeout(refreshBots, 500);
-      });
-    }
+    Dialogs.confirm('Delete Music Bot', 'Delete Music Bot?').then((confirmed) => {
+      if (confirmed) {
+        import('@tauri-apps/api/core').then(({ invoke }) => {
+          invoke('send_command', { command: `musicbotdelete bot_id=${botId}` });
+          setTimeout(refreshBots, 500);
+        });
+      }
+    });
   };
 
   return (
@@ -73,8 +78,8 @@ export function ServerInfo() {
               <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>Status: Playing</p>
             </div>
             <div className="card-actions" style={{ marginTop: 0 }}>
-              <button className="btn-icon" style={{ padding: '8px 12px' }} title="Play/Pause">⏸️</button>
-              <button className="btn-icon muted" style={{ padding: '8px 12px' }} onClick={() => handleDeleteBot(b.bot_id)} title="Delete">🗑️</button>
+              <button className="btn-icon" style={{ padding: '8px 12px' }} title="Play/Pause"><PauseIcon /></button>
+              <button className="btn-icon muted" style={{ padding: '8px 12px' }} onClick={() => handleDeleteBot(b.bot_id)} title="Delete"><TrashIcon /></button>
             </div>
           </div>
         ))}

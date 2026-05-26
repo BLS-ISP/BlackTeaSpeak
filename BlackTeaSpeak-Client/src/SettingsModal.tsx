@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { Identity, AppConfig } from './App';
 import { AudioDeviceSettings } from './components/settings/AudioDeviceSettings';
+import { Toast } from './ui/Toast';
 import { TransmissionSettings } from './components/settings/TransmissionSettings';
 import { WhisperSettings } from './components/settings/WhisperSettings';
 import { AdvancedAudioSettings } from './components/settings/AdvancedAudioSettings';
@@ -122,7 +123,7 @@ export function SettingsModal({ onClose, identity, onIdentityUpdated }: Settings
       onClose();
     } catch (e) {
       console.error("Failed to save settings:", e);
-      alert("Failed to save settings. See console.");
+      Toast.error("Failed to save settings. See console.");
     }
   };
 
