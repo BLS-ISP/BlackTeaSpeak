@@ -9,7 +9,7 @@ pub mod specs;
 pub mod state;
 pub mod transport;
 pub mod web_client;
-pub mod web_transport;
+pub mod web;
 pub mod desktop_transport;
 pub mod desktop_tcp_transport;
 pub mod desktop_session;

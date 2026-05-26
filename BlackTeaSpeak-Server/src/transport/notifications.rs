@@ -6,123 +6,10 @@ use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
-
 use anyhow::{Context, Result};
-
-use crate::query::{
-    CommandRequest, QueryResponse, encode_query_value, parse_request_line, render_response,
-};
-use crate::runtime::{
-    BaselineRuntime, ChannelSnapshot, NotificationEventKind, OnlineClientSnapshot,
-    QuerySessionState, ServerSnapshot, TextMessageTarget, create_baseline_runtime,
-    create_baseline_runtime_with_state_path, stable_query_client_unique_identifier,
-};
-
-pub const DEFAULT_QUERY_BIND: &str = "127.0.0.1:10101";
-
-
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SessionPresence {
-    pub client_id: u64,
-    pub login_name: String,
-    pub unique_identifier: String,
-    pub client_type: u32,
-    pub server_id: u32,
-    pub channel_id: u32,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum TransportNotification {
-    ClientEnterView {
-        presence: SessionPresence,
-        from_channel_id: Option<u32>,
-        reason_id: u32,
-    },
-    ClientUpdated {
-        server_id: u32,
-        before: OnlineClientSnapshot,
-        after: OnlineClientSnapshot,
-    },
-    ClientPoke {
-        server_id: u32,
-        target_client_id: u64,
-        invoker_id: u64,
-        invoker_name: String,
-        invoker_uid: String,
-        message: String,
-    },
-    ClientMoved {
-        presence: SessionPresence,
-        from_channel_id: u32,
-        reason_id: u32,
-        reason_message: String,
-        invoker_id: u64,
-        invoker_name: String,
-        invoker_uid: String,
-    },
-    ClientLeftView {
-        presence: SessionPresence,
-        to_channel_id: Option<u32>,
-        reason_id: u32,
-        reason_message: String,
-        invoker_id: u64,
-        invoker_name: String,
-        invoker_uid: String,
-        ban_time: Option<u32>,
-    },
-    ChannelEdited {
-        server_id: u32,
-        channel: ChannelSnapshot,
-        description_changed: bool,
-        invoker_id: u64,
-        invoker_name: String,
-    },
-    ChannelCreated {
-        server_id: u32,
-        channel: ChannelSnapshot,
-        invoker_id: u64,
-        invoker_name: String,
-    },
-    ChannelDeleted {
-        server_id: u32,
-        channel: ChannelSnapshot,
-        invoker_id: u64,
-        invoker_name: String,
-    },
-    ChannelMoved {
-        server_id: u32,
-        previous_parent_id: u32,
-        channel: ChannelSnapshot,
-        invoker_id: u64,
-        invoker_name: String,
-    },
-    ServerEdited {
-        server_id: u32,
-        before: ServerSnapshot,
-        after: ServerSnapshot,
-        invoker_id: u64,
-        invoker_name: String,
-    },
-    TalkStatus {
-        server_id: u32,
-        channel_id: u32,
-        client_id: u64,
-        is_talking: bool,
-        is_whisper: bool,
-        whisper_targets: Option<crate::models::WhisperTargetSelection>,
-    },
-    TextMessage {
-        target: TextMessageTarget,
-        invoker_id: u64,
-        invoker_name: String,
-        invoker_uid: String,
-    },
-}
-
-
-
-
+use crate::query::*;
+use crate::runtime::*;
+use super::*;
 pub fn execute_request_with_notifications(
     runtime: &mut BaselineRuntime,
     request: &CommandRequest,
@@ -185,23 +72,7 @@ pub fn execute_request_with_notifications(
     }
     (response, runtime_notifications)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-fn derive_runtime_notifications(
+pub(crate) fn derive_runtime_notifications(
     runtime: &BaselineRuntime,
     request: &CommandRequest,
     before_session: &QuerySessionState,
@@ -444,12 +315,10 @@ fn derive_runtime_notifications(
 
     Vec::new()
 }
-
-fn response_is_ok(response: &QueryResponse) -> bool {
+pub(crate) fn response_is_ok(response: &QueryResponse) -> bool {
     response.error_id == 0
 }
-
-fn channel_snapshot_before_request(
+pub(crate) fn channel_snapshot_before_request(
     runtime: &BaselineRuntime,
     request: &CommandRequest,
     session: &QuerySessionState,
@@ -463,8 +332,7 @@ fn channel_snapshot_before_request(
         _ => None,
     }
 }
-
-fn channel_snapshot_after_request(
+pub(crate) fn channel_snapshot_after_request(
     runtime: &BaselineRuntime,
     request: &CommandRequest,
     session: &QuerySessionState,
@@ -485,8 +353,7 @@ fn channel_snapshot_after_request(
         _ => None,
     }
 }
-
-fn server_snapshot_before_request(
+pub(crate) fn server_snapshot_before_request(
     runtime: &BaselineRuntime,
     request: &CommandRequest,
     session: &QuerySessionState,
@@ -498,8 +365,7 @@ fn server_snapshot_before_request(
     let server_id = session.selected_virtual_server_id?;
     runtime.snapshot_server(server_id)
 }
-
-fn server_snapshot_after_request(
+pub(crate) fn server_snapshot_after_request(
     runtime: &BaselineRuntime,
     request: &CommandRequest,
     session: &QuerySessionState,
@@ -512,8 +378,7 @@ fn server_snapshot_after_request(
     let server_id = session.selected_virtual_server_id?;
     runtime.snapshot_server(server_id)
 }
-
-fn client_snapshot_before_request(
+pub(crate) fn client_snapshot_before_request(
     runtime: &BaselineRuntime,
     request: &CommandRequest,
     session: &QuerySessionState,
@@ -548,8 +413,7 @@ fn client_snapshot_before_request(
         _ => None,
     }
 }
-
-fn client_snapshot_after_request(
+pub(crate) fn client_snapshot_after_request(
     runtime: &BaselineRuntime,
     request: &CommandRequest,
     session: &QuerySessionState,
@@ -587,18 +451,15 @@ fn client_snapshot_after_request(
         _ => None,
     }
 }
-
-fn channel_id_from_request(request: &CommandRequest) -> Option<u32> {
+pub(crate) fn channel_id_from_request(request: &CommandRequest) -> Option<u32> {
     request.named_args.get("cid")?.parse::<u32>().ok()
 }
-
-fn same_view_location(left: &SessionPresence, right: &SessionPresence) -> bool {
+pub(crate) fn same_view_location(left: &SessionPresence, right: &SessionPresence) -> bool {
     left.client_id == right.client_id
         && left.server_id == right.server_id
         && left.channel_id == right.channel_id
 }
-
-fn session_presence(session: &QuerySessionState) -> Option<SessionPresence> {
+pub(crate) fn session_presence(session: &QuerySessionState) -> Option<SessionPresence> {
     let server_id = session.selected_virtual_server_id?;
     let (unique_identifier, client_type) = if session.is_desktop_client {
         (format!("desktop-{}", session.client_id), 0)
@@ -616,8 +477,7 @@ fn session_presence(session: &QuerySessionState) -> Option<SessionPresence> {
         channel_id: session.current_channel_id.unwrap_or(1),
     })
 }
-
-fn session_presence_from_snapshot(snapshot: &OnlineClientSnapshot) -> SessionPresence {
+pub(crate) fn session_presence_from_snapshot(snapshot: &OnlineClientSnapshot) -> SessionPresence {
     SessionPresence {
         client_id: snapshot.id,
         login_name: snapshot.nickname.clone(),
@@ -627,8 +487,7 @@ fn session_presence_from_snapshot(snapshot: &OnlineClientSnapshot) -> SessionPre
         channel_id: snapshot.channel_id,
     }
 }
-
-fn cleanup_candidate_channel_ids(
+pub(crate) fn cleanup_candidate_channel_ids(
     request: &CommandRequest,
     before_client_snapshot: Option<&OnlineClientSnapshot>,
 ) -> Vec<u32> {
@@ -639,8 +498,7 @@ fn cleanup_candidate_channel_ids(
         _ => Vec::new(),
     }
 }
-
-fn cleanup_notifications_from_runtime(
+pub(crate) fn cleanup_notifications_from_runtime(
     server_id: u32,
     cleanups: Vec<crate::runtime::TemporaryChannelCleanup>,
     invoker_id: u64,
@@ -674,10 +532,6 @@ fn cleanup_notifications_from_runtime(
 
     notifications
 }
-
-
-
-
 pub(crate) fn wants_notification(session: &QuerySessionState, notification: &TransportNotification) -> bool {
     match notification {
         TransportNotification::ClientEnterView { presence, .. }
@@ -858,343 +712,3 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
         }
     }
 }
-
-fn matches_channel_tree_subscription(
-    subscription_channel_id: Option<u32>,
-    channel: &ChannelSnapshot,
-    previous_parent_id: Option<u32>,
-) -> bool {
-    subscription_channel_id.is_some_and(|channel_id| {
-        channel_id == channel.id
-            || channel_id == channel.parent_id
-            || previous_parent_id == Some(channel_id)
-    })
-}
-
-pub fn render_notification(notification: &TransportNotification) -> String {
-    match notification {
-        TransportNotification::ClientEnterView {
-            presence,
-            from_channel_id,
-            reason_id,
-        } => render_message(
-            "notifycliententerview",
-            &[
-                ("clid", presence.client_id.to_string()),
-                ("client_nickname", presence.login_name.clone()),
-                ("client_type", presence.client_type.to_string()),
-                ("ctid", presence.channel_id.to_string()),
-                ("cfid", from_channel_id.unwrap_or(0).to_string()),
-                ("reasonid", reason_id.to_string()),
-            ],
-        ),
-        TransportNotification::ClientUpdated { before, after, .. } => {
-            render_message_owned("notifyclientupdated", client_update_fields(before, after))
-        }
-        TransportNotification::ClientPoke {
-            invoker_id,
-            invoker_name,
-            invoker_uid,
-            message,
-            ..
-        } => render_message(
-            "notifyclientpoke",
-            &[
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", invoker_uid.clone()),
-                ("msg", message.clone()),
-            ],
-        ),
-        TransportNotification::ClientMoved {
-            presence,
-            from_channel_id,
-            reason_id,
-            reason_message,
-            invoker_id,
-            invoker_name,
-            invoker_uid,
-        } => render_message(
-            "notifyclientmoved",
-            &[
-                ("clid", presence.client_id.to_string()),
-                ("cfid", from_channel_id.to_string()),
-                ("ctid", presence.channel_id.to_string()),
-                ("reasonid", reason_id.to_string()),
-                ("reasonmsg", reason_message.clone()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", invoker_uid.clone()),
-            ],
-        ),
-        TransportNotification::ClientLeftView {
-            presence,
-            to_channel_id,
-            reason_id,
-            reason_message,
-            invoker_id,
-            invoker_name,
-            invoker_uid,
-            ban_time,
-        } => render_message(
-            "notifyclientleftview",
-            &[
-                ("clid", presence.client_id.to_string()),
-                ("cfid", presence.channel_id.to_string()),
-                ("ctid", to_channel_id.unwrap_or(0).to_string()),
-                ("reasonid", reason_id.to_string()),
-                ("reasonmsg", reason_message.clone()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", invoker_uid.clone()),
-                ("bantime", ban_time.unwrap_or(0).to_string()),
-            ],
-        ),
-        TransportNotification::ChannelEdited {
-            channel,
-            invoker_id,
-            invoker_name,
-            ..
-        } => render_message(
-            "notifychanneledited",
-            &[
-                ("cid", channel.id.to_string()),
-                ("channel_name", channel.name.clone()),
-                ("channel_topic", channel.topic.clone()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", format!("query-{}", invoker_id)),
-            ],
-        ),
-        TransportNotification::ChannelCreated {
-            channel,
-            invoker_id,
-            invoker_name,
-            ..
-        } => render_message(
-            "notifychannelcreated",
-            &[
-                ("cid", channel.id.to_string()),
-                ("cpid", channel.parent_id.to_string()),
-                ("channel_order", channel.order.to_string()),
-                ("channel_name", channel.name.clone()),
-                ("channel_topic", channel.topic.clone()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", format!("query-{}", invoker_id)),
-            ],
-        ),
-        TransportNotification::ChannelDeleted {
-            channel,
-            invoker_id,
-            invoker_name,
-            ..
-        } => render_message(
-            "notifychanneldeleted",
-            &[
-                ("cid", channel.id.to_string()),
-                ("cpid", channel.parent_id.to_string()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", format!("query-{}", invoker_id)),
-            ],
-        ),
-        TransportNotification::ChannelMoved {
-            channel,
-            invoker_id,
-            invoker_name,
-            ..
-        } => render_message(
-            "notifychannelmoved",
-            &[
-                ("cid", channel.id.to_string()),
-                ("cpid", channel.parent_id.to_string()),
-                ("order", channel.order.to_string()),
-                ("channel_name", channel.name.clone()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", format!("query-{}", invoker_id)),
-            ],
-        ),
-        TransportNotification::ServerEdited {
-            before,
-            after,
-            invoker_id,
-            invoker_name,
-            ..
-        } => render_message_owned(
-            "notifyserveredited",
-            server_edited_fields(before, after, *invoker_id, invoker_name),
-        ),
-        TransportNotification::TalkStatus {
-            client_id,
-            is_talking,
-            is_whisper,
-            ..
-        } => render_message(
-            "notifytalkstatus",
-            &[
-                ("clid", client_id.to_string()),
-                ("status", if *is_talking { "1".to_string() } else { "0".to_string() }),
-                ("isreceivedwhisper", if *is_whisper { "1".to_string() } else { "0".to_string() }),
-            ],
-        ),
-        TransportNotification::TextMessage {
-            target,
-            invoker_id,
-            invoker_name,
-            invoker_uid,
-        } => render_message(
-            "notifytextmessage",
-            &[
-                ("targetmode", target.target_mode.to_string()),
-                ("msg", target.message.clone()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", invoker_uid.clone()),
-            ],
-        ),
-    }
-}
-
-fn render_message(name: &str, fields: &[(&str, String)]) -> String {
-    let values = fields
-        .iter()
-        .map(|(key, value)| format!("{}={}", key, encode_query_value(value)))
-        .collect::<Vec<_>>()
-        .join(" ");
-    format!("{} {}", name, values)
-}
-
-fn render_message_owned(name: &str, fields: Vec<(String, String)>) -> String {
-    let values = fields
-        .into_iter()
-        .map(|(key, value)| format!("{}={}", key, encode_query_value(&value)))
-        .collect::<Vec<_>>()
-        .join(" ");
-    format!("{} {}", name, values)
-}
-
-fn client_update_fields(
-    before: &OnlineClientSnapshot,
-    after: &OnlineClientSnapshot,
-) -> Vec<(String, String)> {
-    let mut fields = vec![(String::from("clid"), after.id.to_string())];
-
-    if before.nickname != after.nickname {
-        fields.push((String::from("client_nickname"), after.nickname.clone()));
-    }
-    if before.away != after.away {
-        fields.push((
-            String::from("client_away"),
-            if after.away {
-                String::from("1")
-            } else {
-                String::from("0")
-            },
-        ));
-    }
-    if before.away_message != after.away_message {
-        fields.push((
-            String::from("client_away_message"),
-            after.away_message.clone(),
-        ));
-    }
-    if before.input_muted != after.input_muted {
-        fields.push((
-            String::from("client_input_muted"),
-            if after.input_muted {
-                String::from("1")
-            } else {
-                String::from("0")
-            },
-        ));
-    }
-    if before.output_muted != after.output_muted {
-        fields.push((
-            String::from("client_output_muted"),
-            if after.output_muted {
-                String::from("1")
-            } else {
-                String::from("0")
-            },
-        ));
-    }
-
-    fields
-}
-
-fn server_edited_fields(
-    before: &ServerSnapshot,
-    after: &ServerSnapshot,
-    invoker_id: u64,
-    invoker_name: &str,
-) -> Vec<(String, String)> {
-    let mut fields = vec![(String::from("virtualserver_id"), after.id.to_string())];
-
-    if before.name != after.name {
-        fields.push((String::from("virtualserver_name"), after.name.clone()));
-    }
-    if before.welcome_message != after.welcome_message {
-        fields.push((
-            String::from("virtualserver_welcomemessage"),
-            after.welcome_message.clone(),
-        ));
-    }
-    if before.host_message != after.host_message {
-        fields.push((
-            String::from("virtualserver_hostmessage"),
-            after.host_message.clone(),
-        ));
-    }
-    if before.host_message_mode != after.host_message_mode {
-        fields.push((
-            String::from("virtualserver_hostmessage_mode"),
-            after.host_message_mode.to_string(),
-        ));
-    }
-    if before.ask_for_privilegekey != after.ask_for_privilegekey {
-        fields.push((
-            String::from("virtualserver_ask_for_privilegekey"),
-            after.ask_for_privilegekey.to_string(),
-        ));
-    }
-    if before.max_clients != after.max_clients {
-        fields.push((
-            String::from("virtualserver_maxclients"),
-            after.max_clients.to_string(),
-        ));
-    }
-    if before.antiflood_points_tick_reduce != after.antiflood_points_tick_reduce {
-        fields.push((
-            String::from("virtualserver_antiflood_points_tick_reduce"),
-            after.antiflood_points_tick_reduce.to_string(),
-        ));
-    }
-    if before.antiflood_points_needed_command_block != after.antiflood_points_needed_command_block {
-        fields.push((
-            String::from("virtualserver_antiflood_points_needed_command_block"),
-            after.antiflood_points_needed_command_block.to_string(),
-        ));
-    }
-    if before.antiflood_points_needed_ip_block != after.antiflood_points_needed_ip_block {
-        fields.push((
-            String::from("virtualserver_antiflood_points_needed_ip_block"),
-            after.antiflood_points_needed_ip_block.to_string(),
-        ));
-    }
-    if before.antiflood_ban_time != after.antiflood_ban_time {
-        fields.push((
-            String::from("virtualserver_antiflood_ban_time"),
-            after.antiflood_ban_time.to_string(),
-        ));
-    }
-
-    fields.push((String::from("invokerid"), invoker_id.to_string()));
-    fields.push((String::from("invokername"), invoker_name.to_string()));
-    fields.push((String::from("invokeruid"), format!("query-{}", invoker_id)));
-    fields
-}
-
-
-

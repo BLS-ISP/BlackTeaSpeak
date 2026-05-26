@@ -15,7 +15,7 @@ use std::sync::Arc;
 use tokio_rustls::TlsAcceptor;
 use tower_http::services::ServeDir;
 
-use crate::web_transport::load_server_tls_config;
+use crate::web::load_server_tls_config;
 
 pub const DEFAULT_WEB_CLIENT_BIND: &str = "127.0.0.1:8080";
 

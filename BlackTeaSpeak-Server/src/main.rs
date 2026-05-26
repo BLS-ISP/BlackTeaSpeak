@@ -10,13 +10,13 @@ use blackteaspeak_server::desktop_capture::{
     DEFAULT_DESKTOP_CAPTURE_BIND, DEFAULT_DESKTOP_COMPAT_MAX_BYTES, DesktopCaptureServer,
     DesktopResponder, DesktopResponseAction, DesktopUdpServer,
 };
-use blackteaspeak_server::desktop_transport::DesktopTransportServer;
 use blackteaspeak_server::file_transfer::{DEFAULT_FILE_TRANSFER_BIND, FileTransferServer};
+use blackteaspeak_server::desktop_transport::DesktopTransportServer;
 use blackteaspeak_server::runtime::{QuerySessionState, create_baseline_runtime};
 use blackteaspeak_server::specs::FoundationSpecs;
 use blackteaspeak_server::ssh_query::SshQueryServer;
 use blackteaspeak_server::web_client::{DEFAULT_WEB_CLIENT_BIND, WebClientServer};
-use blackteaspeak_server::web_transport::{
+use blackteaspeak_server::web::{
     DEFAULT_TEAWEB_BIND, BlackTeaWebTransportServer, generate_localhost_tls_assets,
 };
 

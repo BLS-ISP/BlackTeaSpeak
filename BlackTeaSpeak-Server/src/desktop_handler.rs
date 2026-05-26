@@ -146,7 +146,7 @@ impl DesktopSessionHandler {
                         row.insert("permid".to_string(), runtime.permission_id_for_name(&perm_name).to_string());
                         row.insert("permname".to_string(), perm_name);
                         row.insert("permvalue".to_string(), assignment.value.to_string());
-                        row.insert("permskip".to_string(), if assignment.skip { "1".to_string() } else { "0".to_string() });
+                        row.insert("permskip".to_string(), if assignment.skipped { "1".to_string() } else { "0".to_string() });
                         row.insert("permnegated".to_string(), if assignment.negated { "1".to_string() } else { "0".to_string() });
                         rows.push(row);
                     }
