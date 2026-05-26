@@ -1,0 +1,44 @@
+
+> tauri-app@0.1.0 tauri
+> tauri build
+
+        Info Looking up installed tauri packages to check mismatched versions...
+     Running beforeBuildCommand `npm run build`
+
+> tauri-app@0.1.0 build
+> tsc && vite build
+
+src/App.tsx(58,10): error TS6133: 'editingIdentity' is declared but its value is never read.
+src/App.tsx(58,27): error TS6133: 'setEditingIdentity' is declared but its value is never read.
+src/App.tsx(90,9): error TS6133: 'actIdent' is declared but its value is never read.
+src/Avatar.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/ChatPane.tsx(2,23): error TS6133: 'FileEntry' is declared but its value is never read.
+src/ConnectedView.tsx(1,20): error TS6133: 'useRef' is declared but its value is never read.
+src/ControlBar.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/ControlBar.tsx(5,46): error TS6133: 'HeadphoneIcon' is declared but its value is never read.
+src/ControlBar.tsx(5,91): error TS6133: 'MicOffIcon' is declared but its value is never read.
+src/ControlBar.tsx(5,110): error TS6133: 'MicIcon' is declared but its value is never read.
+src/EmojiPicker.tsx(1,1): error TS6192: All imports in import declaration are unused.
+src/FileBrowserModal.tsx(7,1): error TS6133: 'FolderIcon' is declared but its value is never read.
+src/FileBrowserModal.tsx(17,23): error TS6133: 'setCurrentPath' is declared but its value is never read.
+src/FileBrowserModal.tsx(45,32): error TS6133: 'serverftfid' is declared but its value is never read.
+src/FileBrowserModal.tsx(46,17): error TS6133: 'isUpload' is declared but its value is never read.
+src/ModalsContainer.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/PermissionEditorModal.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/RichText.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/SettingsModal.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/Sidebar.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/info/ChannelInfo.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/info/ChannelInfo.tsx(3,66): error TS6133: 'FolderIcon' is declared but its value is never read.
+src/components/info/ClientInfo.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/info/ServerInfo.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/permissions/PermissionEditor.tsx(1,8): error TS6133: 'React' is declared but its value is never read.
+src/components/permissions/PermissionGroup.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/permissions/PermissionRow.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/settings/AdvancedAudioSettings.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/settings/AudioDeviceSettings.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/components/tabs/FavoritesTab.tsx(1,1): error TS6133: 'React' is declared but its value is never read.
+src/hooks/usePermissions.ts(5,1): error TS6133: 'Permission' is declared but its value is never read.
+src/hooks/usePermissions.ts(34,66): error TS6133: 'event' is declared but its value is never read.
+beforeBuildCommand `npm run build` failed with exit code 2
+       Error beforeBuildCommand `npm run build` failed with exit code 2
