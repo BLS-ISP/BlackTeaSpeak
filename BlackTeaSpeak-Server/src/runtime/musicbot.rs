@@ -1937,4 +1937,25 @@ impl BaselineRuntime {
         self.sync_music_bot_client_state(bot_id);
         QueryResponse::ok()
     }
+
+    pub(crate) fn handle_musicbotlist(&self, session: &QuerySessionState) -> QueryResponse {
+        if !session_has_permission_actor(session) {
+            return QueryResponse::error(521, "login required");
+        }
+
+        let Some(server_id) = session.selected_virtual_server_id else {
+            return QueryResponse::error(522, "virtual server selection required");
+        };
+
+        let rows = self.store.music_bots.values()
+            .filter(|bot| bot.server_id == server_id)
+            .map(|bot| {
+                let mut row = Self::music_bot_playerinfo_row(bot);
+                row.insert(String::from("name"), self.music_bot_client_name(bot));
+                row
+            })
+            .collect::<Vec<_>>();
+
+        QueryResponse::ok_rows(rows)
+    }
 }

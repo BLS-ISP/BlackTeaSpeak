@@ -6,6 +6,7 @@ import { FavoritesTab } from "./components/tabs/FavoritesTab";
 import { AddFavoriteTab } from "./components/tabs/AddFavoriteTab";
 import { IdentitiesTab } from "./components/tabs/IdentitiesTab";
 import { ConnectTab } from "./components/tabs/ConnectTab";
+import { AudioService } from "./services/AudioService";
 import "./App.scss";
 
 export type Identity = {
@@ -104,6 +105,7 @@ function App() {
         identityPublicKey: pubkey
       });
       setStatus(response as string);
+      AudioService.playConnected();
       setIsConnected(true);
     } catch (error) {
       setStatus(`Error: ${error}`);
@@ -119,6 +121,7 @@ function App() {
     } catch (e) {
       console.error(e);
     }
+    AudioService.playDisconnected();
     setIsConnected(false);
     setStatus("Disconnected.");
   }

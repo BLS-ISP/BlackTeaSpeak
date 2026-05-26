@@ -54,6 +54,10 @@ impl BaselineRuntime {
             "clientpoke" => self.handle_clientpoke(&request, session),
             "clientkick" => self.handle_clientkick(&request, session),
             "banclient" => self.handle_banclient(&request, session),
+            "banlist" => self.handle_banlist(session),
+            "banadd" => self.handle_banadd(&request, session),
+            "bandel" => self.handle_bandel(&request, session),
+            "bandelall" => self.handle_bandelall(session),
             "querylist" => self.handle_querylist(&request, session),
             "clientfind" => self.handle_clientfind(&request, session),
             "clientgetids" => self.handle_clientgetids(&request, session),
@@ -71,9 +75,9 @@ impl BaselineRuntime {
             "clientmove" => self.handle_clientmove(&request, session),
             "ftinitupload" => self.handle_ftinitupload(&request, session),
             "ftinitdownload" => self.handle_ftinitdownload(&request, session),
-            "ftgetfilelist" => self.handle_ftgetfilelist(&request, session),
+            "ftgetfilelist" | "ftlist" => self.handle_ftgetfilelist(&request, session),
             "ftcreatedir" => self.handle_ftcreatedir(&request, session),
-            "ftdeletefile" => self.handle_ftdeletefile(&request, session),
+            "ftdeletefile" | "ftdelete" => self.handle_ftdeletefile(&request, session),
             "ftrenamefile" => self.handle_ftrenamefile(&request, session),
             "ftgetfileinfo" => self.handle_ftgetfileinfo(&request, session),
             "permfind" => self.handle_permfind(&request, session),
@@ -138,6 +142,7 @@ impl BaselineRuntime {
             "whoami" => self.handle_whoami(session),
             "serverinfo" => self.handle_serverinfo(session),
             "channellist" => self.handle_channellist(session),
+            "musicbotlist" => self.handle_musicbotlist(session),
             "musicbotcreate" => self.handle_musicbotcreate(&request, session),
             "musicbotdelete" => self.handle_musicbotdelete(&request, session),
             "musicbotqueueadd" => self.handle_musicbotqueueadd(&request, session),
@@ -199,6 +204,10 @@ impl BaselineRuntime {
                 | "clientdelperm"
                 | "clientpermlist"
                 | "banclient"
+                | "banlist"
+                | "banadd"
+                | "bandel"
+                | "bandelall"
                 | "clientmove"
                 | "permoverview"
                 | "channelclientaddperm"
@@ -263,7 +272,19 @@ impl BaselineRuntime {
                 | "whoami"
                 | "serverinfo"
                 | "channellist"
+                | "musicbotlist"
                 | "musicbotplayeraction"
+                | "musicbotcreate"
+                | "musicbotdelete"
+                | "ftgetfilelist"
+                | "ftlist"
+                | "ftdeletefile"
+                | "ftdelete"
+                | "ftinitupload"
+                | "ftinitdownload"
+                | "ftcreatedir"
+                | "ftrenamefile"
+                | "ftgetfileinfo"
                 | "querycreate"
                 | "queryrename"
                 | "querychangepassword"

@@ -3,6 +3,7 @@ import { invoke } from '@tauri-apps/api/core';
 import { ChatMessage } from '../types';
 import { escapeTs3String } from '../ts3parser';
 import { Identity } from '../App';
+import { AudioService } from '../services/AudioService';
 
 export function useClientActions(
   myClientId: string, 
@@ -29,6 +30,7 @@ export function useClientActions(
       await invoke("toggle_microphone", { muted: newMuted });
       await invoke('send_command', { command: `clientupdate client_input_muted=${newMuted ? 1 : 0}` });
       setIsMicMuted(newMuted);
+      if (newMuted) AudioService.playMicMuted(); else AudioService.playMicActivated();
     } catch (e) {
       console.error(e);
     }
@@ -40,6 +42,7 @@ export function useClientActions(
       await invoke("toggle_speaker", { muted: newMuted });
       await invoke('send_command', { command: `clientupdate client_output_muted=${newMuted ? 1 : 0}` });
       setIsSpeakerMuted(newMuted);
+      if (newMuted) AudioService.playSpeakerMuted(); else AudioService.playSpeakerActivated();
     } catch (e) {
       console.error(e);
     }

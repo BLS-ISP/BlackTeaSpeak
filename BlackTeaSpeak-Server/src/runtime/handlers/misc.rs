@@ -852,4 +852,159 @@ impl BaselineRuntime {
         }
     }
 
+
+    pub(crate) fn handle_banlist(&mut self, session: &QuerySessionState) -> QueryResponse {
+        if !session_has_permission_actor(session) {
+            return QueryResponse::error(521, "login required");
+        }
+        let Some(server_id) = session.selected_virtual_server_id else {
+            return QueryResponse::error(522, "virtual server selection required");
+        };
+
+        if let Ok((_actor, actor_permissions)) = self.query_actor_effective_permissions(session) {
+            if let Err(permission_name) = check_required_permission(&actor_permissions, &["b_client_ban_list"], "b_client_ban_list") {
+                return self.insufficient_permission_response(permission_name);
+            }
+        } else {
+            return QueryResponse::error(512, "insufficient permissions");
+        }
+
+        self.prune_expired_active_bans();
+
+        let rows = self.store.active_bans.values()
+            .filter(|ban| ban.server_id == server_id)
+            .map(|ban| {
+                let mut row = BTreeMap::new();
+                row.insert("banid".to_string(), ban.id.to_string());
+                row.insert("ip".to_string(), ban.ip.clone());
+                row.insert("name".to_string(), ban.name.clone());
+                row.insert("uid".to_string(), ban.unique_identifier.clone());
+                row.insert("hwid".to_string(), ban.hardware_identifier.clone());
+                row.insert("invokercldbid".to_string(), ban.invoker_database_id.to_string());
+                row.insert("invokeruid".to_string(), ban.invoker_unique_identifier.clone());
+                row.insert("invokername".to_string(), ban.invoker_name.clone());
+                row.insert("created".to_string(), ban.created_at.to_string());
+                row.insert("duration".to_string(), ban.duration_seconds.to_string());
+                row.insert("banreason".to_string(), ban.reason.clone());
+                row.insert("enforcements".to_string(), "0".to_string());
+                row
+            })
+            .collect::<Vec<_>>();
+
+        QueryResponse::ok_rows(rows)
+    }
+
+    pub(crate) fn handle_banadd(&mut self, request: &CommandRequest, session: &QuerySessionState) -> QueryResponse {
+        if !session_has_permission_actor(session) && session.actor_client_database_id_override.is_none() {
+            return QueryResponse::error(521, "login required");
+        }
+        let Some(server_id) = session.selected_virtual_server_id else {
+            return QueryResponse::error(522, "virtual server selection required");
+        };
+
+        let ip = request.named_args.get("ip").cloned().unwrap_or_default();
+        let name = request.named_args.get("name").cloned().unwrap_or_default();
+        let uid = request.named_args.get("uid").cloned().unwrap_or_default();
+        let hwid = request.named_args.get("hwid").cloned().unwrap_or_default();
+        
+        if ip.is_empty() && name.is_empty() && uid.is_empty() && hwid.is_empty() {
+            return QueryResponse::error(512, "missing target definition");
+        }
+
+        let requested_ban_time = request.named_args.get("time").and_then(|v| v.parse::<u32>().ok()).unwrap_or(0);
+        let ban_reason = request.named_args.get("banreason").cloned().unwrap_or_default();
+        if ban_reason.len() > 40 {
+            return QueryResponse::error(512, "banreason is too long");
+        }
+
+        let (actor, actor_permissions) = match self.query_actor_effective_permissions(session) {
+            Ok(actor) => actor,
+            Err(response) => return response,
+        };
+
+        if let Err(permission_name) = check_required_permission(&actor_permissions, &["b_client_ban_create"], "b_client_ban_create") {
+            return self.insufficient_permission_response(permission_name);
+        }
+
+        let max_ban_time = permission_value_or_default(&actor_permissions, &["i_client_ban_max_bantime"]);
+        if max_ban_time > 0 && i64::from(requested_ban_time) > max_ban_time {
+            return self.insufficient_permission_response("i_client_ban_max_bantime");
+        }
+
+        let (invoker_uid, invoker_name) = self.lookup_client_identity_by_dbid(server_id, actor.client_database_id)
+            .map(|(uid, _, name)| (uid, name))
+            .unwrap_or_else(|| (String::from("Unknown"), String::from("ServerQuery")));
+
+        let banid = self.create_manual_active_ban(
+            server_id,
+            name,
+            uid,
+            hwid,
+            ip,
+            ban_reason,
+            requested_ban_time,
+            invoker_name,
+            actor.client_database_id,
+            invoker_uid,
+        );
+        
+        let mut row = BTreeMap::new();
+        row.insert("banid".to_string(), banid.to_string());
+        QueryResponse::ok_row(row)
+    }
+
+    pub(crate) fn handle_bandel(&mut self, request: &CommandRequest, session: &QuerySessionState) -> QueryResponse {
+        if !session_has_permission_actor(session) {
+            return QueryResponse::error(521, "login required");
+        }
+        let Some(server_id) = session.selected_virtual_server_id else {
+            return QueryResponse::error(522, "virtual server selection required");
+        };
+
+        let Some(banid) = request.named_args.get("banid").and_then(|v| v.parse::<u32>().ok()) else {
+            return QueryResponse::error(512, "banid is required");
+        };
+
+        if let Ok((_actor, actor_permissions)) = self.query_actor_effective_permissions(session) {
+            if let Err(permission_name) = check_required_permission(&actor_permissions, &["b_client_ban_delete"], "b_client_ban_delete") {
+                return self.insufficient_permission_response(permission_name);
+            }
+        } else {
+            return QueryResponse::error(512, "insufficient permissions");
+        }
+
+        if self.remove_active_ban(banid, Some(server_id)) {
+            QueryResponse::ok()
+        } else {
+            QueryResponse::error(1281, "invalid ban id")
+        }
+    }
+
+    pub(crate) fn handle_bandelall(&mut self, session: &QuerySessionState) -> QueryResponse {
+        if !session_has_permission_actor(session) {
+            return QueryResponse::error(521, "login required");
+        }
+        let Some(server_id) = session.selected_virtual_server_id else {
+            return QueryResponse::error(522, "virtual server selection required");
+        };
+
+        if let Ok((_actor, actor_permissions)) = self.query_actor_effective_permissions(session) {
+            if let Err(permission_name) = check_required_permission(&actor_permissions, &["b_client_ban_delete"], "b_client_ban_delete") {
+                return self.insufficient_permission_response(permission_name);
+            }
+        } else {
+            return QueryResponse::error(512, "insufficient permissions");
+        }
+
+        let ban_ids: Vec<u32> = self.store.active_bans.values()
+            .filter(|ban| ban.server_id == server_id)
+            .map(|ban| ban.id)
+            .collect();
+            
+        for banid in ban_ids {
+            self.remove_active_ban(banid, Some(server_id));
+        }
+
+        QueryResponse::ok()
+    }
 }

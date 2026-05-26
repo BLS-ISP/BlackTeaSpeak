@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from '@tauri-apps/api/core';
 import { eventBus } from '../EventBus';
 import { Channel, Client, ChatMessage, FileEntry } from '../types';
+import { AudioService } from '../services/AudioService';
 
 interface UseServerEventsProps {
   onDisconnect: () => void;
@@ -13,6 +14,7 @@ interface UseServerEventsProps {
   setChannelFiles: React.Dispatch<React.SetStateAction<FileEntry[]>>;
   pendingTransfers: React.MutableRefObject<Map<string, any>>;
   executeFileTransfer: (transfer: any, ftkey: string, port: number) => void;
+  currentChannelId?: string;
 }
 
 export function useServerEvents({
@@ -23,7 +25,8 @@ export function useServerEvents({
   setChatMessages,
   setChannelFiles,
   pendingTransfers,
-  executeFileTransfer
+  executeFileTransfer,
+  currentChannelId
 }: UseServerEventsProps) {
   const myClientIdRef = useRef<string>('');
 
@@ -75,14 +78,37 @@ export function useServerEvents({
               newClients[existing] = newClient;
               return newClients;
             }
+            
+            if (row.command === 'notifycliententerview' && clid !== myClientIdRef.current && cid === currentChannelId) {
+                AudioService.playUserJoined();
+            }
+
             return [...prev, newClient];
           });
         } else if (row.command === 'notifyclientleftview') {
-          setClients(prev => prev.filter(c => c.clid !== row.args.clid));
+          setClients(prev => {
+            const client = prev.find(c => c.clid === row.args.clid);
+            if (client && client.cid === currentChannelId) {
+                AudioService.playUserLeft();
+            }
+            return prev.filter(c => c.clid !== row.args.clid);
+          });
         } else if (row.command === 'notifyclientmoved') {
-          setClients(prev => prev.map(c => 
-            c.clid === row.args.clid ? { ...c, cid: row.args.ctid } : c
-          ));
+          setClients(prev => {
+            const client = prev.find(c => c.clid === row.args.clid);
+            if (row.args.clid === myClientIdRef.current) {
+                AudioService.playChannelJoined();
+            } else if (client) {
+                if (row.args.ctid === currentChannelId) {
+                    AudioService.playUserJoined(); // Moved into our channel
+                } else if (client.cid === currentChannelId) {
+                    AudioService.playUserLeft(); // Moved out of our channel
+                }
+            }
+            return prev.map(c => 
+              c.clid === row.args.clid ? { ...c, cid: row.args.ctid } : c
+            );
+          });
         } else if (row.command === 'notifyclientupdated') {
           setClients(prev => prev.map(c => {
             if (c.clid === row.args.clid) {
@@ -117,6 +143,7 @@ export function useServerEvents({
               targetMode: parseInt(row.args.targetmode) || 3,
               message: row.args.msg || ''
             };
+            AudioService.playMessageReceived();
             setChatMessages(prev => [...prev, newMsg]);
           }
         } else if ((row.command === 'unknown' || row.command === 'ftgetfilelist') && row.args.name && row.args.size && row.args.datetime && row.args.type) {

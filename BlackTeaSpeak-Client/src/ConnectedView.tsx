@@ -65,7 +65,8 @@ export default function ConnectedView({ onDisconnect, identity, onIdentityUpdate
     onDisconnect: handleDisconnect,
     setChannels, setClients, setMyClientId,
     setChatMessages, setChannelFiles,
-    pendingTransfers, executeFileTransfer
+    pendingTransfers, executeFileTransfer,
+    currentChannelId
   });
 
   useGlobalShortcuts(identity);
