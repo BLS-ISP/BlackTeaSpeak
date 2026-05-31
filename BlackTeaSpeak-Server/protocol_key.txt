@@ -1,3 +1,8 @@
-chain: AQCVXTlKF+UQc0yga99dOQ9FJCwLaJqtDb1G7xYPMvHFMwIKVfKADF6zAAcAAAAgQW5vbnltb3VzAA==
-root_key_prv: QCUIVtjakIWe3BoNWHt9c6BX8lUyR4QOPirywBuPI0s=
+# planetteaspeak.de
+# CEO xCasaTV
+# Expiration date: 16/01/2027
+version: 0
+chain: AQCvbHFTQDY/terPeilrp/ECU9xCH5U3xC92lYTNaY/0KQAJFueAazbsgAAAACVUZWFtU3BlYWsgU3lzdGVtcyBHbWJIAAAYgCX1fPC/Sgq3cOSCfPjiCZOykM3yHUMKY1B4oJTkvgAYfjHRPo3wSgAAACRUZWFtU3BlYWsgc3lzdGVtcyBHbWJIAABxwP3eCxni86h7i2Ia/ipU7LXAi8NSy5+6d4IfYXiIrQIYh1iAGmiMAAYAAAAARmxvcmlhbiBNYXRoaWFzIEJlcmtlbWVpZXIA
+root_key_prv: YARwqypuXjU9b+zg/yBEGpdTNiYgcWYV87k6vXU7rGo=
 root_key_pbl: zQ3irtRjRVCafjz9j2iz3HVVsp3M7HPNGHUPmTgSQIo=
+root_prv_index: 3

@@ -308,9 +308,10 @@ impl TeaSpeakTransportServer {
                                                   entry2_bytes.push(0x20); // LicenseType::EPHEMERAL (0x20)
                                                   
                                                   const TIMESTAMP_OFFSET: u64 = 1356998400;
-                                                  // Set validation_time to July 1, 2024 (1719830400) to match Chain B's validity period.
-                                                  // Clients connecting to this server must roll back their PC's local clock to July 1, 2024 to connect.
-                                                  let validation_time = 1719830400;
+                                                  let validation_time = std::time::SystemTime::now()
+                                                      .duration_since(std::time::UNIX_EPOCH)
+                                                      .unwrap_or_default()
+                                                      .as_secs();
                                                   let begin = (validation_time - TIMESTAMP_OFFSET) as u32;
                                                   let end = (validation_time + 30 * 24 * 3600 - TIMESTAMP_OFFSET) as u32;
                                                   entry2_bytes.extend_from_slice(&begin.to_be_bytes());
