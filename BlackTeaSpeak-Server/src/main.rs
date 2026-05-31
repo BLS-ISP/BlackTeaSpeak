@@ -245,7 +245,14 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
     // Start initial servers
     {
         let rt = runtime.lock().unwrap();
-        let servers = rt.db.load_virtual_servers().unwrap_or_default();
+        let mut servers = rt.db.load_virtual_servers().unwrap_or_default();
+        if servers.is_empty() {
+            println!("No virtual servers found. Creating default server on port 9987...");
+            let default_server = blackteaspeak_server::runtime::VirtualServer::new_default(1, 9987);
+            if let Ok(_) = rt.db.save_virtual_server(&default_server) {
+                servers.insert(default_server.id(), default_server);
+            }
+        }
         for server in servers.values() {
             let _ = lifecycle_tx.send(blackteaspeak_server::runtime::LifecycleAction::StartVirtualServer {
                 server_id: server.id(),
@@ -263,16 +270,18 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
         while let Ok(action) = lifecycle_rx.recv() {
             match action {
                 blackteaspeak_server::runtime::LifecycleAction::StartVirtualServer { server_id, port } => {
-                    let bind_addr = format!("0.0.0.0:{}", port);
+                    let btea_port = port + 1;
+                    let btea_bind_addr = format!("0.0.0.0:{}", btea_port);
+                    let ts3_bind_addr = format!("0.0.0.0:{}", port);
                     
-                    // Start UDP
+                    // Start BTEA UDP
                     if let Ok(server) = DesktopTransportServer::bind_with_shared_runtime(
                         server_id,
                         Arc::clone(&lifecycle_runtime),
-                        &bind_addr,
+                        &btea_bind_addr,
                         Arc::clone(&lifecycle_secrets)
                     ) {
-                        println!("virtual server {} desktop transport listening on udp {}", server_id, port);
+                        println!("virtual server {} desktop transport listening on udp {}", server_id, btea_port);
                         let should_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
                         running_udp_servers.insert(server_id, Arc::clone(&should_stop));
                         thread::spawn(move || {
@@ -280,21 +289,57 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
                                 eprintln!("virtual server {} udp terminated: {}", server_id, e);
                             }
                         });
+                    } else {
+                        eprintln!("virtual server {} failed to bind desktop UDP on {}", server_id, btea_bind_addr);
                     }
                     
-                    // Start TCP
+                    // Start BTEA TCP
                     if let Ok(server) = blackteaspeak_server::desktop_tcp_transport::DesktopTcpTransportServer::bind_with_shared_runtime(
                         server_id,
                         Arc::clone(&lifecycle_runtime),
-                        &bind_addr,
+                        &btea_bind_addr,
                         Arc::clone(&lifecycle_secrets)
                     ) {
-                        println!("virtual server {} desktop tcp transport listening on tcp {}", server_id, port);
+                        println!("virtual server {} desktop tcp transport listening on tcp {}", server_id, btea_port);
                         let should_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
                         running_tcp_servers.insert(server_id, Arc::clone(&should_stop));
                         thread::spawn(move || {
                             if let Err(e) = server.run(should_stop) {
                                 eprintln!("virtual server {} tcp terminated: {}", server_id, e);
+                            }
+                        });
+                    }
+
+                    // Start TeaSpeak UDP
+                    if let Ok(server) = blackteaspeak_server::teaspeak_transport::TeaSpeakTransportServer::bind_with_shared_runtime(
+                        server_id,
+                        Arc::clone(&lifecycle_runtime),
+                        &ts3_bind_addr,
+                    ) {
+                        println!("virtual server {} teaspeak transport listening on udp {}", server_id, port);
+                        let should_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+                        running_udp_servers.insert(server_id + 10000, Arc::clone(&should_stop));
+                        thread::spawn(move || {
+                            if let Err(e) = server.run(should_stop) {
+                                eprintln!("virtual server {} teaspeak udp terminated: {}", server_id, e);
+                            }
+                        });
+                    } else {
+                        eprintln!("virtual server {} failed to bind teaspeak UDP on {}", server_id, ts3_bind_addr);
+                    }
+
+                    // Start TeaSpeak TCP
+                    if let Ok(server) = blackteaspeak_server::teaspeak_tcp_transport::TeaSpeakTcpTransportServer::bind_with_shared_runtime(
+                        server_id,
+                        Arc::clone(&lifecycle_runtime),
+                        &ts3_bind_addr,
+                    ) {
+                        println!("virtual server {} teaspeak tcp transport listening on tcp {}", server_id, port);
+                        let should_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+                        running_tcp_servers.insert(server_id + 10000, Arc::clone(&should_stop));
+                        thread::spawn(move || {
+                            if let Err(e) = server.run(should_stop) {
+                                eprintln!("virtual server {} teaspeak tcp terminated: {}", server_id, e);
                             }
                         });
                     }
@@ -304,6 +349,12 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
                         should_stop.store(true, std::sync::atomic::Ordering::SeqCst);
                     }
                     if let Some(should_stop) = running_tcp_servers.remove(&server_id) {
+                        should_stop.store(true, std::sync::atomic::Ordering::SeqCst);
+                    }
+                    if let Some(should_stop) = running_udp_servers.remove(&(server_id + 10000)) {
+                        should_stop.store(true, std::sync::atomic::Ordering::SeqCst);
+                    }
+                    if let Some(should_stop) = running_tcp_servers.remove(&(server_id + 10000)) {
                         should_stop.store(true, std::sync::atomic::Ordering::SeqCst);
                     }
                     println!("virtual server {} stopped", server_id);

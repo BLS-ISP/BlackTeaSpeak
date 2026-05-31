@@ -36,3 +36,6 @@ wtransport = "0.7.1"
 russh = "0.61.1"
 russh-keys = "0.49.2"
 rand_core = "0.6"
+quicklz = "0.3"
+webrtc = "0.11.0"
+

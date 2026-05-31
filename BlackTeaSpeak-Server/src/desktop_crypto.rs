@@ -35,6 +35,17 @@ pub fn export_public_key_der(verifying_key: &VerifyingKey) -> Vec<u8> {
     ts3_key
 }
 
+pub fn export_public_key_asn1_der(verifying_key: &VerifyingKey) -> Vec<u8> {
+    use p256::elliptic_curve::sec1::ToEncodedPoint;
+    let encoded_point = verifying_key.to_encoded_point(false);
+    let bytes = encoded_point.as_bytes(); // 65 bytes starting with 0x04
+    
+    let mut result = Vec::with_capacity(70);
+    result.extend_from_slice(&[0x30, 0x44, 0x03, 0x42, 0x00]);
+    result.extend_from_slice(bytes);
+    result
+}
+
 pub fn calculate_shared_secret(client_pub_bytes: &[u8], server_sec: &SecretKey) -> Option<[u8; 20]> {
     use p256::PublicKey;
     let client_pub = PublicKey::from_sec1_bytes(client_pub_bytes).ok()?;
@@ -404,7 +415,7 @@ pub fn generate_server_proof(private_key_bytes: &[u8], license_bytes: &[u8]) -> 
     Some(signature.to_der().to_bytes().into())
 }
 
-pub fn load_protocol_key() -> Option<(String, Vec<u8>)> {
+pub fn load_protocol_key() -> Option<(String, Vec<u8>, Vec<u8>)> {
     use std::fs::File;
     use std::io::{BufRead, BufReader};
     use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
@@ -414,6 +425,7 @@ pub fn load_protocol_key() -> Option<(String, Vec<u8>)> {
 
     let mut chain_b64 = String::new();
     let mut root_key_prv = Vec::new();
+    let mut root_key_pbl = Vec::new();
 
     for line in reader.lines() {
         let line = line.ok()?;
@@ -422,12 +434,148 @@ pub fn load_protocol_key() -> Option<(String, Vec<u8>)> {
         } else if line.starts_with("root_key_prv:") {
             let prv_b64 = line.trim_start_matches("root_key_prv:").trim();
             root_key_prv = BASE64.decode(prv_b64).ok()?;
+        } else if line.starts_with("root_key_pbl:") {
+            let pbl_b64 = line.trim_start_matches("root_key_pbl:").trim();
+            root_key_pbl = BASE64.decode(pbl_b64).ok()?;
         }
     }
 
-    if chain_b64.is_empty() || root_key_prv.len() != 32 {
+    if chain_b64.is_empty() || root_key_prv.len() != 32 || root_key_pbl.len() != 32 {
         return None;
     }
 
-    Some((chain_b64, root_key_prv))
+    Some((chain_b64, root_key_prv, root_key_pbl))
 }
+
+pub fn import_public_key_libtomcrypt_asn1(asn1_bytes: &[u8]) -> Option<Vec<u8>> {
+    // A simple ASN.1 DER parser to extract X and Y coordinates of the public key
+    // The libtomcrypt format is typically:
+    // SEQUENCE {
+    //   BIT_STRING (2 bytes, usually 0x07 0x00)
+    //   INTEGER (32)
+    //   INTEGER (X coordinate, 32 or 33 bytes)
+    //   INTEGER (Y coordinate, 32 or 33 bytes)
+    // }
+    
+    let mut pos = 0;
+    
+    // SEQUENCE
+    if pos >= asn1_bytes.len() || asn1_bytes[pos] != 0x30 { return None; }
+    pos += 1;
+    if pos >= asn1_bytes.len() { return None; }
+    let _seq_len = asn1_bytes[pos] as usize; // Usually < 128
+    pos += 1;
+    
+    // BIT_STRING
+    if pos >= asn1_bytes.len() || asn1_bytes[pos] != 0x03 { return None; }
+    pos += 1;
+    if pos >= asn1_bytes.len() { return None; }
+    let bs_len = asn1_bytes[pos] as usize;
+    pos += 1 + bs_len;
+    
+    // INTEGER (32)
+    if pos >= asn1_bytes.len() || asn1_bytes[pos] != 0x02 { return None; }
+    pos += 1;
+    if pos >= asn1_bytes.len() { return None; }
+    let int_len = asn1_bytes[pos] as usize;
+    pos += 1 + int_len;
+    
+    // X INTEGER
+    if pos >= asn1_bytes.len() || asn1_bytes[pos] != 0x02 { return None; }
+    pos += 1;
+    if pos >= asn1_bytes.len() { return None; }
+    let mut x_len = asn1_bytes[pos] as usize;
+    pos += 1;
+    if pos + x_len > asn1_bytes.len() { return None; }
+    let mut x_bytes = &asn1_bytes[pos..pos+x_len];
+    if x_len == 33 && x_bytes[0] == 0x00 {
+        x_bytes = &x_bytes[1..];
+        x_len = 32;
+    }
+    pos += asn1_bytes[pos - 1] as usize; // Move past X
+    
+    // Y INTEGER
+    if pos >= asn1_bytes.len() || asn1_bytes[pos] != 0x02 { return None; }
+    pos += 1;
+    if pos >= asn1_bytes.len() { return None; }
+    let mut y_len = asn1_bytes[pos] as usize;
+    pos += 1;
+    if pos + y_len > asn1_bytes.len() { return None; }
+    let mut y_bytes = &asn1_bytes[pos..pos+y_len];
+    if y_len == 33 && y_bytes[0] == 0x00 {
+        y_bytes = &y_bytes[1..];
+        y_len = 32;
+    }
+    
+    if x_len != 32 || y_len != 32 { return None; }
+    
+    let mut sec1 = vec![0x04];
+    sec1.extend_from_slice(x_bytes);
+    sec1.extend_from_slice(y_bytes);
+    Some(sec1)
+}
+
+pub fn export_public_key_libtomcrypt_asn1(verifying_key: &p256::ecdsa::VerifyingKey) -> Vec<u8> {
+    use p256::elliptic_curve::sec1::ToEncodedPoint;
+    let encoded_point = verifying_key.to_encoded_point(false);
+    let bytes = encoded_point.as_bytes();
+    let raw = if bytes.len() == 65 && bytes[0] == 0x04 {
+        &bytes[1..]
+    } else {
+        bytes
+    };
+    
+    let x = &raw[0..32];
+    let y = &raw[32..64];
+    
+    let mut x_encoded = Vec::new();
+    if x[0] >= 0x80 {
+        x_encoded.push(0x00);
+    }
+    x_encoded.extend_from_slice(x);
+    
+    let mut y_encoded = Vec::new();
+    if y[0] >= 0x80 {
+        y_encoded.push(0x00);
+    }
+    y_encoded.extend_from_slice(y);
+    
+    let mut result = Vec::new();
+    let rest_len = 4 + 3 + 2 + x_encoded.len() + 2 + y_encoded.len();
+    result.push(0x30); // SEQUENCE
+    result.push(rest_len as u8);
+    
+    result.extend_from_slice(&[0x03, 0x02, 0x07, 0x00]);
+    result.extend_from_slice(&[0x02, 0x01, 0x20]);
+    
+    result.push(0x02);
+    result.push(x_encoded.len() as u8);
+    result.extend_from_slice(&x_encoded);
+    
+    result.push(0x02);
+    result.push(y_encoded.len() as u8);
+    result.extend_from_slice(&y_encoded);
+    
+    result
+}
+
+pub fn export_public_key_libtomcrypt(verifying_key: &p256::ecdsa::VerifyingKey) -> Vec<u8> {
+    use p256::elliptic_curve::sec1::ToEncodedPoint;
+    let encoded_point = verifying_key.to_encoded_point(false);
+    let bytes = encoded_point.as_bytes();
+    
+    // TS3 expects the raw X and Y coordinates (64 bytes total), without the uncompressed 0x04 prefix
+    if bytes.len() == 65 && bytes[0] == 0x04 {
+        bytes[1..].to_vec()
+    } else {
+        bytes.to_vec()
+    }
+}
+
+pub fn sign_server_identity_proof(server_sec: &[u8], exported_chain: &[u8]) -> Option<Vec<u8>> {
+    use p256::ecdsa::signature::Signer;
+    let signing_key = p256::ecdsa::SigningKey::from_slice(server_sec).ok()?;
+    let signature: p256::ecdsa::Signature = signing_key.sign(exported_chain);
+    Some(signature.to_der().to_bytes().into())
+}
+

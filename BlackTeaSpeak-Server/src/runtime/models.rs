@@ -283,6 +283,24 @@ pub struct VirtualServer {
 }
 
 impl VirtualServer {
+    pub fn new_default(id: u32, port: u16) -> Self {
+        Self {
+            id,
+            port,
+            name: "BlackTeaSpeak Server".to_string(),
+            unique_identifier: "default_uid".to_string(),
+            welcome_message: "Welcome to BlackTeaSpeak!".to_string(),
+            host_message: "".to_string(),
+            host_message_mode: 0,
+            ask_for_privilegekey: 0,
+            max_clients: 32,
+            antiflood_points_tick_reduce: 5,
+            antiflood_points_needed_command_block: 150,
+            antiflood_points_needed_ip_block: 250,
+            antiflood_ban_time: 20,
+        }
+    }
+    
     pub fn id(&self) -> u32 {
         self.id
     }

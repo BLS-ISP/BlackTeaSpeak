@@ -16,3 +16,6 @@ pub mod desktop_session;
 pub mod ssh_query;
 pub mod desktop_handler;
 pub mod database;
+pub mod teaspeak_transport;
+pub mod teaspeak_tcp_transport;
+pub mod rtc_manager;
