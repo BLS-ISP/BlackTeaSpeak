@@ -85,6 +85,9 @@ pub struct UdpSession {
     pub rtc_describe_buffer: Vec<u8>,
     pub ephemeral_sec: Option<[u8; 32]>,
     pub entry2_hash: Option<[u8; 64]>,
+    pub client_nickname: String,
+    pub command_fragment_buffer: Vec<u8>,
+    pub command_fragment_active: bool,
 }
 
 pub struct TeaSpeakTransportServer {
@@ -265,6 +268,9 @@ impl TeaSpeakTransportServer {
                                                 rtc_describe_buffer: Vec::new(),
                                                 ephemeral_sec: None,
                                                 entry2_hash: None,
+                                                command_fragment_buffer: Vec::new(),
+                                                command_fragment_active: false,
+                                                client_nickname: String::new(),
                                             });
                                             
                                             let _ = socket.send_to(&encrypted_payload, addr).await;
@@ -442,6 +448,9 @@ impl TeaSpeakTransportServer {
                                                      rtc_describe_buffer: Vec::new(),
                                                      ephemeral_sec: if is_teaspeak { None } else { Some(ephemeral_sec_bytes) },
                                                      entry2_hash: if is_teaspeak { None } else { Some(entry2_hash_bytes) },
+                                                     command_fragment_buffer: Vec::new(),
+                                                     command_fragment_active: false,
+                                                     client_nickname: String::new(),
                                                  });
                                                 
                                                 let ts3_escape = |s: &str| -> String {
@@ -581,14 +590,32 @@ impl TeaSpeakTransportServer {
                                                  }
                                                 
                                                 let is_fragmented = (flags & 0x10) != 0;
-                                                let processed_decrypted = if !is_fragmented {
-                                                    decompress_if_needed(&decrypted)
+                                                let mut defragmented_payload = None;
+                                                if is_fragmented {
+                                                    if !session.command_fragment_active {
+                                                        session.command_fragment_active = true;
+                                                        session.command_fragment_buffer.clear();
+                                                        session.command_fragment_buffer.extend_from_slice(&decrypted);
+                                                        println!("teaspeak udp: received first fragment of command. packet_id: {}", packet_id);
+                                                    } else {
+                                                        session.command_fragment_buffer.extend_from_slice(&decrypted);
+                                                        session.command_fragment_active = false;
+                                                        defragmented_payload = Some(session.command_fragment_buffer.clone());
+                                                        println!("teaspeak udp: received last fragment of command. assembled len: {}", session.command_fragment_buffer.len());
+                                                    }
                                                 } else {
-                                                    decrypted.clone()
-                                                };
-                                                
-                                                let payload_str = String::from_utf8_lossy(&processed_decrypted);
-                                                println!("teaspeak udp: payload_str: {}", payload_str);
+                                                    if session.command_fragment_active {
+                                                        session.command_fragment_buffer.extend_from_slice(&decrypted);
+                                                        println!("teaspeak udp: received middle fragment of command. packet_id: {}", packet_id);
+                                                    } else {
+                                                        defragmented_payload = Some(decrypted.clone());
+                                                    }
+                                                }
+
+                                                if let Some(final_payload) = defragmented_payload {
+                                                    let processed_decrypted = decompress_if_needed(&final_payload);
+                                                    let payload_str = String::from_utf8_lossy(&processed_decrypted);
+                                                    println!("teaspeak udp: payload_str: {}", payload_str);
                                                 
                                                 if payload_str.contains("rtcsessiondescribe") {
                                                     session.pending_rtc_describe = true;
@@ -718,6 +745,7 @@ impl TeaSpeakTransportServer {
                                                      }
 
                                                      println!("Received clientinit! Client nickname: {}", client_nickname);
+                                                     session.client_nickname = client_nickname.clone();
                                                      
                                                      let ts3_escape = |s: &str| -> String {
                                                          s.replace("\\", "\\\\").replace(" ", "\\s").replace("/", "\\/").replace("|", "\\p").replace("\x07", "\\a").replace("\x08", "\\b").replace("\x0c", "\\f").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\x0b", "\\v")
@@ -756,29 +784,15 @@ impl TeaSpeakTransportServer {
                                                      let client_nickname_escaped = ts3_escape(&client_nickname);
                                                      println!("Client successfully passed TS3 handshake puzzle!");
                                                      
-                                                     // Send ACK for clientinit
-                                                     let mut ack_header = [0u8; 3];
-                                                     ack_header[0..2].copy_from_slice(&0u16.to_be_bytes()); // ACK packet_id = 0
-                                                     ack_header[2] = 0x22; // NewProtocol | Command ? Wait, ACK for clientinit usually doesn't have NewProtocol if it's an ACK?
-                                                     // Let's just use what worked
-                                                     
-                                                     let mut ack_payload = Vec::new();
-                                                     ack_payload.extend_from_slice(&ack_header);
-                                                     
-                                                     let enc_ack = crate::desktop_crypto::encrypt_with_dummy_key(packet_id, &[], &ack_payload);
-                                                     
-                                                     if let Err(e) = socket.send_to(&enc_ack, addr).await {
-                                                         eprintln!("Failed to send ACK: {}", e);
-                                                     }
-                                                     println!("Sent ACK for clientinit (packet_id: {})", packet_id);
                                                      
                                                      let client_uid_escaped = ts3_escape(&session.client_uid);
                                                      let server_uid_escaped = ts3_escape(&session.server_uid);
                                                      let initserver = format!("initserver virtualserver_name={} virtualserver_welcomemessage={} virtualserver_maxclients=32 virtualserver_password= virtualserver_clientsonline=1 virtualserver_channelsonline=1 virtualserver_created=1494921612 virtualserver_uptime=33245 virtualserver_hostmessage= virtualserver_hostmessage_mode=0 virtualserver_filebase=files\\/virtualserver_1 virtualserver_default_server_group=8 virtualserver_default_channel_group=8 virtualserver_flag_password=0 virtualserver_default_channel_admin_group=5 virtualserver_max_download_total_bandwidth=-1 virtualserver_max_upload_total_bandwidth=-1 virtualserver_hostbanner_url= virtualserver_hostbanner_gfx_url= virtualserver_hostbanner_gfx_interval=0 virtualserver_complain_autoban_count=5 virtualserver_complain_autoban_time=1200 virtualserver_complain_remove_time=3600 virtualserver_min_clients_in_channel_before_forced_silence=100 virtualserver_priority_speaker_dimm_modificator=-18.0000 virtualserver_id=1 virtualserver_antiflood_points_tick_reduce=5 virtualserver_antiflood_points_needed_command_block=150 virtualserver_antiflood_points_needed_ip_block=250 virtualserver_client_connections=1 virtualserver_query_client_connections=0 virtualserver_hostbutton_tooltip= virtualserver_hostbutton_url= virtualserver_hostbutton_gfx_url= virtualserver_queryclientsonline=0 virtualserver_download_quota=-1 virtualserver_upload_quota=-1 virtualserver_month_bytes_downloaded=0 virtualserver_month_bytes_uploaded=0 virtualserver_total_bytes_downloaded=0 virtualserver_total_bytes_uploaded=0 virtualserver_port=9987 virtualserver_autostart=1 virtualserver_machine_id= virtualserver_needed_identity_security_level=8 virtualserver_log_client=0 virtualserver_log_query=0 virtualserver_log_channel=0 virtualserver_log_permissions=1 virtualserver_log_server=0 virtualserver_log_filetransfer=0 virtualserver_min_client_version=1481105459 virtualserver_name_phonetic= virtualserver_icon_id=0 virtualserver_reserved_slots=0 virtualserver_total_packetloss_speech=0.0000 virtualserver_total_packetloss_keepalive=0.0000 virtualserver_total_packetloss_control=0.0000 virtualserver_total_packetloss_total=0.0000 virtualserver_total_ping=0.0000 virtualserver_ip=0.0000 virtualserver_weblist_identifier= virtualserver_ask_for_privilegekey=0 virtualserver_hostbanner_mode=0 virtualserver_channel_temp_delete_delay_default=0 virtualserver_min_android_version=1429007622 virtualserver_min_ios_version=1429007622 virtualserver_nickname= virtualserver_unique_identifier={} virtualserver_platform=Windows virtualserver_version=3.5.6 virtualserver_status=online virtualserver_codec_encryption_mode=0 client_talk_power=0 client_needed_serverquery_view_power=0 client_myteamspeak_id= client_integrations= lt=0 pv=6 acn={} aclid=1", server_name_escaped, welcome_msg_escaped, server_uid_escaped, client_nickname_escaped);
                                                      let channellist = format!("channellist cid=1 cpid=0 channel_name=Default\\sChannel channel_topic= channel_description= channel_password= channel_codec=4 channel_codec_quality=6 channel_maxclients=-1 channel_maxfamilyclients=-1 channel_order=0 channel_flag_permanent=1 channel_flag_semi_permanent=0 channel_flag_default=1 channel_flag_password=0 channel_codec_latency_factor=1 channel_codec_is_unencrypted=0 channel_delete_delay=0 channel_flag_maxclients_unlimited=1 channel_flag_maxfamilyclients_unlimited=1 channel_flag_maxfamilyclients_inherited=0 channel_needed_talk_power=0 channel_forced_silence=0 channel_name_phonetic= channel_icon_id=0 channel_flag_private=0");
                                                      let notifycliententerview = format!(
-                                                         "notifycliententerview cfid=0 ctid=1 reasonid=0 clid=1 client_unique_identifier={} client_nickname={} client_input_muted=0 client_output_muted=0 client_outputonly_muted=0 client_input_hardware=0 client_output_hardware=0 client_meta_data= client_is_recording=0 client_database_id=1 client_channel_group_id=8 client_servergroups=8 client_away=0 client_away_message= client_type=0 client_flag_avatar= client_talk_power=0 client_talk_request=0 client_talk_request_msg= client_description= client_is_talker=0 client_is_priority_speaker=0 client_unread_messages=0 client_nickname_phonetic= client_needed_serverquery_view_power=0 client_icon_id=0 client_is_channel_commander=0 client_country=DE client_channel_group_inherited_channel_id=1 client_badges= client_myteamspeak_id= client_integrations=",
-                                                         client_uid_escaped, client_nickname_escaped
+                                                         "notifycliententerview cfid=0 ctid=1 reasonid=2 clid=1 client_unique_identifier={} client_nickname={} client_input_muted=0 client_output_muted=0 client_outputonly_muted=0 client_input_hardware=1 client_output_hardware=1 client_meta_data= client_is_recording=0 client_database_id=1001 client_channel_group_id=8 client_servergroups=6 client_totalconnections=1 client_away=0 client_away_message= client_type=0 client_flag_avatar= client_talk_power=0 client_talk_request=0 client_talk_request_msg= client_description= client_is_talker=0 client_is_priority_speaker=0 client_unread_messages=0 client_nickname_phonetic= client_needed_serverquery_view_power=0 client_icon_id=0 client_is_channel_commander=0 client_country=DE client_channel_group_inherited_channel_id=1 client_badges= client_myteamspeak_id= client_integrations=",
+                                                         client_uid_escaped,
+                                                         client_nickname_escaped
                                                      );
                                                      let channellistfinished = "channellistfinished";
                                                      
@@ -789,15 +803,16 @@ impl TeaSpeakTransportServer {
 
                                                      let commands_to_send = vec![
                                                          initserver,
+                                                         channellist.to_string(),
+                                                         notifychannelsubscribed,
+                                                         notifycliententerview,
+                                                         channellistfinished.to_string(),
                                                          notifyservergrouplist,
                                                          notifychannelgrouplist,
                                                          notifyclientneededpermissions,
-                                                         channellist.to_string(),
-                                                         notifychannelsubscribed,
-                                                         channellistfinished.to_string(),
                                                      ];
 
-                                                    for cmd in commands_to_send.iter() {
+                                                    for (cmd_idx, cmd) in commands_to_send.iter().enumerate() {
                                                         let payload_bytes = cmd.as_bytes();
                                                         let chunk_size = 400; // TS3 fragment limit
                                                         let chunks: Vec<&[u8]> = payload_bytes.chunks(chunk_size).collect();
@@ -828,7 +843,12 @@ impl TeaSpeakTransportServer {
                                                             let _ = socket.send_to(&final_packet, addr).await;
                                                         }
                                                         println!("Sent {} to {}", cmd.split(' ').next().unwrap_or(""), addr);
-                                                    }
+                                                    
+                                                        // Wait 100ms after sending the first command (initserver) to allow client state transition
+                                                        if cmd_idx == 0 {
+                                                            tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+                                                        }
+}
                                                 } else if payload_str.starts_with("handshakebegin ") {
                                                     println!("Received handshakebegin! Client using TeaSpeak handshake.");
                                                     
@@ -1242,9 +1262,95 @@ tokio::spawn(async move {
                                                                    final_packet.extend_from_slice(&enc_payload[8..]);
                                                                    let _ = socket.send_to(&final_packet, addr).await;
                                                                    println!("Sent robust ACK to {}: {}", addr, ack_cmd);
+
+                                                                if payload_str.starts_with("clientgetvariables") {
+                                                                    let ts3_escape = |s: &str| -> String {
+                                                                        s.replace("\\", "\\\\").replace(" ", "\\s").replace("/", "\\/").replace("|", "\\p").replace("\x07", "\\a").replace("\x08", "\\b").replace("\x0c", "\\f").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\x0b", "\\v")
+                                                                    };
+                                                                    let nick = if session.client_nickname.is_empty() { "BlackTeaUser" } else { &session.client_nickname };
+                                                                    let nick_escaped = ts3_escape(nick);
+                                                                    let uid_escaped = ts3_escape(&session.client_uid);
+                                                                    
+                                                                    let notify_cmd = format!(
+                                                                        "notifyclientupdated clid=1 client_unique_identifier={} client_nickname={} client_database_id=1 client_channel_group_id=8 client_servergroups=8 client_country=DE client_talk_power=0 client_input_muted=0 client_output_muted=0 client_input_hardware=1 client_output_hardware=1 client_is_recording=0 client_is_channel_commander=0 client_is_priority_speaker=0 client_away=0 client_type=0",
+                                                                        uid_escaped, nick_escaped
+                                                                    );
+                                                                    
+                                                                    let payload_bytes = notify_cmd.as_bytes();
+                                                                    let chunk_size = 400;
+                                                                    let chunks: Vec<&[u8]> = payload_bytes.chunks(chunk_size).collect();
+                                                                    let total_chunks = chunks.len();
+                                                                    for (i, chunk) in chunks.iter().enumerate() {
+                                                                        let mut flags = 0x22;
+                                                                        if total_chunks > 1 && (i == 0 || i == total_chunks - 1) {
+                                                                            flags |= 0x10;
+                                                                        }
+                                                                        let out_packet_id = {
+                                                                            let mut lock = session.server_packet_id.lock().unwrap();
+                                                                            let val = *lock;
+                                                                            *lock = lock.wrapping_add(1);
+                                                                            val
+                                                                        };
+                                                                        let mut out_header = [0u8; 3];
+                                                                        out_header[0..2].copy_from_slice(&out_packet_id.to_be_bytes());
+                                                                        out_header[2] = flags;
+                                                                        let encrypted_out = crate::desktop_crypto::encrypt_btea_packet(
+                                                                            out_packet_id, 0, flags, &out_header, chunk,
+                                                                            &iv_struct, true
+                                                                        );
+                                                                        let mut final_packet = Vec::with_capacity(8 + 3 + encrypted_out.len() - 8);
+                                                                        final_packet.extend_from_slice(&encrypted_out[0..8]);
+                                                                        final_packet.extend_from_slice(&out_header);
+                                                                        final_packet.extend_from_slice(&encrypted_out[8..]);
+                                                                        let _ = socket.send_to(&final_packet, addr).await;
+                                                                    }
+                                                                    println!("Sent notifyclientupdated to {}", addr);
+                                                                }
+                                                                
+                                                                if payload_str.starts_with("servergetvariables") {
+                                                                    let ts3_escape = |s: &str| -> String {
+                                                                        s.replace("\\", "\\\\").replace(" ", "\\s").replace("/", "\\/").replace("|", "\\p").replace("\x07", "\\a").replace("\x08", "\\b").replace("\x0c", "\\f").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\x0b", "\\v")
+                                                                    };
+                                                                    let server_uid_escaped = ts3_escape(&session.server_uid);
+                                                                    let notify_cmd = format!(
+                                                                        "notifyserverupdated virtualserver_name=BlackTeaSpeak virtualserver_welcomemessage=Welcome! virtualserver_maxclients=32 virtualserver_clientsonline=1 virtualserver_channelsonline=1 virtualserver_created=1494921612 virtualserver_uptime=33245 virtualserver_unique_identifier={} virtualserver_platform=Windows virtualserver_version=3.5.6 virtualserver_status=online",
+                                                                        server_uid_escaped
+                                                                    );
+                                                                    
+                                                                    let payload_bytes = notify_cmd.as_bytes();
+                                                                    let chunk_size = 400;
+                                                                    let chunks: Vec<&[u8]> = payload_bytes.chunks(chunk_size).collect();
+                                                                    let total_chunks = chunks.len();
+                                                                    for (i, chunk) in chunks.iter().enumerate() {
+                                                                        let mut flags = 0x22;
+                                                                        if total_chunks > 1 && (i == 0 || i == total_chunks - 1) {
+                                                                            flags |= 0x10;
+                                                                        }
+                                                                        let out_packet_id = {
+                                                                            let mut lock = session.server_packet_id.lock().unwrap();
+                                                                            let val = *lock;
+                                                                            *lock = lock.wrapping_add(1);
+                                                                            val
+                                                                        };
+                                                                        let mut out_header = [0u8; 3];
+                                                                        out_header[0..2].copy_from_slice(&out_packet_id.to_be_bytes());
+                                                                        out_header[2] = flags;
+                                                                        let encrypted_out = crate::desktop_crypto::encrypt_btea_packet(
+                                                                            out_packet_id, 0, flags, &out_header, chunk,
+                                                                            &iv_struct, true
+                                                                        );
+                                                                        let mut final_packet = Vec::with_capacity(8 + 3 + encrypted_out.len() - 8);
+                                                                        final_packet.extend_from_slice(&encrypted_out[0..8]);
+                                                                        final_packet.extend_from_slice(&out_header);
+                                                                        final_packet.extend_from_slice(&encrypted_out[8..]);
+                                                                        let _ = socket.send_to(&final_packet, addr).await;
+                                                                    }
+                                                                    println!("Sent notifyserverupdated to {}", addr);
+                                                                }
                                                                }
                                                            }
                                                       }
+                                                 }
                                                  }
                                             } else {
                                                 println!("teaspeak udp: failed to decrypt packet from {} (flags={:02X}, id={})", addr, flags, packet_id);
