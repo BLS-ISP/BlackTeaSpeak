@@ -1,25 +1,26 @@
 #[test]
-fn test_eax() {
-    use aes::Aes128;
-    use eax::aead::{Aead, Payload};
-    use eax::aead::generic_array::GenericArray;
-    use eax::{Eax, NewAead};
+fn test_scalar_derivation() {
+    use curve25519_dalek::scalar::Scalar;
+    use curve25519_dalek::constants::ED25519_BASEPOINT_TABLE;
+    use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+    use std::ops::Mul;
 
-    let key = b"c:\\windows\\syste";
-    let nonce = b"m\\firewall32.cpl";
-    let cipher = Eax::<Aes128>::new(GenericArray::from_slice(key));
-    let nonce_arr = GenericArray::from_slice(nonce);
+    let prv_b64 = "YARwqypuXjU9b+zg/yBEGpdTNiYgcWYV87k6vXU7rGo=";
+    let prv_bytes = BASE64.decode(prv_b64).unwrap();
+    let mut prv_array = [0u8; 32];
+    prv_array.copy_from_slice(&prv_bytes);
 
-    let payload = b"Hello, EAX!";
-    let encrypted = cipher.encrypt(nonce_arr, Payload { msg: payload, aad: b"" }).unwrap();
-    println!("Encrypted length: {}", encrypted.len());
-
-    let mut ciphertext = encrypted[..encrypted.len()-16].to_vec();
-    let mut bad_mac = encrypted[encrypted.len()-16..].to_vec();
-    bad_mac[0] ^= 1; // Corrupt MAC
-
-    use eax::aead::AeadInPlace;
-    let res = cipher.decrypt_in_place_detached(nonce_arr, b"", &mut ciphertext, GenericArray::from_slice(&bad_mac));
-    println!("Result: {:?}", res);
-    println!("Ciphertext buffer after failed decryption: {:?}", String::from_utf8_lossy(&ciphertext));
+    let s = Scalar::from_bytes_mod_order(prv_array);
+    let r_point = (&ED25519_BASEPOINT_TABLE).mul(&s);
+    let mut r_bytes = r_point.compress().to_bytes();
+    
+    println!("--- TEST SCALAR DERIVATION ---");
+    println!("Public key unflipped hex: {}", hex::encode(&r_bytes));
+    
+    // Flipped (TeamSpeak standard)
+    r_bytes[31] ^= 0x80;
+    println!("Public key flipped hex:   {}", hex::encode(&r_bytes));
+    println!("Public key flipped b64:   {}", BASE64.encode(&r_bytes));
+    println!("-----------------------------");
 }
+

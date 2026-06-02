@@ -4,7 +4,7 @@ use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64_STANDARD};
 use std::ops::Mul;
 
 fn main() {
-    let ts3_master_prv_b64 = "oCPmMAvfkS6z/UWghpcfl+a7EO11FMGh/DGKSVgJ33g=";
+    let ts3_master_prv_b64 = "YARwqypuXjU9b+zg/yBEGpdTNiYgcWYV87k6vXU7rGo=";
     let ts3_master_prv_bytes = BASE64_STANDARD.decode(ts3_master_prv_b64).unwrap();
     let mut master_prv_array = [0u8; 32];
     master_prv_array.copy_from_slice(&ts3_master_prv_bytes);

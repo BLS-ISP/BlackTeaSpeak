@@ -36,14 +36,8 @@ pub fn export_public_key_der(verifying_key: &VerifyingKey) -> Vec<u8> {
 }
 
 pub fn export_public_key_asn1_der(verifying_key: &VerifyingKey) -> Vec<u8> {
-    use p256::elliptic_curve::sec1::ToEncodedPoint;
-    let encoded_point = verifying_key.to_encoded_point(false);
-    let bytes = encoded_point.as_bytes(); // 65 bytes starting with 0x04
-    
-    let mut result = Vec::with_capacity(70);
-    result.extend_from_slice(&[0x30, 0x44, 0x03, 0x42, 0x00]);
-    result.extend_from_slice(bytes);
-    result
+    use p256::elliptic_curve::pkcs8::EncodePublicKey;
+    verifying_key.to_public_key_der().unwrap().as_bytes().to_vec()
 }
 
 pub fn calculate_shared_secret(client_pub_bytes: &[u8], server_sec: &SecretKey) -> Option<[u8; 20]> {
@@ -76,6 +70,9 @@ pub fn get_shared_secret2(public_key: &[u8], private_key: &[u8]) -> Option<[u8; 
         return None;
     }
 
+    println!("get_shared_secret2: public_key = {:02X?}", public_key);
+    println!("get_shared_secret2: private_key = {:02X?}", private_key);
+
     // 1. Copy and mask private key (like TS3AudioBot: privateKeyCpy[31] &= 0x7F)
     let mut private_key_cpy = [0u8; 32];
     private_key_cpy.copy_from_slice(private_key);
@@ -96,7 +93,9 @@ pub fn get_shared_secret2(public_key: &[u8], private_key: &[u8]) -> Option<[u8; 
 
     // 4. Compress and negate the shared point (like sharedTmp[31] ^= 0x80)
     let mut shared_bytes = shared_point.compress().to_bytes();
+    println!("get_shared_secret2: shared_point (before negate) = {:02X?}", shared_bytes);
     shared_bytes[31] ^= 0x80;
+    println!("get_shared_secret2: shared_point (after negate) = {:02X?}", shared_bytes);
 
     // 5. SHA512 hash
     let mut hasher = Sha512::new();
@@ -105,6 +104,7 @@ pub fn get_shared_secret2(public_key: &[u8], private_key: &[u8]) -> Option<[u8; 
 
     let mut hash = [0u8; 64];
     hash.copy_from_slice(&result);
+    println!("get_shared_secret2: SHA512 full = {:02X?}", &hash[..]);
     Some(hash)
 }
 
@@ -578,4 +578,128 @@ pub fn sign_server_identity_proof(server_sec: &[u8], exported_chain: &[u8]) -> O
     let signature: p256::ecdsa::Signature = signing_key.sign(exported_chain);
     Some(signature.to_der().to_bytes().into())
 }
+
+pub fn sign_with_raw_scalar(
+    private_scalar_bytes: &[u8; 32],
+    public_key_bytes: &[u8; 32],
+    message: &[u8],
+) -> [u8; 64] {
+    use curve25519_dalek::scalar::Scalar;
+    use curve25519_dalek::constants::ED25519_BASEPOINT_TABLE;
+    use sha2::{Sha512, Digest};
+    use rand::RngCore;
+    use std::ops::Mul;
+
+    // 1. Load private scalar s
+    let s = Scalar::from_bytes_mod_order(*private_scalar_bytes);
+
+    // 2. Generate random scalar r
+    let mut r_bytes = [0u8; 64];
+    rand::thread_rng().fill_bytes(&mut r_bytes);
+    let r = Scalar::from_bytes_mod_order_wide(&r_bytes);
+
+    // 3. Compute R = r * B (standard Edwards public key bytes)
+    let r_point = (&ED25519_BASEPOINT_TABLE).mul(&r);
+    let mut r_bytes = r_point.compress().to_bytes();
+    
+    // Get unflipped public key bytes for hashing (since public_key_bytes is stored flipped in chain)
+    let mut pub_unflipped = *public_key_bytes;
+    pub_unflipped[31] ^= 0x80;
+
+    // 4. Compute k = SHA-512(R_unflipped || A_unflipped || M)
+    let mut hasher = Sha512::new();
+    hasher.update(&r_bytes); // standard (unflipped) R
+    hasher.update(&pub_unflipped); // standard (unflipped) A
+    hasher.update(message);
+    let hash_result = hasher.finalize();
+
+    // 5. Reduce k mod l
+    let k_scalar = Scalar::from_bytes_mod_order_wide(&hash_result.into());
+
+    // 6. Compute S = r + k * s
+    let s_scalar = r + (k_scalar * s);
+
+    // Flip the sign bit of R for TeamSpeak custom signature format
+    r_bytes[31] ^= 0x80;
+
+    // 7. Signature = R_flipped || S
+    let mut signature = [0u8; 64];
+    signature[0..32].copy_from_slice(&r_bytes);
+    signature[32..64].copy_from_slice(&s_scalar.to_bytes());
+
+    signature
+}
+
+pub fn load_or_create_server_keypair() -> (SecretKey, VerifyingKey) {
+    use std::fs::File;
+    use std::io::{Read, Write};
+    use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+
+    let filename = "server_keypair.txt";
+    if let Ok(mut file) = File::open(filename) {
+        let mut content = String::new();
+        if file.read_to_string(&mut content).is_ok() {
+            if let Ok(sec_bytes) = BASE64.decode(content.trim()) {
+                if let Ok(secret_key) = SecretKey::from_slice(&sec_bytes) {
+                    let public_key = secret_key.public_key();
+                    return (secret_key, public_key.into());
+                }
+            }
+        }
+    }
+
+    // Fallback: generate new and save
+    let (secret_key, public_key) = generate_server_keypair();
+    let sec_bytes = secret_key.to_bytes();
+    let b64 = BASE64.encode(&sec_bytes);
+    if let Ok(mut file) = File::create(filename) {
+        let _ = file.write_all(b64.as_bytes());
+    }
+    (secret_key, public_key)
+}
+
+pub fn get_stable_server_uid() -> String {
+    use sha1::{Digest, Sha1};
+    use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+    
+    let (_, server_pub) = load_or_create_server_keypair();
+    let omega_bytes_asn1 = export_public_key_libtomcrypt_asn1(&server_pub);
+    let mut server_hasher = Sha1::new();
+    let omega_string = BASE64.encode(&omega_bytes_asn1);
+    server_hasher.update(omega_string.as_bytes());
+    BASE64.encode(server_hasher.finalize())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_scalar_derivation() {
+        use curve25519_dalek::scalar::Scalar;
+        use curve25519_dalek::constants::ED25519_BASEPOINT_TABLE;
+        use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64};
+        use std::ops::Mul;
+
+        let prv_b64 = "YARwqypuXjU9b+zg/yBEGpdTNiYgcWYV87k6vXU7rGo=";
+        let prv_bytes = BASE64.decode(prv_b64).unwrap();
+        let mut prv_array = [0u8; 32];
+        prv_array.copy_from_slice(&prv_bytes);
+
+        let s = Scalar::from_bytes_mod_order(prv_array);
+        let r_point = (&ED25519_BASEPOINT_TABLE).mul(&s);
+        let mut r_bytes = r_point.compress().to_bytes();
+        
+        println!("--- TEST SCALAR DERIVATION ---");
+        println!("Public key unflipped hex: {}", hex::encode(&r_bytes));
+        
+        // Flipped (TeamSpeak standard)
+        r_bytes[31] ^= 0x80;
+        println!("Public key flipped hex:   {}", hex::encode(&r_bytes));
+        println!("Public key flipped b64:   {}", BASE64.encode(&r_bytes));
+        println!("-----------------------------");
+    }
+}
+
+
 

@@ -36,3 +36,29 @@ host_key.pem
 
 runtime-state.json
 target-*/
+
+# External analysis code (very large)
+P2/
+
+# Compiled files
+**/*.exe
+**/*.obj
+**/*.pdb
+**/__pycache__/
+
+# Local build artifacts/logs
+*.log
+**/build_check_errs.txt
+**/check_err.txt
+**/error.txt
+**/errors.txt
+**/initivexpand2_logs.txt
+**/build.log
+**/build_error.log
+**/check.log
+**/server_keypair.txt
+
+# License and keys
+*.dat
+*.dat.bak
+

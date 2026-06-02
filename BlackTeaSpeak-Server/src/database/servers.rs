@@ -41,7 +41,7 @@ impl Database {
                 id,
                 port,
                 name,
-                unique_identifier: format!("server-{}", id),
+                unique_identifier: crate::desktop_crypto::get_stable_server_uid(),
                 welcome_message,
                 host_message: String::new(),
                 host_message_mode: 0,

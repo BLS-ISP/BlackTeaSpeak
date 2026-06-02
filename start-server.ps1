@@ -150,14 +150,14 @@ foreach ($PortName in $PortsToCheck.Keys) {
     $Port = $PortsToCheck[$PortName]
     $Conn = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($Conn) {
-        $Pid = $Conn.OwningProcess
-        $Proc = Get-Process -Id $Pid -ErrorAction SilentlyContinue
+        $OwnerPid = $Conn.OwningProcess
+        $Proc = Get-Process -Id $OwnerPid -ErrorAction SilentlyContinue
         $ProcName = if ($Proc) { $Proc.Name } else { "Unknown" }
-        Write-Warn "$PortName ($Port) is in use by Process '$ProcName' (PID: $Pid)"
+        Write-Warn "$PortName ($Port) is in use by Process '$ProcName' (PID: $OwnerPid)"
         $Conflicts += [PSCustomObject]@{
             PortName = $PortName
             Port     = $Port
-            PID      = $Pid
+            PID      = $OwnerPid
             ProcName = $ProcName
         }
     }
@@ -166,17 +166,17 @@ foreach ($PortName in $PortsToCheck.Keys) {
 # Check UDP port for Desktop (only if different from Web TCP, or check independently)
 $UdpConn = Get-NetUDPEndpoint -LocalPort $DesktopPort -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($UdpConn) {
-    $Pid = $UdpConn.OwningProcess
-    $Proc = Get-Process -Id $Pid -ErrorAction SilentlyContinue
+    $OwnerPid = $UdpConn.OwningProcess
+    $Proc = Get-Process -Id $OwnerPid -ErrorAction SilentlyContinue
     $ProcName = if ($Proc) { $Proc.Name } else { "Unknown" }
     # Only report if it's not already reported under the same PID (sharing ports)
-    if (-not ($Conflicts | Where-Object { $_.PID -eq $Pid -and $_.Port -eq $DesktopPort })) {
-        Write-Warn "Desktop UDP Port ($DesktopPort) is in use by Process '$ProcName' (PID: $Pid)"
+    if (-not ($Conflicts | Where-Object { $_.PID -eq $OwnerPid -and $_.Port -eq $DesktopPort })) {
+        Write-Warn "Desktop UDP Port ($DesktopPort) is in use by Process '$ProcName' (PID: $OwnerPid)"
         $Conflicts += [PSCustomObject]@{
             PortName = "Desktop UDP Port"
             Port     = $DesktopPort
-            PID      = $Pid
-            ProcName = $ProcName
+            PID      = $OwnerPid
+            ProcName = $OwnerPid
         }
     }
 }

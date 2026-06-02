@@ -288,7 +288,7 @@ impl VirtualServer {
             id,
             port,
             name: "BlackTeaSpeak Server".to_string(),
-            unique_identifier: "default_uid".to_string(),
+            unique_identifier: crate::desktop_crypto::get_stable_server_uid(),
             welcome_message: "Welcome to BlackTeaSpeak!".to_string(),
             host_message: "".to_string(),
             host_message_mode: 0,

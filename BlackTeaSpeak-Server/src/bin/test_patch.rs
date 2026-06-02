@@ -1,16 +1,21 @@
-use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64_STANDARD};
+use base64::{engine::general_purpose::STANDARD as base64_std, Engine as _};
+use ed25519_dalek::SigningKey;
+use curve25519_dalek::scalar::Scalar;
+use curve25519_dalek::constants::ED25519_BASEPOINT_TABLE;
+use std::ops::Mul;
+
 fn main() {
-    let chain_b64 = "AQCVXTlKF+UQc0yga99dOQ9FJCwLaJqtDb1G7xYPMvHFMwIKVfKADF6zAAcAAAAgQW5vbnltb3VzAA==";
-    let crypto_chain = BASE64_STANDARD.decode(&chain_b64).unwrap();
-    let mut exported_chain = crypto_chain.clone();
+    let key_hex = "afc10cd303c007b90d4e8911ec461f8a69bc235782b2121ddbea91269f3072ad";
+    let secret_bytes = hex::decode(key_hex).unwrap();
     
-    let new_begin: u32 = 0x1757E2D3;
-    let new_end: u32 = 0x2A123456;
+    let signing_key = SigningKey::from_bytes(secret_bytes[..].try_into().unwrap());
+    let verifying_key = signing_key.verifying_key();
+    let pk_bytes = verifying_key.to_bytes();
     
-    exported_chain[35..39].copy_from_slice(&new_begin.to_be_bytes());
-    exported_chain[39..43].copy_from_slice(&new_end.to_be_bytes());
+    let mut flipped_pk = pk_bytes;
+    flipped_pk[31] ^= 0x80;
     
-    let new_b64 = BASE64_STANDARD.encode(&exported_chain);
-    println!("Original: {}", chain_b64);
-    println!("Patched:  {}", new_b64);
+    println!("Derived Public Key (Unflipped): {}", hex::encode(&pk_bytes));
+    println!("Derived Public Key (Flipped):   {}", hex::encode(&flipped_pk));
+    println!("Derived Public Key (base64):    {}", base64_std.encode(&pk_bytes));
 }

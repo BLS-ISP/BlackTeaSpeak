@@ -2,28 +2,39 @@ use base64::{engine::general_purpose::STANDARD as base64_std, Engine as _};
 use p256::SecretKey;
 
 fn main() {
-    let prv_b64 = "QCUIVtjakIWe3BoNWHt9c6BX8lUyR4QOPirywBuPI0s=";
-    let pbl_b64 = "zQ3irtRjRVCafjz9j2iz3HVVsp3M7HPNGHUPmTgSQIo=";
+    let prv_b64 = "6BNOfdZZvplSDRM6EUYxtkYFzpb83GO840322dgtRHM=";
+    let target_hex = "7c28498b980304b795439e55d9cee696f0af5ed3af45d056b59a6f03078302a8";
+    let target_bytes = hex::decode(target_hex).unwrap();
     
     let prv_bytes = base64_std.decode(prv_b64).unwrap();
-    let pbl_bytes = base64_std.decode(pbl_b64).unwrap();
+    println!("Private Key Hex: {}", hex::encode(&prv_bytes));
+    println!("Target X Hex:    {}", target_hex);
     
-    println!("Private Key: {}", hex::encode(&prv_bytes));
-    println!("Public Key X: {}", hex::encode(&pbl_bytes));
+    // 1. Try with Big Endian private key
+    if let Ok(sk) = SecretKey::from_slice(&prv_bytes) {
+        let pk = sk.public_key();
+        let pk_bytes = pk.to_sec1_bytes();
+        let x_bytes = &pk_bytes[1..33];
+        println!("Derived X (BE):  {}", hex::encode(x_bytes));
+        if x_bytes == target_bytes.as_slice() {
+            println!("  => MATCH BE!");
+        }
+    } else {
+        println!("Failed to parse as BE SecretKey");
+    }
     
+    // 2. Try with Little Endian private key (reversed)
     let mut prv_le = prv_bytes.clone();
     prv_le.reverse();
-    let sk = SecretKey::from_slice(&prv_le).unwrap();
-    let pk = sk.public_key();
-    let pk_bytes = pk.to_sec1_bytes();
-    
-    // In uncompressed format (0x04), bytes 1..33 are X, 33..65 are Y
-    let x_bytes = &pk_bytes[1..33];
-    println!("Derived X: {}", hex::encode(x_bytes));
-    
-    if x_bytes == pbl_bytes.as_slice() {
-        println!("MATCH! It is indeed NIST P-256 (secp256r1)");
+    if let Ok(sk) = SecretKey::from_slice(&prv_le) {
+        let pk = sk.public_key();
+        let pk_bytes = pk.to_sec1_bytes();
+        let x_bytes = &pk_bytes[1..33];
+        println!("Derived X (LE):  {}", hex::encode(x_bytes));
+        if x_bytes == target_bytes.as_slice() {
+            println!("  => MATCH LE!");
+        }
     } else {
-        println!("NO MATCH");
+        println!("Failed to parse as LE SecretKey");
     }
 }

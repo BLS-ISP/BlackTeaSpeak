@@ -1,7 +1,7 @@
 use std::net::SocketAddr;
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::Ordering;
-use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use std::time::{Duration, SystemTime, UNIX_EPOCH, Instant};
 
 use anyhow::{Context, Result};
 use tokio::net::UdpSocket;
@@ -205,7 +205,7 @@ impl TeaSpeakTransportServer {
                                             rand::RngCore::fill_bytes(&mut rand::thread_rng(), &mut beta_bytes);
                                             use base64::{Engine as _, engine::general_purpose::STANDARD as BASE64_STANDARD};
                                             
-                                            let (server_sec, server_pub) = crate::desktop_crypto::generate_server_keypair();
+                                            let (server_sec, server_pub) = crate::desktop_crypto::load_or_create_server_keypair();
                                             let omega_bytes = crate::desktop_crypto::export_public_key_libtomcrypt_asn1(&server_pub);
                                             
                                             // Calculate shared secret using client's omega
@@ -259,7 +259,7 @@ impl TeaSpeakTransportServer {
                                                 client_uid,
                                                 server_uid,
                                                 server_packet_id: Arc::new(Mutex::new(1)),
-                                                server_ack_packet_id: 1,
+                                                server_ack_packet_id: 0,
                                                 pending_rtc_describe: false,
                                                 pending_rtc_is_video: false,
                                                 rtc_describe_buffer: Vec::new(),
@@ -280,20 +280,83 @@ impl TeaSpeakTransportServer {
                                                  
                                                   let (chain_b64, identity_sec, root_key_pbl) = crate::desktop_crypto::load_protocol_key().unwrap();
                                                   let mut crypto_chain = BASE64_STANDARD.decode(&chain_b64).unwrap();
+                                                  println!("DEBUG: raw chain from protocol_key.txt: {} bytes", crypto_chain.len());
                                                   
-                                                  let (server_sec, server_pub) = crate::desktop_crypto::generate_server_keypair();
-                                                  let omega_bytes_asn1 = crate::desktop_crypto::export_public_key_asn1_der(&server_pub);
+                                                  // Step 1: Remove the 0x12-tagged secondary block if present
+                                                  // The chain from protocol_key.txt may contain a second chain block 
+                                                  // starting at some offset with tag 0x12. We need to find and remove it.
+                                                  // Walk entries to find where the valid chain ends.
+                                                  {
+                                                      let mut pos = 1usize; // skip version byte
+                                                      while pos < crypto_chain.len() {
+                                                          let tag = crypto_chain[pos];
+                                                          if tag == 0x12 {
+                                                              // Found secondary block marker - truncate here
+                                                              println!("DEBUG: Found 0x12 marker at offset {}, truncating", pos);
+                                                              crypto_chain.truncate(pos);
+                                                              break;
+                                                          }
+                                                          if tag != 0x00 {
+                                                              println!("DEBUG: Unknown tag 0x{:02x} at offset {}, truncating", tag, pos);
+                                                              crypto_chain.truncate(pos);
+                                                              break;
+                                                          }
+                                                          // Skip past this entry: tag(1) + pubkey(32) + type(1) + begin(4) + end(4) = 42 minimum
+                                                          if pos + 42 > crypto_chain.len() { break; }
+                                                          let entry_type = crypto_chain[pos + 33];
+                                                          pos += 42; // base entry size
+                                                          match entry_type {
+                                                              0x00 => { // Intermediate: + dummy(4) + null-terminated string
+                                                                  pos += 4; // dummy
+                                                                  while pos < crypto_chain.len() && crypto_chain[pos] != 0 { pos += 1; }
+                                                                  if pos < crypto_chain.len() { pos += 1; } // null terminator
+                                                              }
+                                                              0x02 => { // Server: + license_type(1) + slots(4) + null-terminated string
+                                                                  pos += 5; // license_type + slots
+                                                                  while pos < crypto_chain.len() && crypto_chain[pos] != 0 { pos += 1; }
+                                                                  if pos < crypto_chain.len() { pos += 1; } // null terminator
+                                                              }
+                                                              0x20 => { // Ephemeral: no extra content - remove it
+                                                                  println!("DEBUG: Found existing ephemeral entry at offset {}, removing", pos - 42);
+                                                                  crypto_chain.truncate(pos - 42);
+                                                              }
+                                                              _ => { break; }
+                                                          }
+                                                      }
+                                                  }
+                                                  println!("DEBUG: chain after cleanup: {} bytes", crypto_chain.len());
+                                                  
+                                                  let (server_sec, server_pub) = crate::desktop_crypto::load_or_create_server_keypair();
+                                                  let omega_bytes_asn1 = crate::desktop_crypto::export_public_key_libtomcrypt_asn1(&server_pub);
                                                   
                                                   let is_teaspeak = parsed_payload.teaspeak;
                                                   
                                                   // Ephemeral Ed25519 Keypair generation (only for official TS3 client, not teaspeak client)
+                                                  // Matches C++ _ed25519_create_keypair: SHA512(seed)[0..32] clamped = private_key,
+                                                  // public_key = private_key * Basepoint
                                                   let mut ephemeral_sec_bytes = [0u8; 32];
                                                   let mut ephemeral_pub_bytes = [0u8; 32];
                                                   if !is_teaspeak {
+                                                      use sha2::{Digest as _, Sha512};
+                                                      use curve25519_dalek::constants::ED25519_BASEPOINT_TABLE;
+                                                      use curve25519_dalek::scalar::Scalar;
+                                                      
+                                                      // 1. Generate random seed
+                                                      let mut seed = [0u8; 32];
                                                       let mut rng = rand::thread_rng();
-                                                      rand::RngCore::fill_bytes(&mut rng, &mut ephemeral_sec_bytes);
-                                                      let ephemeral_signing_key = ed25519_dalek::SigningKey::from_bytes(&ephemeral_sec_bytes);
-                                                      ephemeral_pub_bytes = ephemeral_signing_key.verifying_key().to_bytes();
+                                                      rand::RngCore::fill_bytes(&mut rng, &mut seed);
+                                                      
+                                                      // 2. SHA512(seed) → expanded[0..32] with Ed25519 clamping
+                                                      let expanded = Sha512::digest(&seed);
+                                                      ephemeral_sec_bytes.copy_from_slice(&expanded[0..32]);
+                                                      ephemeral_sec_bytes[0] &= 0xF8;
+                                                      ephemeral_sec_bytes[31] &= 0x7F;
+                                                      ephemeral_sec_bytes[31] |= 0x40;
+                                                      
+                                                      // 3. public_key = scalar * Basepoint (direct, no further hashing)
+                                                      let scalar = Scalar::from_bytes_mod_order(ephemeral_sec_bytes);
+                                                      let public_point = &scalar * ED25519_BASEPOINT_TABLE;
+                                                      ephemeral_pub_bytes = public_point.compress().to_bytes();
                                                   }
                                                   
                                                   // Construct Ephemeral Entry
@@ -319,14 +382,8 @@ impl TeaSpeakTransportServer {
                                                   
                                                   let mut entry2_hash_bytes = [0u8; 64];
                                                   if !is_teaspeak {
-                                                      // For official TS3 client, sign the ephemeral entry using intermediate Ed25519 identity key
-                                                      use ed25519_dalek::{SigningKey, Signer};
-                                                      let mut prv_array = [0u8; 32];
-                                                      prv_array.copy_from_slice(&identity_sec);
-                                                      let signing_key = SigningKey::from_bytes(&prv_array);
-                                                      let signature = signing_key.sign(&entry2_bytes[1..]);
-                                                      entry2_bytes.extend_from_slice(&signature.to_bytes());
-                                                      
+                                                      // Compute SHA-512 hash of ephemeral entry body (excluding 0x00 tag byte)
+                                                      // This matches C++ LicenseEntry::hash() which does digest::sha512(write().substr(1))
                                                       use sha2::{Digest as _, Sha512};
                                                       let mut hasher = Sha512::new();
                                                       hasher.update(&entry2_bytes[1..]);
@@ -334,9 +391,13 @@ impl TeaSpeakTransportServer {
                                                   }
                                                   
                                                   // Append Ephemeral Entry to Chain
+                                                  println!("DEBUG: crypto_chain len BEFORE ephemeral: {}", crypto_chain.len());
+                                                  println!("DEBUG: entry2_bytes len: {}", entry2_bytes.len());
                                                   crypto_chain.extend_from_slice(&entry2_bytes);
+                                                  println!("DEBUG: crypto_chain len AFTER ephemeral: {}", crypto_chain.len());
                                                   
                                                   let chain_b64_new = BASE64_STANDARD.encode(&crypto_chain);
+                                                  println!("DEBUG: chain_b64_new len: {} chars", chain_b64_new.len());
                                                   let root_b64 = BASE64_STANDARD.encode(&root_key_pbl);
                                                   
                                                   let proof = crate::desktop_crypto::generate_server_proof(
@@ -375,7 +436,7 @@ impl TeaSpeakTransportServer {
                                                      client_uid,
                                                      server_uid,
                                                      server_packet_id: Arc::new(Mutex::new(1)),
-                                                     server_ack_packet_id: 1,
+                                                     server_ack_packet_id: 0,
                                                      pending_rtc_describe: false,
                                                      pending_rtc_is_video: false,
                                                      rtc_describe_buffer: Vec::new(),
@@ -393,7 +454,7 @@ impl TeaSpeakTransportServer {
                                                 let root_b64_esc = ts3_escape(&root_b64);
                                                 let chain_b64_esc = ts3_escape(&chain_b64_new);
                                                 
-                                                let initivexpand2_cmd = format!("initivexpand2 time={} l={} beta={} omega={} proof={} tvd root={} ot=1",
+                                                let initivexpand2_cmd = format!("initivexpand2 time={} l={} beta={} omega={} proof={} tvd= root={} ot=1",
                                                     validation_time,
                                                     chain_b64_esc,
                                                     beta_b64,
@@ -402,16 +463,32 @@ impl TeaSpeakTransportServer {
                                                     root_b64_esc
                                                 );
                                                 
-                                                let mut header = [0u8; 3];
-                                                header[0..2].copy_from_slice(&0u16.to_be_bytes());
-                                                header[2] = 0x20 | 0x02; // NewProtocol | Command
-                                                
-                                                let encrypted_payload = crate::desktop_crypto::encrypt_with_dummy_key(0, &header, initivexpand2_cmd.as_bytes());
-                                                
-                                                let _ = socket.send_to(&encrypted_payload, addr).await;
-                                                let _ = socket.send_to(&encrypted_payload, addr).await;
-                                                
-                                                println!("Sent initivexpand2 to {}: {}", addr, initivexpand2_cmd);
+                                                 let payload_bytes = initivexpand2_cmd.as_bytes();
+                                                 let chunk_size = 400; // TS3 fragment limit
+                                                 let chunks: Vec<&[u8]> = payload_bytes.chunks(chunk_size).collect();
+                                                 let total_chunks = chunks.len();
+                                                 
+                                                 for (i, chunk) in chunks.iter().enumerate() {
+                                                     let mut flags = 0x22; // NewProtocol | Command
+                                                     if total_chunks > 1 && (i == 0 || i == total_chunks - 1) {
+                                                         flags |= 0x10; // Fragmented
+                                                     }
+                                                     
+                                                     let out_packet_id = i as u16;
+                                                     let mut header = [0u8; 3];
+                                                     header[0..2].copy_from_slice(&out_packet_id.to_be_bytes());
+                                                     header[2] = flags;
+                                                     
+                                                     let encrypted_payload = crate::desktop_crypto::encrypt_with_dummy_key(out_packet_id, &header, chunk);
+                                                     let _ = socket.send_to(&encrypted_payload, addr).await;
+                                                 }
+                                                 
+                                                 if let Some(session) = sessions.get_mut(&addr) {
+                                                     let mut lock = session.server_packet_id.lock().unwrap();
+                                                     *lock = total_chunks as u16;
+                                                 }
+                                                 
+                                                 println!("Sent fragmented initivexpand2 ({}) to {}: {}", total_chunks, addr, initivexpand2_cmd);
                                             } else {
                                                 println!("ot=1: failed to parse solve puzzle payload!");
                                             }
@@ -427,7 +504,7 @@ impl TeaSpeakTransportServer {
                                             
                                             // Try decrypting with session key first, fallback to dummy key
                                             let iv_struct = crate::desktop_crypto::derive_iv_struct(
-                                                &session.shared_secret[0..20], 
+                                                &session.shared_secret, 
                                                 &session.seed_client, 
                                                 &session.seed_server
                                             );
@@ -463,39 +540,41 @@ impl TeaSpeakTransportServer {
                                                  }
                                                  
                                                  // Send UDP ACK/PONG if it is a COMMAND (type 2) or PING (type 4)
+                                                 // Skip generic ACK for clientek packets - the clientek handler sends its own ACK
+                                                 // after computing the shared secret with the correct iv_struct
                                                  let packet_type = flags & 0x0F;
-                                                 if packet_type == 0x02 || packet_type == 0x04 {
+                                                 let is_clientek_packet = key_type == "dummy" && decrypted.windows(8).any(|w| w == b"clientek");
+                                                 if (packet_type == 0x02 || packet_type == 0x04) && !is_clientek_packet {
                                                      let ack_payload = packet_id.to_be_bytes();
                                                      let mut ack_header = [0u8; 3];
                                                      let is_new_protocol = (flags & 0x20) != 0;
-                                                     let is_unencrypted = (flags & 0x80) != 0;
                                                      
                                                      let resp_type = if packet_type == 0x04 { 0x05 } else { 0x06 };
+                                                     // ACKs and PONGs are ALWAYS unencrypted (0x80 flag set)
                                                      let ack_flags = if is_new_protocol {
-                                                         if is_unencrypted { 0xA0 | resp_type } else { 0x20 | resp_type }
+                                                         0x80 | 0x20 | resp_type // Unencrypted | NewProtocol | type
                                                      } else {
-                                                         if is_unencrypted { 0x80 | resp_type } else { resp_type }
+                                                         0x80 | resp_type // Unencrypted | type
                                                      };
                                                      ack_header[0..2].copy_from_slice(&session.server_ack_packet_id.to_be_bytes());
                                                      ack_header[2] = ack_flags;
                                                      
-                                                     if is_unencrypted {
-                                                         let mut final_ack = Vec::with_capacity(8 + 3 + 2);
-                                                         final_ack.extend_from_slice(&[0u8; 8]); // Dummy MAC
-                                                         final_ack.extend_from_slice(&ack_header);
-                                                         final_ack.extend_from_slice(&ack_payload);
-                                                         let _ = socket.send_to(&final_ack, addr).await;
+                                                     // Compute MAC: SHA1(iv_struct)[0..7] if shared secret is set, else zeros
+                                                     let mac = if session.shared_secret.iter().any(|&b| b != 0) {
+                                                         use sha1::{Sha1, Digest as _};
+                                                         let hash = Sha1::digest(&iv_struct);
+                                                         let mut m = [0u8; 8];
+                                                         m.copy_from_slice(&hash[0..8]);
+                                                         m
                                                      } else {
-                                                         let enc_ack = crate::desktop_crypto::encrypt_btea_packet(
-                                                             session.server_ack_packet_id, 0, ack_flags, &ack_header, &ack_payload,
-                                                             &iv_struct, true
-                                                         );
-                                                         let mut final_ack = Vec::with_capacity(8 + 3 + enc_ack.len() - 8);
-                                                         final_ack.extend_from_slice(&enc_ack[0..8]);
-                                                         final_ack.extend_from_slice(&ack_header);
-                                                         final_ack.extend_from_slice(&enc_ack[8..]);
-                                                         let _ = socket.send_to(&final_ack, addr).await;
-                                                     }
+                                                         [0u8; 8]
+                                                     };
+                                                     
+                                                     let mut final_ack = Vec::with_capacity(13);
+                                                     final_ack.extend_from_slice(&mac);
+                                                     final_ack.extend_from_slice(&ack_header);
+                                                     final_ack.extend_from_slice(&ack_payload);
+                                                     let _ = socket.send_to(&final_ack, addr).await;
                                                      
                                                      session.server_ack_packet_id = session.server_ack_packet_id.wrapping_add(1);
                                                      println!("Sent UDP {} {} for client packet_id {} (flags={:02X})", if resp_type == 0x05 { "PONG" } else { "ACK" }, session.server_ack_packet_id - 1, packet_id, ack_flags);
@@ -560,38 +639,50 @@ impl TeaSpeakTransportServer {
                                                                      
                                                                      if let Some(shared_secret_64) = crate::desktop_crypto::get_shared_secret2(&client_ek_bytes, &derived_private_bytes) {
                                                                          println!("clientek: successfully computed 64-byte shared secret!");
+                                                                         println!("clientek: derived_private = {:02X?}", &derived_private_bytes);
+                                                                         println!("clientek: client_ek = {:02X?}", &client_ek_bytes);
+                                                                         println!("clientek: seed_client ({} bytes) = {:02X?}", session.seed_client.len(), &session.seed_client);
+                                                                         println!("clientek: seed_server ({} bytes) = {:02X?}", session.seed_server.len(), &session.seed_server);
                                                                          session.shared_secret.copy_from_slice(&shared_secret_64);
+                                                                         println!("clientek: shared_secret[56..64] after copy = {:02X?}", &session.shared_secret[56..64]);
                                                                          
-                                                                         // Send encrypted ACK/NewProtocol packet back to the client!
-                                                                         let mut ack_header = [0u8; 3];
-                                                                         let next_pid = {
-                                                                             let mut pid_g = session.server_packet_id.lock().unwrap();
-                                                                             let p = *pid_g;
-                                                                             *pid_g = p.wrapping_add(1);
-                                                                             p
-                                                                         };
-                                                                         ack_header[0..2].copy_from_slice(&next_pid.to_be_bytes());
-                                                                         ack_header[2] = 0x20 | 0x06; // NewProtocol | Ack
-                                                                         
-                                                                         let ack_payload = packet_id.to_be_bytes();
-                                                                         
-                                                                         let iv_struct = crate::desktop_crypto::derive_iv_struct(
+                                                                         // Compute the new iv_struct with the real shared secret
+                                                                         let new_iv_struct = crate::desktop_crypto::derive_iv_struct(
                                                                              &session.shared_secret, 
                                                                              &session.seed_client, 
                                                                              &session.seed_server
                                                                          );
+                                                                         println!("clientek: iv_struct ({} bytes) = {:02X?}", new_iv_struct.len(), &new_iv_struct);
                                                                          
-                                                                         let enc_ack = crate::desktop_crypto::encrypt_btea_packet(
-                                                                             next_pid, 0, 0x20 | 0x06, &ack_header, &ack_payload,
-                                                                             &iv_struct, true
-                                                                         );
-                                                                         let mut final_ack = Vec::with_capacity(8 + 3 + enc_ack.len() - 8);
-                                                                         final_ack.extend_from_slice(&enc_ack[0..8]);
+                                                                         // ACK packets are NEVER encrypted in TS3 (both old and new protocol).
+                                                                         // They use the Unencrypted flag and MAC = SHA1(iv_struct)[0..7]
+                                                                         let current_mac = {
+                                                                             use sha1::{Sha1, Digest};
+                                                                             let hash = Sha1::digest(&new_iv_struct);
+                                                                             let mut mac = [0u8; 8];
+                                                                             mac.copy_from_slice(&hash[0..8]);
+                                                                             mac
+                                                                         };
+                                                                         
+                                                                         let ack_pid = session.server_ack_packet_id;
+                                                                         session.server_ack_packet_id = ack_pid.wrapping_add(1);
+                                                                         
+                                                                         // ACK flags: Unencrypted (0x80) | NewProtocol (0x20) | Ack (0x06) = 0xA6
+                                                                         let mut ack_header = [0u8; 3];
+                                                                         ack_header[0..2].copy_from_slice(&ack_pid.to_be_bytes());
+                                                                         ack_header[2] = 0xA6; // Unencrypted | NewProtocol | Ack
+                                                                         
+                                                                         let ack_payload = packet_id.to_be_bytes();
+                                                                         
+                                                                         // Wire format: [8-byte MAC][3-byte header][2-byte payload]
+                                                                         let mut final_ack = Vec::with_capacity(13);
+                                                                         final_ack.extend_from_slice(&current_mac);
                                                                          final_ack.extend_from_slice(&ack_header);
-                                                                         final_ack.extend_from_slice(&enc_ack[8..]);
+                                                                         final_ack.extend_from_slice(&ack_payload);
                                                                          
                                                                          let _ = socket.send_to(&final_ack, addr).await;
-                                                                         println!("Sent encrypted clientek ACK packet to client. packet_id: {}, ack_to: {}", next_pid, packet_id);
+                                                                         println!("Sent clientek ACK RAW ({} bytes): {:02X?}", final_ack.len(), &final_ack);
+                                                                         println!("  breakdown: MAC={:02X?} PID={:02X?} FLAGS=0x{:02X} PAYLOAD={:02X?}", &final_ack[0..8], &final_ack[8..10], final_ack[10], &final_ack[11..13]);
                                                                      }
                                                                  }
                                                              }
@@ -683,15 +774,28 @@ impl TeaSpeakTransportServer {
                                                      
                                                      let client_uid_escaped = ts3_escape(&session.client_uid);
                                                      let server_uid_escaped = ts3_escape(&session.server_uid);
-                                                     let initserver = format!("initserver virtualserver_name={} virtualserver_welcomemessage={} virtualserver_maxclients=32 virtualserver_password virtualserver_clientsonline=1 virtualserver_channelsonline=1 virtualserver_created=1494921612 virtualserver_uptime=33245 virtualserver_hostmessage virtualserver_hostmessage_mode=0 virtualserver_filebase=files\\/virtualserver_1 virtualserver_default_server_group=8 virtualserver_default_channel_group=8 virtualserver_flag_password=0 virtualserver_default_channel_admin_group=5 virtualserver_max_download_total_bandwidth=-1 virtualserver_max_upload_total_bandwidth=-1 virtualserver_hostbanner_url virtualserver_hostbanner_gfx_url virtualserver_hostbanner_gfx_interval=0 virtualserver_complain_autoban_count=5 virtualserver_complain_autoban_time=1200 virtualserver_complain_remove_time=3600 virtualserver_min_clients_in_channel_before_forced_silence=100 virtualserver_priority_speaker_dimm_modificator=-18.0000 virtualserver_id=1 virtualserver_antiflood_points_tick_reduce=5 virtualserver_antiflood_points_needed_command_block=150 virtualserver_antiflood_points_needed_ip_block=250 virtualserver_client_connections=1 virtualserver_query_client_connections=0 virtualserver_hostbutton_tooltip virtualserver_hostbutton_url virtualserver_hostbutton_gfx_url virtualserver_queryclientsonline=0 virtualserver_download_quota=-1 virtualserver_upload_quota=-1 virtualserver_month_bytes_downloaded=0 virtualserver_month_bytes_uploaded=0 virtualserver_total_bytes_downloaded=0 virtualserver_total_bytes_uploaded=0 virtualserver_port=9987 virtualserver_autostart=1 virtualserver_machine_id virtualserver_needed_identity_security_level=8 virtualserver_log_client=0 virtualserver_log_query=0 virtualserver_log_channel=0 virtualserver_log_permissions=1 virtualserver_log_server=0 virtualserver_log_filetransfer=0 virtualserver_min_client_version=1481105459 virtualserver_name_phonetic virtualserver_icon_id=0 virtualserver_reserved_slots=0 virtualserver_total_packetloss_speech=0.0000 virtualserver_total_packetloss_keepalive=0.0000 virtualserver_total_packetloss_control=0.0000 virtualserver_total_packetloss_total=0.0000 virtualserver_total_ping=0.0000 virtualserver_ip=0.0000 virtualserver_weblist_identifier virtualserver_ask_for_privilegekey=0 virtualserver_hostbanner_mode=0 virtualserver_channel_temp_delete_delay_default=0 virtualserver_min_android_version=1429007622 virtualserver_min_ios_version=1429007622 virtualserver_nickname virtualserver_unique_identifier={} virtualserver_platform=Windows virtualserver_version=3.5.6 virtualserver_status=online virtualserver_codec_encryption_mode=0 client_talk_power=0 client_needed_serverquery_view_power=0 client_myteamspeak_id client_integrations lt=0 pv=6 acn={} aclid=1", server_name_escaped, welcome_msg_escaped, server_uid_escaped, client_nickname_escaped);
-                                                    let channellist = format!("channellist cid=1 cpid=0 channel_name=Default\\sChannel channel_topic channel_description channel_password channel_codec=4 channel_codec_quality=6 channel_maxclients=-1 channel_maxfamilyclients=-1 channel_order=0 channel_flag_permanent=1 channel_flag_semi_permanent=0 channel_flag_default=1 channel_flag_password=0 channel_codec_latency_factor=1 channel_codec_is_unencrypted=0 channel_delete_delay=0 channel_flag_maxclients_unlimited=1 channel_flag_maxfamilyclients_unlimited=1 channel_flag_maxfamilyclients_inherited=0 channel_needed_talk_power=0 channel_forced_silence=0 channel_name_phonetic channel_icon_id=0 channel_flag_private=0");
-                                                    let notifycliententerview = format!(
-                                                        "notifycliententerview cfid=0 ctid=1 reasonid=0 clid=1 client_unique_identifier={} client_nickname={} client_input_muted=0 client_output_muted=0 client_outputonly_muted=0 client_input_hardware=0 client_output_hardware=0 client_meta_data client_is_recording=0 client_database_id=1 client_channel_group_id=8 client_servergroups=8 client_away=0 client_away_message client_type=0 client_flag_avatar client_talk_power=0 client_talk_request=0 client_talk_request_msg client_description client_is_talker=0 client_is_priority_speaker=0 client_unread_messages=0 client_nickname_phonetic client_needed_serverquery_view_power=0 client_icon_id=0 client_is_channel_commander=0 client_country=DE client_channel_group_inherited_channel_id=1 client_badges client_myteamspeak_id client_integrations",
-                                                        client_uid_escaped, client_nickname_escaped
-                                                    );
-                                                    let channellistfinished = "channellistfinished";
+                                                     let initserver = format!("initserver virtualserver_name={} virtualserver_welcomemessage={} virtualserver_maxclients=32 virtualserver_password= virtualserver_clientsonline=1 virtualserver_channelsonline=1 virtualserver_created=1494921612 virtualserver_uptime=33245 virtualserver_hostmessage= virtualserver_hostmessage_mode=0 virtualserver_filebase=files\\/virtualserver_1 virtualserver_default_server_group=8 virtualserver_default_channel_group=8 virtualserver_flag_password=0 virtualserver_default_channel_admin_group=5 virtualserver_max_download_total_bandwidth=-1 virtualserver_max_upload_total_bandwidth=-1 virtualserver_hostbanner_url= virtualserver_hostbanner_gfx_url= virtualserver_hostbanner_gfx_interval=0 virtualserver_complain_autoban_count=5 virtualserver_complain_autoban_time=1200 virtualserver_complain_remove_time=3600 virtualserver_min_clients_in_channel_before_forced_silence=100 virtualserver_priority_speaker_dimm_modificator=-18.0000 virtualserver_id=1 virtualserver_antiflood_points_tick_reduce=5 virtualserver_antiflood_points_needed_command_block=150 virtualserver_antiflood_points_needed_ip_block=250 virtualserver_client_connections=1 virtualserver_query_client_connections=0 virtualserver_hostbutton_tooltip= virtualserver_hostbutton_url= virtualserver_hostbutton_gfx_url= virtualserver_queryclientsonline=0 virtualserver_download_quota=-1 virtualserver_upload_quota=-1 virtualserver_month_bytes_downloaded=0 virtualserver_month_bytes_uploaded=0 virtualserver_total_bytes_downloaded=0 virtualserver_total_bytes_uploaded=0 virtualserver_port=9987 virtualserver_autostart=1 virtualserver_machine_id= virtualserver_needed_identity_security_level=8 virtualserver_log_client=0 virtualserver_log_query=0 virtualserver_log_channel=0 virtualserver_log_permissions=1 virtualserver_log_server=0 virtualserver_log_filetransfer=0 virtualserver_min_client_version=1481105459 virtualserver_name_phonetic= virtualserver_icon_id=0 virtualserver_reserved_slots=0 virtualserver_total_packetloss_speech=0.0000 virtualserver_total_packetloss_keepalive=0.0000 virtualserver_total_packetloss_control=0.0000 virtualserver_total_packetloss_total=0.0000 virtualserver_total_ping=0.0000 virtualserver_ip=0.0000 virtualserver_weblist_identifier= virtualserver_ask_for_privilegekey=0 virtualserver_hostbanner_mode=0 virtualserver_channel_temp_delete_delay_default=0 virtualserver_min_android_version=1429007622 virtualserver_min_ios_version=1429007622 virtualserver_nickname= virtualserver_unique_identifier={} virtualserver_platform=Windows virtualserver_version=3.5.6 virtualserver_status=online virtualserver_codec_encryption_mode=0 client_talk_power=0 client_needed_serverquery_view_power=0 client_myteamspeak_id= client_integrations= lt=0 pv=6 acn={} aclid=1", server_name_escaped, welcome_msg_escaped, server_uid_escaped, client_nickname_escaped);
+                                                     let channellist = format!("channellist cid=1 cpid=0 channel_name=Default\\sChannel channel_topic= channel_description= channel_password= channel_codec=4 channel_codec_quality=6 channel_maxclients=-1 channel_maxfamilyclients=-1 channel_order=0 channel_flag_permanent=1 channel_flag_semi_permanent=0 channel_flag_default=1 channel_flag_password=0 channel_codec_latency_factor=1 channel_codec_is_unencrypted=0 channel_delete_delay=0 channel_flag_maxclients_unlimited=1 channel_flag_maxfamilyclients_unlimited=1 channel_flag_maxfamilyclients_inherited=0 channel_needed_talk_power=0 channel_forced_silence=0 channel_name_phonetic= channel_icon_id=0 channel_flag_private=0");
+                                                     let notifycliententerview = format!(
+                                                         "notifycliententerview cfid=0 ctid=1 reasonid=0 clid=1 client_unique_identifier={} client_nickname={} client_input_muted=0 client_output_muted=0 client_outputonly_muted=0 client_input_hardware=0 client_output_hardware=0 client_meta_data= client_is_recording=0 client_database_id=1 client_channel_group_id=8 client_servergroups=8 client_away=0 client_away_message= client_type=0 client_flag_avatar= client_talk_power=0 client_talk_request=0 client_talk_request_msg= client_description= client_is_talker=0 client_is_priority_speaker=0 client_unread_messages=0 client_nickname_phonetic= client_needed_serverquery_view_power=0 client_icon_id=0 client_is_channel_commander=0 client_country=DE client_channel_group_inherited_channel_id=1 client_badges= client_myteamspeak_id= client_integrations=",
+                                                         client_uid_escaped, client_nickname_escaped
+                                                     );
+                                                     let channellistfinished = "channellistfinished";
+                                                     
+                                                     let notifyservergrouplist = "notifyservergrouplist sgid=6 name=Server\\sAdmin type=0 iconid=0 savedb=1 sortid=0 namemode=0 n_member_addp=75 n_member_removep=75 n_modifyp=75|sgid=7 name=Normal type=0 iconid=0 savedb=1 sortid=0 namemode=0 n_member_addp=50 n_member_removep=50 n_modifyp=50|sgid=8 name=Guest type=0 iconid=0 savedb=1 sortid=0 namemode=0 n_member_addp=25 n_member_removep=25 n_modifyp=25".to_string();
+                                                     let notifychannelgrouplist = "notifychannelgrouplist cgid=5 name=Channel\\sAdmin type=0 iconid=0 savedb=1 sortid=0 namemode=0 n_member_addp=75 n_member_removep=75 n_modifyp=75|cgid=6 name=Operator type=0 iconid=0 savedb=1 sortid=0 namemode=0 n_member_addp=50 n_member_removep=50 n_modifyp=50|cgid=7 name=Voice type=0 iconid=0 savedb=1 sortid=0 namemode=0 n_member_addp=25 n_member_removep=25 n_modifyp=25|cgid=8 name=Guest type=0 iconid=0 savedb=1 sortid=0 namemode=0 n_member_addp=0 n_member_removep=0 n_modifyp=0".to_string();
+                                                     let notifyclientneededpermissions = "notifyclientneededpermissions permid=1 permvalue=0".to_string();
+                                                     let notifychannelsubscribed = "notifychannelsubscribed cid=1".to_string();
 
-                                                    let commands_to_send = vec![initserver, channellist.to_string(), notifycliententerview, channellistfinished.to_string()];
+                                                     let commands_to_send = vec![
+                                                         initserver,
+                                                         notifyservergrouplist,
+                                                         notifychannelgrouplist,
+                                                         notifyclientneededpermissions,
+                                                         channellist.to_string(),
+                                                         notifychannelsubscribed,
+                                                         channellistfinished.to_string(),
+                                                     ];
 
                                                     for cmd in commands_to_send.iter() {
                                                         let payload_bytes = cmd.as_bytes();
@@ -819,8 +923,14 @@ impl TeaSpeakTransportServer {
                                                     
                                                     // (Send initserver here if needed, omitted for now)
                                                  } else {
-                                                     // Fallback to ACK any other client commands by finding "rt-<number>"
-                                                      if let Some(rt_idx) = payload_str.rfind("rt-") {
+                                                      let is_supported_command = payload_str.starts_with("servergetvariables")
+                                                          || payload_str.starts_with("connectioninfoautoupdate")
+                                                          || payload_str.starts_with("clientupdate")
+                                                          || payload_str.starts_with("clientgetvariables")
+                                                          || payload_str.starts_with("channelsubscribeball");
+
+                                                      // Fallback to ACK any other client commands by finding "rt-<number>"
+                                                       if let Some(rt_idx) = payload_str.rfind("rt-") {
                                                           let mut end_idx = rt_idx + 3;
                                                           while end_idx < payload_str.len() {
                                                               let c = payload_str.as_bytes()[end_idx];
@@ -1107,6 +1217,31 @@ tokio::spawn(async move {
                                                                            }
                                                                        }
                                                                    }
+                                                               } else if is_supported_command {
+                                                                   // Respond to common commands that don't have rt- returning return_code
+                                                                   let ack_cmd = "error id=0 msg=ok".to_string();
+                                                                   let ack_packet_id = {
+                                                                       let mut lock = session.server_packet_id.lock().unwrap();
+                                                                       let val = *lock;
+                                                                       *lock = lock.wrapping_add(1);
+                                                                       val
+                                                                   };
+                                                                   let mut out_header = [0u8; 3];
+                                                                   let flags = 0x22;
+                                                                   out_header[0..2].copy_from_slice(&ack_packet_id.to_be_bytes());
+                                                                   out_header[2] = flags;
+                                                                   
+                                                                   let enc_payload = crate::desktop_crypto::encrypt_btea_packet(
+                                                                       ack_packet_id, 0, flags, &out_header, ack_cmd.as_bytes(),
+                                                                       &iv_struct, true
+                                                                   );
+                                                                   
+                                                                   let mut final_packet = Vec::with_capacity(8 + 3 + enc_payload.len() - 8);
+                                                                   final_packet.extend_from_slice(&enc_payload[0..8]);
+                                                                   final_packet.extend_from_slice(&out_header);
+                                                                   final_packet.extend_from_slice(&enc_payload[8..]);
+                                                                   let _ = socket.send_to(&final_packet, addr).await;
+                                                                   println!("Sent robust ACK to {}: {}", addr, ack_cmd);
                                                                }
                                                            }
                                                       }
