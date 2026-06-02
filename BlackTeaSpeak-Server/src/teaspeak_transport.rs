@@ -85,8 +85,11 @@ pub struct UdpSession {
     pub rtc_describe_buffer: Vec<u8>,
     pub ephemeral_sec: Option<[u8; 32]>,
     pub entry2_hash: Option<[u8; 64]>,
+    // Client nickname cached from clientinit used to respond to clientgetvariables queries.
     pub client_nickname: String,
+    // Buffer used to accumulate incoming fragmented command packets (marked with flag 0x10).
     pub command_fragment_buffer: Vec<u8>,
+    // Indicator whether a fragmented command sequence is actively being received.
     pub command_fragment_active: bool,
 }
 
@@ -589,15 +592,19 @@ impl TeaSpeakTransportServer {
                                                      println!("Sent UDP {} {} for client packet_id {} (flags={:02X})", if resp_type == 0x05 { "PONG" } else { "ACK" }, session.server_ack_packet_id - 1, packet_id, ack_flags);
                                                  }
                                                 
+                                                // TS3 command packets exceeding MTU are split across fragments (flag 0x10).
+                                                // The first and last packets in the sequence have the 0x10 flag set, while intermediate packets do not.
                                                 let is_fragmented = (flags & 0x10) != 0;
                                                 let mut defragmented_payload = None;
                                                 if is_fragmented {
                                                     if !session.command_fragment_active {
+                                                        // First fragment: initiate a new reassembly buffer.
                                                         session.command_fragment_active = true;
                                                         session.command_fragment_buffer.clear();
                                                         session.command_fragment_buffer.extend_from_slice(&decrypted);
                                                         println!("teaspeak udp: received first fragment of command. packet_id: {}", packet_id);
                                                     } else {
+                                                        // Last fragment: append data and finalize reassembled payload.
                                                         session.command_fragment_buffer.extend_from_slice(&decrypted);
                                                         session.command_fragment_active = false;
                                                         defragmented_payload = Some(session.command_fragment_buffer.clone());
@@ -605,9 +612,11 @@ impl TeaSpeakTransportServer {
                                                     }
                                                 } else {
                                                     if session.command_fragment_active {
+                                                        // Intermediate fragment: append to active buffer.
                                                         session.command_fragment_buffer.extend_from_slice(&decrypted);
                                                         println!("teaspeak udp: received middle fragment of command. packet_id: {}", packet_id);
                                                     } else {
+                                                        // Unfragmented payload: pass through directly.
                                                         defragmented_payload = Some(decrypted.clone());
                                                     }
                                                 }
@@ -1263,6 +1272,8 @@ tokio::spawn(async move {
                                                                    let _ = socket.send_to(&final_packet, addr).await;
                                                                    println!("Sent robust ACK to {}: {}", addr, ack_cmd);
 
+                                                                // Handle `clientgetvariables clid=...` sent by client to fetch client variables.
+                                                                // We respond with a mock `notifyclientupdated` matching the client's cached identity.
                                                                 if payload_str.starts_with("clientgetvariables") {
                                                                     let ts3_escape = |s: &str| -> String {
                                                                         s.replace("\\", "\\\\").replace(" ", "\\s").replace("/", "\\/").replace("|", "\\p").replace("\x07", "\\a").replace("\x08", "\\b").replace("\x0c", "\\f").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\x0b", "\\v")
@@ -1307,6 +1318,8 @@ tokio::spawn(async move {
                                                                     println!("Sent notifyclientupdated to {}", addr);
                                                                 }
                                                                 
+                                                                // Handle `servergetvariables` sent by client to fetch virtual server status.
+                                                                // We respond with a mock `notifyserverupdated` containing server metadata.
                                                                 if payload_str.starts_with("servergetvariables") {
                                                                     let ts3_escape = |s: &str| -> String {
                                                                         s.replace("\\", "\\\\").replace(" ", "\\s").replace("/", "\\/").replace("|", "\\p").replace("\x07", "\\a").replace("\x08", "\\b").replace("\x0c", "\\f").replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t").replace("\x0b", "\\v")
