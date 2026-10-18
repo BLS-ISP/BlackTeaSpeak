@@ -1,44 +1,15 @@
 use super::*;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::fs::{self, File};
-use std::io::{self, BufReader};
-use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::{Duration, Instant};
+use std::collections::{BTreeMap, BTreeSet};
+use std::io::{self};
+use std::sync::Arc;
 
-use anyhow::{Context, Result, anyhow};
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
-use rcgen::generate_simple_self_signed;
-use rustls::pki_types::{PrivateKeyDer, PrivatePkcs8KeyDer};
-use rustls::{ServerConfig, ServerConnection, StreamOwned};
-use serde::Deserialize;
-use serde_json::{Map, Value, json};
-use tungstenite::error::Error as WebSocketError;
-use tungstenite::protocol::{CloseFrame, frame::coding::CloseCode};
-use tungstenite::{Message, accept};
-use wtransport::{Endpoint, ServerConfig as WTransportServerConfig, Identity};
+use anyhow::Result;
 
 use crate::file_transfer::{
-    FileEntryInfo, FileTransferError, FileTransferEvent, FileTransferRegistry,
-    PreparedFileTransfer,
+    FileTransferEvent, FileTransferRegistry,
 };
-use crate::query::{CommandRequest, QueryResponse, encode_query_value};
-use crate::models::{
-    WhisperTargetSelection, WHISPER_TARGET_CHANNEL, WHISPER_TARGET_CLIENT,
-    WHISPER_TARGET_SERVER_GROUP, WHISPER_TARGET_SELF,
-};
-use crate::runtime::{
-    AntiFloodSessionState, BaselineRuntime, ChannelSnapshot, MusicBotNotifyPayload,
-    OnlineClientSnapshot, QuerySessionState, ServerSnapshot,
-    WebServerGroupMutationError, WebServerInitInfo, create_baseline_runtime,
-    create_baseline_runtime_with_state_path, stable_web_client_database_id,
-    stable_web_client_unique_identifier,
-};
-use crate::transport::{SessionPresence, TransportNotification};
+use crate::runtime::BaselineRuntime;
+use crate::transport::TransportNotification;
 
 #[derive(Clone)]
 pub struct BlackTeaWebNotificationBridge {
@@ -85,6 +56,7 @@ pub(crate) fn permission_refresh_scope(command: &str) -> PermissionRefreshScope 
         "servergroupaddclient"
         | "servergroupdelclient"
         | "tokenuse"
+        | "privilegekeyuse"
         | "setclientchannelgroup"
         | "channeladdperm"
         | "channeldelperm"
@@ -93,8 +65,13 @@ pub(crate) fn permission_refresh_scope(command: &str) -> PermissionRefreshScope 
         | "channelclientaddperm"
         | "channelclientdelperm" => PermissionRefreshScope {
             needed_permissions: true,
-            server_groups: false,
-            channel_groups: false,
+            server_groups: true,
+            channel_groups: true,
+        },
+        "permreset" => PermissionRefreshScope {
+            needed_permissions: true,
+            server_groups: true,
+            channel_groups: true,
         },
         _ => PermissionRefreshScope::default(),
     }
@@ -150,7 +127,7 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
                 .online_client_snapshot(presence.server_id, presence.client_id)
                 .map(|snapshot| BlackTeaWebFrameBroadcast::Server {
                     server_id: presence.server_id,
-                    exclude_client_id: origin_client_id,
+                    exclude_client_id: origin_client_id.or(Some(presence.client_id)),
                     frame: command_frame(
                         "notifycliententerview",
                         vec![presence_enter_view_row(
@@ -173,7 +150,7 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
             )
             .map(|row| BlackTeaWebFrameBroadcast::Server {
                 server_id: *server_id,
-                exclude_client_id: origin_client_id,
+                exclude_client_id: origin_client_id.or(Some(after.id)),
                 frame: command_frame("notifyclientupdated", vec![row])
                     .expect("notifyclientupdated should encode"),
             })
@@ -336,9 +313,15 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
                         vec![row_map([
                             ("cid", channel.id.to_string()),
                             ("cpid", channel.parent_id.to_string()),
+                            ("pid", channel.parent_id.to_string()),
+                            ("channel_order", channel.order.to_string()),
                             ("channel_name", channel.name.clone()),
                             ("channel_topic", channel.topic.clone()),
                             ("channel_description", channel.description.clone()),
+                            ("channel_codec", channel.codec.to_string()),
+                            ("channel_codec_quality", channel.codec_quality.to_string()),
+                            ("channel_maxclients", channel.maxclients.to_string()),
+                            ("channel_maxfamilyclients", channel.maxfamilyclients.to_string()),
                             (
                                 "channel_flag_permanent",
                                 if channel.kind.is_permanent() {
@@ -355,6 +338,53 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
                                     String::from("0")
                                 },
                             ),
+                            (
+                                "channel_flag_default",
+                                if channel.flag_default {
+                                    String::from("1")
+                                } else {
+                                    String::from("0")
+                                },
+                            ),
+                            (
+                                "channel_flag_password",
+                                if channel.flag_password {
+                                    String::from("1")
+                                } else {
+                                    String::from("0")
+                                },
+                            ),
+                            (
+                                "channel_flag_maxclients_unlimited",
+                                if channel.maxclients < 0 {
+                                    String::from("1")
+                                } else {
+                                    String::from("0")
+                                },
+                            ),
+                            (
+                                "channel_flag_maxfamilyclients_unlimited",
+                                if channel.maxfamilyclients < 0 {
+                                    String::from("1")
+                                } else {
+                                    String::from("0")
+                                },
+                            ),
+                            (
+                                "channel_flag_maxfamilyclients_inherited",
+                                if channel.maxfamilyclients < 0 {
+                                    String::from("1")
+                                } else {
+                                    String::from("0")
+                                },
+                            ),
+                            ("channel_needed_talk_power", channel.needed_talk_power.to_string()),
+                            ("i_channel_needed_join_power", channel.needed_join_power.to_string()),
+                            ("i_channel_needed_subscribe_power", channel.needed_subscribe_power.to_string()),
+                            ("i_channel_needed_description_view_power", channel.needed_description_view_power.to_string()),
+                            ("i_channel_needed_modify_power", channel.needed_modify_power.to_string()),
+                            ("i_channel_needed_delete_power", channel.needed_delete_power.to_string()),
+                            ("channel_icon_id", channel.icon_id.to_string()),
                             ("invokerid", invoker_id.to_string()),
                             ("invokername", invoker_name.clone()),
                         ])],
@@ -376,10 +406,15 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
                     vec![row_map([
                         ("cid", channel.id.to_string()),
                         ("cpid", channel.parent_id.to_string()),
+                        ("pid", channel.parent_id.to_string()),
                         ("channel_order", channel.order.to_string()),
                         ("channel_name", channel.name.clone()),
                         ("channel_topic", channel.topic.clone()),
                         ("channel_description", channel.description.clone()),
+                        ("channel_codec", channel.codec.to_string()),
+                        ("channel_codec_quality", channel.codec_quality.to_string()),
+                        ("channel_maxclients", channel.maxclients.to_string()),
+                        ("channel_maxfamilyclients", channel.maxfamilyclients.to_string()),
                         (
                             "channel_flag_permanent",
                             if channel.kind.is_permanent() {
@@ -396,6 +431,53 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
                                 String::from("0")
                             },
                         ),
+                        (
+                            "channel_flag_default",
+                            if channel.flag_default {
+                                String::from("1")
+                            } else {
+                                String::from("0")
+                            },
+                        ),
+                        (
+                            "channel_flag_password",
+                            if channel.flag_password {
+                                String::from("1")
+                            } else {
+                                String::from("0")
+                            },
+                        ),
+                        (
+                            "channel_flag_maxclients_unlimited",
+                            if channel.maxclients < 0 {
+                                String::from("1")
+                            } else {
+                                String::from("0")
+                            },
+                        ),
+                        (
+                            "channel_flag_maxfamilyclients_unlimited",
+                            if channel.maxfamilyclients < 0 {
+                                String::from("1")
+                            } else {
+                                String::from("0")
+                            },
+                        ),
+                        (
+                            "channel_flag_maxfamilyclients_inherited",
+                            if channel.maxfamilyclients < 0 {
+                                String::from("1")
+                            } else {
+                                String::from("0")
+                            },
+                        ),
+                        ("channel_needed_talk_power", channel.needed_talk_power.to_string()),
+                        ("i_channel_needed_join_power", channel.needed_join_power.to_string()),
+                        ("i_channel_needed_subscribe_power", channel.needed_subscribe_power.to_string()),
+                        ("i_channel_needed_description_view_power", channel.needed_description_view_power.to_string()),
+                        ("i_channel_needed_modify_power", channel.needed_modify_power.to_string()),
+                        ("i_channel_needed_delete_power", channel.needed_delete_power.to_string()),
+                        ("channel_icon_id", channel.icon_id.to_string()),
                         ("invokerid", invoker_id.to_string()),
                         ("invokername", invoker_name.clone()),
                     ])],
@@ -435,7 +517,9 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
                     vec![row_map([
                         ("cid", channel.id.to_string()),
                         ("cpid", channel.parent_id.to_string()),
+                        ("pid", channel.parent_id.to_string()),
                         ("order", channel.order.to_string()),
+                        ("channel_order", channel.order.to_string()),
                         ("channel_name", channel.name.clone()),
                         ("invokerid", invoker_id.to_string()),
                         ("invokername", invoker_name.clone()),
@@ -499,6 +583,7 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
                 }],
                 _ => Vec::new(),
             },
+            TransportNotification::VideoBroadcastChanged { .. } => Vec::new(),
         };
         frames.append(&mut notification_frames);
     }
@@ -941,12 +1026,52 @@ pub(crate) fn broadcast_permission_refreshes(
                 None
             };
 
+            let client_group_update_frames = if scope.needed_permissions {
+                let mut rows = Vec::new();
+                for online in runtime
+                    .store
+                    .online_clients
+                    .values()
+                    .filter(|c| c.server_id == server_id)
+                {
+                    let groups_str = if online.server_groups.is_empty() {
+                        String::from("8")
+                    } else {
+                        online
+                            .server_groups
+                            .iter()
+                            .map(u32::to_string)
+                            .collect::<Vec<_>>()
+                            .join(",")
+                    };
+                    if let Some(sess) = sessions.get_mut(&online.id) {
+                        sess.presence
+                            .client_state
+                            .insert(String::from("client_servergroups"), groups_str.clone());
+                    }
+                    let mut row = BTreeMap::new();
+                    row.insert(String::from("clid"), online.id.to_string());
+                    row.insert(String::from("client_servergroups"), groups_str);
+                    rows.push(row);
+                }
+                if rows.is_empty() {
+                    Vec::new()
+                } else {
+                    vec![command_frame("notifyclientupdated", rows)?]
+                }
+            } else {
+                Vec::new()
+            };
+
             for session in sessions.values_mut().filter(|session| session.presence.server_id == server_id)
             {
                 if let Some(frame) = server_groups_frame.as_ref() {
                     recipients.push((Arc::clone(&session.pending_frames), frame.clone()));
                 }
                 if let Some(frame) = channel_groups_frame.as_ref() {
+                    recipients.push((Arc::clone(&session.pending_frames), frame.clone()));
+                }
+                for frame in &client_group_update_frames {
                     recipients.push((Arc::clone(&session.pending_frames), frame.clone()));
                 }
                 if scope.needed_permissions

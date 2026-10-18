@@ -20,15 +20,37 @@ use blackteaspeak_server::web::{
     DEFAULT_TEAWEB_BIND, BlackTeaWebTransportServer, generate_localhost_tls_assets,
 };
 
+use tracing::{info, error};
+use tracing_subscriber::{fmt, EnvFilter, layer::SubscriberExt, util::SubscriberInitExt};
+
+fn setup_logging(workspace_root: &std::path::Path) -> Result<tracing_appender::non_blocking::WorkerGuard> {
+    let log_dir = workspace_root.join("logs");
+    std::fs::create_dir_all(&log_dir)?;
+
+    let file_appender = tracing_appender::rolling::daily(log_dir, "server.log");
+    let (non_blocking, guard) = tracing_appender::non_blocking(file_appender);
+
+    tracing_subscriber::registry()
+        .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info")))
+        .with(fmt::layer().with_writer(std::io::stdout))
+        .with(fmt::layer().with_writer(non_blocking))
+        .init();
+
+    Ok(guard)
+}
+
 fn main() {
-    if let Err(error) = run() {
-        eprintln!("error: {error:#}");
+    let workspace_root = FoundationSpecs::discover_workspace_root(&std::env::current_dir().unwrap()).unwrap();
+    let _log_guard = setup_logging(&workspace_root).unwrap();
+
+    info!("Starting BlackTeaSpeak Server...");
+    if let Err(error) = run(workspace_root) {
+        error!("error: {error:#}");
         std::process::exit(1);
     }
 }
 
-fn run() -> Result<()> {
-    let workspace_root = FoundationSpecs::discover_workspace_root(&env::current_dir()?)?;
+fn run(workspace_root: PathBuf) -> Result<()> {
     let mut args = env::args().skip(1).collect::<Vec<_>>();
 
     match args.first().map(String::as_str) {
@@ -62,6 +84,10 @@ fn run() -> Result<()> {
             args.remove(0);
             run_exec(&workspace_root, &args.join(" "))
         }
+        Some("permreset") | Some("reset-permissions") => {
+            args.remove(0);
+            run_permreset(&workspace_root, &args)
+        }
         Some("help") | Some("--help") | Some("-h") => {
             print_usage();
             Ok(())
@@ -92,8 +118,94 @@ fn print_info(workspace_root: &std::path::Path) -> Result<()> {
 fn run_exec(workspace_root: &std::path::Path, line: &str) -> Result<()> {
     let mut runtime = create_baseline_runtime(workspace_root)?;
     let mut session = QuerySessionState::default();
+    let trimmed = line.trim();
+    if matches!(trimmed, "permreset" | "reset-permissions") {
+        session.authenticated_login = Some(String::from("serveradmin"));
+        session.selected_virtual_server_id = Some(1);
+        println!("{}", runtime.execute("permreset", &mut session));
+        return Ok(());
+    }
     println!("{}", runtime.execute(line, &mut session));
     Ok(())
+}
+
+fn run_permreset(workspace_root: &std::path::Path, args: &[String]) -> Result<()> {
+    let server_id = resolve_usize_option(args, "--sid", 1) as u32;
+    let mut runtime = create_baseline_runtime(workspace_root)?;
+    let token = runtime.reset_permissions_and_generate_admin_token(server_id);
+
+    println!("==================================================================");
+    println!("  BLACKTEASPEAK PERMISSION RESET COMPLETED (sid={server_id})");
+    println!("==================================================================");
+    println!("  All server groups (sgid=6,7,8,9), channel groups (cgid=8,9,10),");
+    println!("  and client/channel permissions have been restored to defaults.");
+    println!("  ServerAdmin Query Login : serveradmin / serveradmin (sgid=6)");
+    println!("  New ServerAdmin Token   : {token}");
+    println!("==================================================================");
+    println!("token={token}");
+    Ok(())
+}
+
+fn print_startup_admin_banner(runtime: &mut blackteaspeak_server::runtime::BaselineRuntime) {
+    let (token, newly_created) = runtime.ensure_initial_admin_token(1);
+    let token_status = if newly_created {
+        "newly generated"
+    } else {
+        "active unused key"
+    };
+    println!("==================================================================");
+    println!("  BlackTeaSpeak Default Permissions & Admin Access (sid=1)");
+    println!("  Default Server Groups : sgid=6 (Admin Server Query), sgid=7 (Guest Query),");
+    println!("                          sgid=8 (Normal), sgid=9 (Server Admin)");
+    println!("  Default Channel Groups: cgid=8 (Channel Admin), cgid=9 (Operator), cgid=10 (Guest)");
+    println!("  ServerQuery Admin     : login serveradmin serveradmin");
+    println!("  ServerAdmin Token     : {token} ({token_status})");
+    println!("  Live Admin Console    : Type `permreset` here at any time if locked out!");
+    println!("==================================================================");
+}
+
+fn spawn_admin_console(runtime: Arc<Mutex<blackteaspeak_server::runtime::BaselineRuntime>>) {
+    thread::spawn(move || {
+        let stdin = io::stdin();
+        let mut session = QuerySessionState {
+            authenticated_login: Some(String::from("serveradmin")),
+            selected_virtual_server_id: Some(1),
+            ..QuerySessionState::default()
+        };
+        loop {
+            let mut line = String::new();
+            match stdin.read_line(&mut line) {
+                Ok(0) | Err(_) => break,
+                Ok(_) => {}
+            }
+            let trimmed = line.trim();
+            if trimmed.is_empty() {
+                continue;
+            }
+            let normalized = match trimmed {
+                "reset-permissions" => "permreset",
+                other => other,
+            };
+            if let Ok(mut rt) = runtime.lock() {
+                if normalized == "permreset" {
+                    session.authenticated_login = Some(String::from("serveradmin"));
+                    if session.selected_virtual_server_id.is_none() {
+                        session.selected_virtual_server_id = Some(1);
+                    }
+                    let sid = session.selected_virtual_server_id.unwrap_or(1);
+                    let token = rt.reset_permissions_and_generate_admin_token(sid);
+                    println!("==================================================================");
+                    println!("  [ADMIN CONSOLE] PERMISSIONS RESET TO FACTORY DEFAULTS (sid={sid})");
+                    println!("  ServerAdmin Query : serveradmin / serveradmin (sgid=6 restored)");
+                    println!("  New Admin Token   : {token}");
+                    println!("==================================================================");
+                } else {
+                    let response = rt.execute(normalized, &mut session);
+                    println!("{response}");
+                }
+            }
+        }
+    });
 }
 
 fn run_repl(workspace_root: &std::path::Path) -> Result<()> {
@@ -102,7 +214,7 @@ fn run_repl(workspace_root: &std::path::Path) -> Result<()> {
     let stdin = io::stdin();
 
     println!("BlackTeaSpeak compatibility baseline REPL");
-    println!("Type help, version, login serveradmin serveradmin, use sid=1, serverinfo or exit.");
+    println!("Type help, version, login serveradmin serveradmin, use sid=1, permreset, serverinfo or exit.");
 
     loop {
         print!("query> ");
@@ -122,6 +234,15 @@ fn run_repl(workspace_root: &std::path::Path) -> Result<()> {
             break;
         }
 
+        if matches!(trimmed, "permreset" | "reset-permissions") {
+            session.authenticated_login = Some(String::from("serveradmin"));
+            if session.selected_virtual_server_id.is_none() {
+                session.selected_virtual_server_id = Some(1);
+            }
+            println!("{}", runtime.execute("permreset", &mut session));
+            continue;
+        }
+
         println!("{}", runtime.execute(trimmed, &mut session));
     }
 
@@ -135,6 +256,11 @@ fn run_serve(workspace_root: &std::path::Path, args: &[String]) -> Result<()> {
     println!("press Ctrl+C to stop");
 
     let runtime = Arc::new(Mutex::new(create_baseline_runtime(workspace_root)?));
+    {
+        let mut rt = runtime.lock().unwrap();
+        print_startup_admin_banner(&mut rt);
+    }
+    spawn_admin_console(Arc::clone(&runtime));
     
     let rt = tokio::runtime::Runtime::new()?;
     rt.block_on(async {
@@ -164,7 +290,7 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
     let web_client_bind_addr = resolve_bind_address_for(args, &["--web-client-bind"], DEFAULT_WEB_CLIENT_BIND);
     let file_bind_addr = resolve_bind_address_for(args, &["--file-bind"], DEFAULT_FILE_TRANSFER_BIND);
     let desktop_bind_addr = resolve_desktop_bind_addr(args, &web_bind_addr);
-    let desktop_max_bytes = resolve_usize_option(
+    let _desktop_max_bytes = resolve_usize_option(
         args,
         "--desktop-max-bytes",
         DEFAULT_DESKTOP_COMPAT_MAX_BYTES,
@@ -176,36 +302,17 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
     let (cert_path, key_path) = resolve_blackteaweb_tls_paths(workspace_root, args);
     let runtime = Arc::new(Mutex::new(create_baseline_runtime(workspace_root)?));
     let file_transfers = {
-        let runtime_guard = runtime
+        let _runtime_guard = runtime
             .lock()
             .map_err(|_| io::Error::other("runtime lock poisoned"))?;
         blackteaspeak_server::file_transfer::FileTransferRegistry::new(workspace_root)
     };
     let file_transfers = Arc::new(file_transfers);
-    let (music_download_tx, music_download_rx) = std::sync::mpsc::channel();
     {
         let mut rt = runtime.lock().unwrap();
         rt.set_file_transfer_registry(Arc::clone(&file_transfers));
-        rt.music_download_tx = Some(music_download_tx);
     }
-    let dl_runtime = Arc::clone(&runtime);
-    let dl_file_transfers = Arc::clone(&file_transfers);
-    thread::spawn(move || {
-        for (bot_id, song_id, url) in music_download_rx {
-            let output_path = match dl_file_transfers.music_download_path(&format!("{song_id}.mp3")) {
-                Ok(path) => path,
-                Err(error) => {
-                    eprintln!("failed to resolve music download path for {song_id}: {error}");
-                    continue;
-                }
-            };
-            if blackteaspeak_server::runtime::BaselineRuntime::download_youtube_track(&url, &output_path) {
-                if let Ok(mut rt) = dl_runtime.lock() {
-                    rt.update_downloaded_music_track(bot_id, song_id, "ffmpeg", &format!("/music/{song_id}.mp3"));
-                }
-            }
-        }
-    });
+    blackteaspeak_server::runtime::spawn_music_bot_audio_engine(Arc::clone(&runtime));
 
     let tracker_rt = Arc::clone(&runtime);
     file_transfers.add_notifier(Arc::new(move |event| {
@@ -217,7 +324,7 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
         }
     }));
 
-    let mut web_server = BlackTeaWebTransportServer::bind_with_shared_runtime(
+    let web_server = BlackTeaWebTransportServer::bind_with_shared_runtime(
         Arc::clone(&runtime),
         &web_bind_addr,
         &cert_path,
@@ -232,11 +339,13 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
     )?;
     
     let blackteaweb_dist_path = workspace_root.join("BlackTeaWeb").join("dist");
+    let webtransport_port = web_bind_addr.parse::<std::net::SocketAddr>().ok().map(|addr| addr.port());
     let web_client_server = WebClientServer::bind(
         &web_client_bind_addr,
         blackteaweb_dist_path,
         &cert_path,
         &key_path,
+        webtransport_port,
     )?;
     let desktop_shared_secrets = Arc::new(Mutex::new(HashMap::<u64, Vec<u8>>::new()));
     let (lifecycle_tx, lifecycle_rx) = std::sync::mpsc::channel();
@@ -310,12 +419,13 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
                         });
                     }
 
-                    // Start TeaSpeak UDP
+                    // Start TeaSpeak UDP (also handles BTEA UDP packets on the primary port)
                     if let Ok(server) = blackteaspeak_server::teaspeak_transport::TeaSpeakTransportServer::bind_with_shared_runtime(
                         server_id,
                         Arc::clone(&lifecycle_runtime),
                         &ts3_bind_addr,
                     ) {
+                        let server = server.with_shared_secrets(Arc::clone(&lifecycle_secrets));
                         println!("virtual server {} teaspeak transport listening on udp {}", server_id, port);
                         let should_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
                         running_udp_servers.insert(server_id + 10000, Arc::clone(&should_stop));
@@ -328,18 +438,19 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
                         eprintln!("virtual server {} failed to bind teaspeak UDP on {}", server_id, ts3_bind_addr);
                     }
 
-                    // Start TeaSpeak TCP
-                    if let Ok(server) = blackteaspeak_server::teaspeak_tcp_transport::TeaSpeakTcpTransportServer::bind_with_shared_runtime(
+                    // Start BTEA TCP on primary port (e.g. 9987) so BTEA Desktop clients can connect on either 9987 or 9988
+                    if let Ok(server) = blackteaspeak_server::desktop_tcp_transport::DesktopTcpTransportServer::bind_with_shared_runtime(
                         server_id,
                         Arc::clone(&lifecycle_runtime),
                         &ts3_bind_addr,
+                        Arc::clone(&lifecycle_secrets),
                     ) {
-                        println!("virtual server {} teaspeak tcp transport listening on tcp {}", server_id, port);
+                        println!("virtual server {} desktop tcp transport listening on tcp {}", server_id, port);
                         let should_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
                         running_tcp_servers.insert(server_id + 10000, Arc::clone(&should_stop));
                         thread::spawn(move || {
                             if let Err(e) = server.run(should_stop) {
-                                eprintln!("virtual server {} teaspeak tcp terminated: {}", server_id, e);
+                                eprintln!("virtual server {} desktop tcp (primary) terminated: {}", server_id, e);
                             }
                         });
                     }
@@ -379,7 +490,12 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
         println!("desktop responder={}", responder.describe());
     }
     println!("mode=serve-all (shared runtime + live query/web bridge)");
+    {
+        let mut rt = runtime.lock().unwrap();
+        print_startup_admin_banner(&mut rt);
+    }
     println!("press Ctrl+C to stop");
+    spawn_admin_console(Arc::clone(&runtime));
 
     let housekeeping_runtime = Arc::clone(&runtime);
     thread::spawn(move || {
@@ -391,6 +507,23 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
             }
         }
     });
+
+    let tsdns_runtime = Arc::clone(&runtime);
+    let tsdns_bind_addr = resolve_bind_address_for(
+        args,
+        &["--tsdns-bind"],
+        blackteaspeak_server::tsdns::DEFAULT_TSDNS_BIND,
+    );
+    if let Ok(tsdns_server) = blackteaspeak_server::tsdns::TsdnsTcpServer::bind_with_shared_runtime(
+        tsdns_runtime,
+        &tsdns_bind_addr,
+    ) {
+        println!("tsdns responder listening on tcp {}", tsdns_bind_addr);
+        let tsdns_stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
+        thread::spawn(move || {
+            let _ = tsdns_server.run(tsdns_stop);
+        });
+    }
 
     let ssh_runtime = Arc::clone(&runtime);
     let ssh_bind_addr = resolve_bind_address_for(args, &["--query-bind"], "0.0.0.0:10022");
@@ -419,6 +552,33 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
             }
         });
     });
+
+    let telnet_runtime = Arc::clone(&runtime);
+    let telnet_bind_addr = resolve_bind_address_for(args, &["--telnet-query-bind"], "0.0.0.0:10011");
+    thread::spawn(move || {
+        match std::net::TcpListener::bind(&telnet_bind_addr) {
+            Ok(listener) => {
+                println!("telnet query transport listening on {}", telnet_bind_addr);
+                for incoming in listener.incoming() {
+                    if let Ok(stream) = incoming {
+                        let peer = stream.peer_addr().ok();
+                        let rt = Arc::clone(&telnet_runtime);
+                        thread::spawn(move || {
+                            let _ = blackteaspeak_server::ssh_query::handle_telnet_query_client(
+                                stream, peer, rt,
+                            );
+                        });
+                    }
+                }
+            }
+            Err(err) => {
+                eprintln!(
+                    "failed to bind telnet query transport on {}: {}",
+                    telnet_bind_addr, err
+                );
+            }
+        }
+    });
     thread::spawn(move || {
         if let Err(error) = file_server.run() {
             eprintln!("file transfer terminated: {error:#}");
@@ -437,7 +597,7 @@ fn run_serve_web(workspace_root: &std::path::Path, args: &[String]) -> Result<()
     let web_client_bind_addr = resolve_bind_address_for(args, &["--web-client-bind"], DEFAULT_WEB_CLIENT_BIND);
     let file_bind_addr = resolve_bind_address_for(args, &["--file-bind"], DEFAULT_FILE_TRANSFER_BIND);
     let desktop_bind_addr = resolve_desktop_bind_addr(args, &bind_addr);
-    let desktop_max_bytes = resolve_usize_option(
+    let _desktop_max_bytes = resolve_usize_option(
         args,
         "--desktop-max-bytes",
         DEFAULT_DESKTOP_COMPAT_MAX_BYTES,
@@ -498,11 +658,13 @@ fn run_serve_web(workspace_root: &std::path::Path, args: &[String]) -> Result<()
     )?;
     
     let blackteaweb_dist_path = workspace_root.join("BlackTeaWeb").join("dist");
+    let webtransport_port = bind_addr.parse::<std::net::SocketAddr>().ok().map(|addr| addr.port());
     let web_client_server = WebClientServer::bind(
         &web_client_bind_addr,
         blackteaweb_dist_path,
         &cert_path,
         &key_path,
+        webtransport_port,
     )?;
     let desktop_shared_secrets = Arc::new(Mutex::new(HashMap::<u64, Vec<u8>>::new()));
     let desktop_server = desktop_bind_addr
@@ -530,7 +692,12 @@ fn run_serve_web(workspace_root: &std::path::Path, args: &[String]) -> Result<()
     if let Some(responder) = desktop_responder.as_ref() {
         println!("desktop responder={}", responder.describe());
     }
+    {
+        let mut rt = runtime.lock().unwrap();
+        print_startup_admin_banner(&mut rt);
+    }
     println!("press Ctrl+C to stop");
+    spawn_admin_console(Arc::clone(&runtime));
 
     thread::spawn(move || {
         if let Err(error) = file_server.run() {
@@ -616,24 +783,34 @@ fn resolve_blackteaweb_tls_paths(
     let explicit_key = resolve_path_option(args, "--key");
 
     let (generated_cert, generated_key) = resolve_generated_blackteaweb_tls_paths(workspace_root, &[]);
-    let (default_cert, default_key) = if generated_cert.is_file() && generated_key.is_file() {
-        (generated_cert, generated_key)
+    let should_renew = if !generated_cert.is_file() || !generated_key.is_file() {
+        true
     } else {
-        (
-            workspace_root
-                .join("BlackTeaSpeak-1.5.6")
-                .join("certs")
-                .join("default_certificate.pem"),
-            workspace_root
-                .join("BlackTeaSpeak-1.5.6")
-                .join("certs")
-                .join("default_privatekey.pem"),
-        )
+        if let Ok(metadata) = std::fs::metadata(&generated_cert) {
+            if let Ok(modified) = metadata.modified() {
+                if let Ok(elapsed) = modified.elapsed() {
+                    elapsed.as_secs() > 7 * 24 * 3600
+                } else {
+                    false
+                }
+            } else {
+                false
+            }
+        } else {
+            false
+        }
     };
 
+    if should_renew {
+        println!("Generating or renewing BlackTeaWeb localhost certificates...");
+        if let Err(e) = generate_localhost_tls_assets(&generated_cert, &generated_key) {
+            eprintln!("Failed to generate localhost certificates: {e:#}");
+        }
+    }
+
     (
-        explicit_cert.unwrap_or(default_cert),
-        explicit_key.unwrap_or(default_key),
+        explicit_cert.unwrap_or(generated_cert),
+        explicit_key.unwrap_or(generated_key),
     )
 }
 
@@ -763,6 +940,8 @@ fn print_usage() {
     println!("  blackteaspeak_server serve-desktop [--bind <addr>] [--desktop-bind <addr>] [--desktop-max-bytes <count>] [--reply-... <mode>]");
     println!("  blackteaspeak_server capture-desktop [--bind <addr>] [--max-bytes <count>] [--reply-ts3init1 <ignore|echo|reset|set-cookie|set-cookie-compact|set-cookie-dual|set-cookie-error[:<u32|0xHEX|name>]|set-cookie-error-dual[:<u32|0xHEX|name>]|set-puzzle|set-puzzle-legacy|followup39-reply[:bootstrap-overlap23|bootstrap-blocka-blockb7|bootstrap-prefix8-overlap23|segment-prefix8-overlap23]|post-command4-replay[:packet-index-zero-bootstrap-blockab23|ack15-repeat-1302|ack15-1306-only|ack15-seq1-burst|ack15-seq12-burst|ack15-full-burst|ack15-seq12-then-seq3-50ms|ack15-seq12-then-seq3-250ms|bootstrap-head11|bootstrap-head35|bootstrap-head11-xor|bootstrap-head35-xor|bootstrap-head11-add|bootstrap-head35-add|bootstrap-tag-head11-add|alpha-prefix8|alpha-payload-head|bootstrap-tag|bootstrap-blockb16|bootstrap-blockab23|payload-byte:<offset>:<zero|add1|sub1|xor02>|payload-tail1-add1|payload-tail1-sub1|payload-tail1-xor02|payload-tail1-zero|payload-tail2-zero|payload-tail4-zero|payload-tail8-zero|payload-tail16-zero|payload-mid32-zero|payload-tail32-zero|payload-tail64-zero|bootstrap-overlap24|bootstrap-correlated]|hex:...>] [--reply-get-cookie <ignore|echo|reset|set-cookie|set-cookie-compact|set-cookie-dual|set-cookie-error[:<u32|0xHEX|name>]|set-cookie-error-dual[:<u32|0xHEX|name>]|set-puzzle|set-puzzle-legacy|followup39-reply[:bootstrap-overlap23|bootstrap-blocka-blockb7|bootstrap-prefix8-overlap23|segment-prefix8-overlap23]|post-command4-replay[:packet-index-zero-bootstrap-blockab23|ack15-repeat-1302|ack15-1306-only|ack15-seq1-burst|ack15-seq12-burst|ack15-full-burst|ack15-seq12-then-seq3-50ms|ack15-seq12-then-seq3-250ms|bootstrap-head11|bootstrap-head35|bootstrap-head11-xor|bootstrap-head35-xor|bootstrap-head11-add|bootstrap-head35-add|bootstrap-tag-head11-add|alpha-prefix8|alpha-payload-head|bootstrap-tag|bootstrap-blockb16|bootstrap-blockab23|payload-byte:<offset>:<zero|add1|sub1|xor02>|payload-tail1-add1|payload-tail1-sub1|payload-tail1-xor02|payload-tail1-zero|payload-tail2-zero|payload-tail4-zero|payload-tail8-zero|payload-tail16-zero|payload-mid32-zero|payload-tail32-zero|payload-tail64-zero|bootstrap-overlap24|bootstrap-correlated]|hex:...>] [--reply-get-puzzle <ignore|echo|reset|set-cookie|set-cookie-compact|set-cookie-dual|set-cookie-error[:<u32|0xHEX|name>]|set-cookie-error-dual[:<u32|0xHEX|name>]|set-puzzle|set-puzzle-legacy|followup39-reply[:bootstrap-overlap23|bootstrap-blocka-blockb7|bootstrap-prefix8-overlap23|segment-prefix8-overlap23]|post-command4-replay[:packet-index-zero-bootstrap-blockab23|ack15-repeat-1302|ack15-1306-only|ack15-seq1-burst|ack15-seq12-burst|ack15-full-burst|ack15-seq12-then-seq3-50ms|ack15-seq12-then-seq3-250ms|bootstrap-head11|bootstrap-head35|bootstrap-head11-xor|bootstrap-head35-xor|bootstrap-head11-add|bootstrap-head35-add|bootstrap-tag-head11-add|alpha-prefix8|alpha-payload-head|bootstrap-tag|bootstrap-blockb16|bootstrap-blockab23|payload-byte:<offset>:<zero|add1|sub1|xor02>|payload-tail1-add1|payload-tail1-sub1|payload-tail1-xor02|payload-tail1-zero|payload-tail2-zero|payload-tail4-zero|payload-tail8-zero|payload-tail16-zero|payload-mid32-zero|payload-tail32-zero|payload-tail64-zero|bootstrap-overlap24|bootstrap-correlated]|hex:...>] [--reply-bootstrap185 <ignore|echo|reset|set-cookie|set-cookie-compact|set-cookie-dual|set-cookie-error[:<u32|0xHEX|name>]|set-cookie-error-dual[:<u32|0xHEX|name>]|set-puzzle|set-puzzle-legacy|followup39-reply[:bootstrap-overlap23|bootstrap-blocka-blockb7|bootstrap-prefix8-overlap23|segment-prefix8-overlap23]|post-command4-replay[:packet-index-zero-bootstrap-blockab23|ack15-repeat-1302|ack15-1306-only|ack15-seq1-burst|ack15-seq12-burst|ack15-full-burst|ack15-seq12-then-seq3-50ms|ack15-seq12-then-seq3-250ms|bootstrap-head11|bootstrap-head35|bootstrap-head11-xor|bootstrap-head35-xor|bootstrap-head11-add|bootstrap-head35-add|bootstrap-tag-head11-add|alpha-prefix8|alpha-payload-head|bootstrap-tag|bootstrap-blockb16|bootstrap-blockab23|payload-byte:<offset>:<zero|add1|sub1|xor02>|payload-tail1-add1|payload-tail1-sub1|payload-tail1-xor02|payload-tail1-zero|payload-tail2-zero|payload-tail4-zero|payload-tail8-zero|payload-tail16-zero|payload-mid32-zero|payload-tail32-zero|payload-tail64-zero|bootstrap-overlap24|bootstrap-correlated]|hex:...>] [--reply-followup39 <ignore|echo|reset|set-cookie|set-cookie-compact|set-cookie-dual|set-cookie-error[:<u32|0xHEX|name>]|set-cookie-error-dual[:<u32|0xHEX|name>]|set-puzzle|set-puzzle-legacy|followup39-reply[:bootstrap-overlap23|bootstrap-blocka-blockb7|bootstrap-prefix8-overlap23|segment-prefix8-overlap23]|post-command4-replay[:packet-index-zero-bootstrap-blockab23|ack15-repeat-1302|ack15-1306-only|ack15-seq1-burst|ack15-seq12-burst|ack15-full-burst|ack15-seq12-then-seq3-50ms|ack15-seq12-then-seq3-250ms|bootstrap-head11|bootstrap-head35|bootstrap-head11-xor|bootstrap-head35-xor|bootstrap-head11-add|bootstrap-head35-add|bootstrap-tag-head11-add|alpha-prefix8|alpha-payload-head|bootstrap-tag|bootstrap-blockb16|bootstrap-blockab23|payload-byte:<offset>:<zero|add1|sub1|xor02>|payload-tail1-add1|payload-tail1-sub1|payload-tail1-xor02|payload-tail1-zero|payload-tail2-zero|payload-tail4-zero|payload-tail8-zero|payload-tail16-zero|payload-mid32-zero|payload-tail32-zero|payload-tail64-zero|bootstrap-overlap24|bootstrap-correlated]|hex:...>] [--reply-post-command4 <ignore|echo|reset|set-cookie|set-cookie-compact|set-cookie-dual|set-cookie-error[:<u32|0xHEX|name>]|set-cookie-error-dual[:<u32|0xHEX|name>]|set-puzzle|set-puzzle-legacy|followup39-reply[:bootstrap-overlap23|bootstrap-blocka-blockb7|bootstrap-prefix8-overlap23|segment-prefix8-overlap23]|post-command4-replay[:packet-index-zero-bootstrap-blockab23|ack15-repeat-1302|ack15-1306-only|ack15-seq1-burst|ack15-seq12-burst|ack15-full-burst|ack15-seq12-then-seq3-50ms|ack15-seq12-then-seq3-250ms|bootstrap-head11|bootstrap-head35|bootstrap-head11-xor|bootstrap-head35-xor|bootstrap-head11-add|bootstrap-head35-add|bootstrap-tag-head11-add|alpha-prefix8|alpha-payload-head|bootstrap-tag|bootstrap-blockb16|bootstrap-blockab23|payload-byte:<offset>:<zero|add1|sub1|xor02>|payload-tail1-add1|payload-tail1-sub1|payload-tail1-xor02|payload-tail1-zero|payload-tail2-zero|payload-tail4-zero|payload-tail8-zero|payload-tail16-zero|payload-mid32-zero|payload-tail32-zero|payload-tail64-zero|bootstrap-overlap24|bootstrap-correlated]|hex:...>]");
     println!("  blackteaspeak_server generate-web-cert [--cert <path>] [--key <path>]");
+    println!("  blackteaspeak_server permreset [--sid <server_id>]");
+    println!("  blackteaspeak_server reset-permissions [--sid <server_id>]");
     println!("  blackteaspeak_server exec <query line>");
     println!("  blackteaspeak_server <query line>");
 }

@@ -1465,7 +1465,7 @@
     },
     {
       "name": "help",
-      "category": "Query",
+      "category": "query-session",
       "docPath": "commanddocs/help.txt",
       "binaryOffset": null,
       "usage": [],
@@ -1574,7 +1574,7 @@
     },
     {
       "name": "login",
-      "category": "Query",
+      "category": "query-session",
       "docPath": "commanddocs/login.txt",
       "binaryOffset": null,
       "usage": [
@@ -1599,7 +1599,7 @@
     },
     {
       "name": "logout",
-      "category": "Query",
+      "category": "query-session",
       "docPath": "commanddocs/logout.txt",
       "binaryOffset": null,
       "usage": [
@@ -2443,7 +2443,7 @@
     },
     {
       "name": "quit",
-      "category": "Query",
+      "category": "query-session",
       "docPath": "commanddocs/quit.txt",
       "binaryOffset": null,
       "usage": [
@@ -3282,7 +3282,7 @@
     },
     {
       "name": "use",
-      "category": "Query",
+      "category": "query-session",
       "docPath": "commanddocs/use.txt",
       "binaryOffset": null,
       "usage": [
@@ -3302,7 +3302,7 @@
     },
     {
       "name": "version",
-      "category": "Query",
+      "category": "query-session",
       "docPath": "commanddocs/version.txt",
       "binaryOffset": null,
       "usage": [
@@ -3322,7 +3322,7 @@
     },
     {
       "name": "whoami",
-      "category": "Query",
+      "category": "query-session",
       "docPath": "commanddocs/whoami.txt",
       "binaryOffset": null,
       "usage": [

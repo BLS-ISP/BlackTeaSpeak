@@ -3,7 +3,7 @@ use crate::query::CommandRequest;
 use crate::runtime::permissions::PermissionAssignment;
 use crate::state::*;
 
-use crate::runtime::{permission_value_or_default, runtime_bool_flag};
+use crate::runtime::runtime_bool_flag;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum NotificationEventKind {
@@ -86,6 +86,7 @@ pub struct QuerySessionState {
     pub is_desktop_client: bool,
     pub whisper_targets: Option<crate::models::WhisperTargetSelection>,
     pub ignored_clients: Vec<u64>,
+    pub subscribed_channels: BTreeSet<u32>,
     pub points: u32,
     pub blocked_until_millis: u64,
     pub last_points_decay_millis: u64,
@@ -110,6 +111,7 @@ impl QuerySessionState {
         self.client_input_muted = false;
         self.client_output_muted = false;
         self.actor_client_database_id_override = None;
+        self.subscribed_channels.clear();
     }
 }
 
@@ -161,6 +163,12 @@ impl ChannelKind {
             .is_some_and(|value| runtime_bool_flag(value))
         {
             Self::SemiPermanent
+        } else if request
+            .named_args
+            .get("channel_flag_permanent")
+            .is_some_and(|value| !runtime_bool_flag(value))
+        {
+            Self::Temporary
         } else {
             Self::Permanent
         }
@@ -204,7 +212,7 @@ pub(crate) struct QueryAccount {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ServerGroup {
+pub struct ServerGroup {
     pub(crate) id: u32,
     pub(crate) name: String,
     pub(crate) group_type: u32,
@@ -214,7 +222,7 @@ pub(crate) struct ServerGroup {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ChannelGroup {
+pub struct ChannelGroup {
     pub(crate) id: u32,
     pub(crate) name: String,
     pub(crate) group_type: u32,
@@ -224,21 +232,21 @@ pub(crate) struct ChannelGroup {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct ChannelGroupAssignment {
+pub struct ChannelGroupAssignment {
     pub(crate) channel_id: u32,
     pub(crate) client_database_id: u64,
     pub(crate) channel_group_id: u32,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ChannelClientPermissionTarget {
+pub struct ChannelClientPermissionTarget {
     pub(crate) channel_id: u32,
     pub(crate) client_database_id: u64,
     pub(crate) permissions: BTreeMap<String, PermissionAssignment>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ClientPermissionTarget {
+pub struct ClientPermissionTarget {
     pub(crate) server_id: u32,
     pub(crate) client_database_id: u64,
     pub(crate) client_unique_identifier: String,
@@ -247,22 +255,68 @@ pub(crate) struct ClientPermissionTarget {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Channel {
-    pub(crate) id: u32,
-    pub(crate) parent_id: u32,
-    pub(crate) order: u32,
-    pub(crate) kind: ChannelKind,
-    pub(crate) name: String,
-    pub(crate) topic: String,
-    pub(crate) description: String,
-    pub(crate) password: String,
-    pub(crate) codec: u32,
-    pub(crate) codec_quality: u32,
-    pub(crate) maxclients: i32,
-    pub(crate) maxfamilyclients: i32,
-    pub(crate) flag_default: bool,
-    pub(crate) flag_password: bool,
-    pub(crate) permissions: BTreeMap<String, PermissionAssignment>,
+pub struct Channel {
+    pub id: u32,
+    pub parent_id: u32,
+    pub order: u32,
+    pub kind: ChannelKind,
+    pub name: String,
+    pub topic: String,
+    pub description: String,
+    pub password: String,
+    pub codec: u32,
+    pub codec_quality: u32,
+    pub maxclients: i32,
+    pub maxfamilyclients: i32,
+    pub flag_default: bool,
+    pub flag_password: bool,
+    pub permissions: BTreeMap<String, PermissionAssignment>,
+}
+
+impl Channel {
+    pub fn needed_talk_power(&self) -> i64 {
+        self.permission_power("i_channel_needed_talk_power")
+    }
+
+    pub fn set_needed_talk_power(&mut self, value: i64) {
+        self.set_permission_power("i_channel_needed_talk_power", value);
+    }
+
+    pub fn permission_power(&self, perm_name: &str) -> i64 {
+        self.permissions
+            .get(perm_name)
+            .map(|p| p.value)
+            .unwrap_or(0)
+    }
+
+    pub fn set_permission_power(&mut self, perm_name: &str, value: i64) {
+        if (value <= 0 && perm_name != "i_icon_id") || (value == 0 && perm_name == "i_icon_id") {
+            self.permissions.remove(perm_name);
+        } else {
+            self.permissions.insert(
+                String::from(perm_name),
+                PermissionAssignment {
+                    value,
+                    negated: false,
+                    skipped: false,
+                },
+            );
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ServerTempPassword {
+    pub server_id: u32,
+    pub password: String,
+    pub password_clear: String,
+    pub description: String,
+    pub start_timestamp: u64,
+    pub end_timestamp: u64,
+    pub target_channel_id: u32,
+    pub target_channel_password: String,
+    pub invoker_name: String,
+    pub invoker_unique_id: String,
 }
 
 #[derive(Debug, Clone)]
@@ -270,6 +324,8 @@ pub struct VirtualServer {
     pub(crate) id: u32,
     pub(crate) port: u16,
     pub(crate) name: String,
+    pub(crate) status: String,
+    pub(crate) password: String,
     pub(crate) unique_identifier: String,
     pub(crate) welcome_message: String,
     pub(crate) host_message: String,
@@ -288,6 +344,8 @@ impl VirtualServer {
             id,
             port,
             name: "BlackTeaSpeak Server".to_string(),
+            status: "online".to_string(),
+            password: String::new(),
             unique_identifier: crate::desktop_crypto::get_stable_server_uid(),
             welcome_message: "Welcome to BlackTeaSpeak!".to_string(),
             host_message: "".to_string(),
@@ -338,6 +396,42 @@ pub(crate) struct PrivateConversationMessage {
     pub(crate) message: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct OfflineMessage {
+    pub id: u64,
+    pub server_id: u32,
+    pub sender_database_id: u64,
+    pub sender_unique_identifier: String,
+    pub sender_nickname: String,
+    pub recipient_database_id: u64,
+    pub recipient_unique_identifier: String,
+    pub subject: String,
+    pub message: String,
+    pub timestamp: u64,
+    pub flag_read: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ClientComplaint {
+    pub server_id: u32,
+    pub target_database_id: u64,
+    pub target_name: String,
+    pub from_database_id: u64,
+    pub from_name: String,
+    pub message: String,
+    pub timestamp: u64,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ServerLogEntry {
+    pub id: u64,
+    pub server_id: u32,
+    pub timestamp: u64,
+    pub level: u32,
+    pub channel: String,
+    pub message: String,
+}
+
 #[derive(Debug, Clone)]
 pub(crate) struct TokenAction {
     pub(crate) id: u32,
@@ -368,7 +462,7 @@ pub(crate) enum ParsedTokenActionMutation {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct PrivilegeToken {
+pub struct PrivilegeToken {
     pub(crate) id: u32,
     pub(crate) server_id: u32,
     pub(crate) token: String,
@@ -382,7 +476,7 @@ pub(crate) struct PrivilegeToken {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct BanTrigger {
+pub struct BanTrigger {
     pub(crate) client_unique_identifier: String,
     pub(crate) client_nickname: String,
     pub(crate) client_hardware_identifier: String,
@@ -391,7 +485,7 @@ pub(crate) struct BanTrigger {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct ActiveBan {
+pub struct ActiveBan {
     pub(crate) id: u32,
     pub(crate) server_id: u32,
     pub(crate) name: String,
@@ -408,30 +502,31 @@ pub(crate) struct ActiveBan {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct OnlineClient {
-    pub(crate) id: u64,
-    pub(crate) database_id: u64,
-    pub(crate) unique_identifier: String,
-    pub(crate) nickname: String,
-    pub(crate) away: bool,
-    pub(crate) away_message: String,
-    pub(crate) input_muted: bool,
-    pub(crate) output_muted: bool,
-    pub(crate) server_id: u32,
-    pub(crate) channel_id: u32,
-    pub(crate) client_type: u32,
-    pub(crate) version: String,
-    pub(crate) platform: String,
-    pub(crate) country: String,
-    pub(crate) connection_ip: String,
-    pub(crate) server_groups: Vec<u32>,
-    pub(crate) connected_at: u64,
-    pub(crate) last_seen_at: u64,
-    pub(crate) extra_properties: BTreeMap<String, String>,
+pub struct OnlineClient {
+    pub id: u64,
+    pub database_id: u64,
+    pub unique_identifier: String,
+    pub nickname: String,
+    pub away: bool,
+    pub away_message: String,
+    pub input_muted: bool,
+    pub output_muted: bool,
+    pub server_id: u32,
+    pub channel_id: u32,
+    pub client_type: u32,
+    pub version: String,
+    pub platform: String,
+    pub country: String,
+    pub connection_ip: String,
+    pub server_groups: Vec<u32>,
+    pub connected_at: u64,
+    pub last_seen_at: u64,
+    pub whisper_targets: Option<crate::models::WhisperTargetSelection>,
+    pub extra_properties: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Client {
+pub struct Client {
     pub(crate) database_id: u64,
     pub(crate) unique_identifier: String,
     pub(crate) nickname: String,
@@ -468,6 +563,7 @@ pub struct OnlineClientSnapshot {
     pub connection_ip: String,
     pub server_groups: Vec<u32>,
     pub client_flag_avatar: String,
+    pub extra_properties: BTreeMap<String, String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -479,7 +575,49 @@ pub struct ChannelSnapshot {
     pub name: String,
     pub topic: String,
     pub description: String,
+    pub codec: u32,
+    pub codec_quality: u32,
+    pub maxclients: i32,
+    pub maxfamilyclients: i32,
+    pub flag_default: bool,
+    pub flag_password: bool,
+    pub needed_talk_power: i64,
+    pub needed_join_power: i64,
+    pub needed_subscribe_power: i64,
+    pub needed_description_view_power: i64,
+    pub needed_modify_power: i64,
+    pub needed_delete_power: i64,
+    pub icon_id: i64,
     pub total_clients: u32,
+}
+
+impl ChannelSnapshot {
+    pub fn from_channel(channel: &Channel, total_clients: u32) -> Self {
+        Self {
+            id: channel.id,
+            parent_id: channel.parent_id,
+            order: channel.order,
+            kind: channel.kind,
+            name: channel.name.clone(),
+            topic: channel.topic.clone(),
+            description: channel.description.clone(),
+            codec: channel.codec,
+            codec_quality: channel.codec_quality,
+            maxclients: channel.maxclients,
+            maxfamilyclients: channel.maxfamilyclients,
+            flag_default: channel.flag_default,
+            flag_password: channel.flag_password,
+            needed_talk_power: channel.needed_talk_power(),
+            needed_join_power: channel.permission_power("i_channel_needed_join_power"),
+            needed_subscribe_power: channel.permission_power("i_channel_needed_subscribe_power"),
+            needed_description_view_power: channel
+                .permission_power("i_channel_needed_description_view_power"),
+            needed_modify_power: channel.permission_power("i_channel_needed_modify_power"),
+            needed_delete_power: channel.permission_power("i_channel_needed_delete_power"),
+            icon_id: channel.permission_power("i_icon_id"),
+            total_clients,
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -520,4 +658,16 @@ pub struct WebServerInitInfo {
     pub antiflood_points_needed_ip_block: u32,
     pub antiflood_ban_time: u32,
 }
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ActiveMediaBroadcast {
+    pub server_id: u32,
+    pub channel_id: u32,
+    pub broadcaster_client_id: u64,
+    /// `0` = Camera Video, `1` = Screen Share, `2` = Audio Broadcast
+    pub broadcast_type: u32,
+    pub ssrc: u32,
+    pub joined_client_ids: BTreeSet<u64>,
+}
+
 

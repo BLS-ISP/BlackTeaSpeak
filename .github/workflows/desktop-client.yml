@@ -83,7 +83,10 @@ jobs:
 
       - name: Build Tauri Application
         working-directory: ./BlackTeaSpeak-Client
-        run: npm run tauri build > tauri-build.log 2>&1
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
+          NO_STRIP: 1
+        run: (npm run tauri build || npm run tauri build -- --bundles deb) > tauri-build.log 2>&1
 
       - name: Push Tauri Build Log
         if: failure()
@@ -134,7 +137,10 @@ jobs:
 
       - name: Build Tauri Application
         working-directory: ./BlackTeaSpeak-Client
-        run: npm run tauri build > tauri-build.log 2>&1
+        env:
+          APPIMAGE_EXTRACT_AND_RUN: 1
+          NO_STRIP: 1
+        run: (npm run tauri build || npm run tauri build -- --bundles rpm) > tauri-build.log 2>&1
 
       - name: Push Tauri Build Log
         if: failure()

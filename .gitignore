@@ -35,16 +35,24 @@ host_key.pem
 *.log
 
 runtime-state.json
+**/runtime-state.json
 target-*/
 
 # External analysis code (very large)
 P2/
+_archive/
+/data/
+**/data/music/
+**/data/tools/
+**/data/tls/
+**/data/file-repositories/
 
 # Compiled files
 **/*.exe
 **/*.obj
 **/*.pdb
 **/__pycache__/
+**/*.tsbuildinfo
 
 # Local build artifacts/logs
 *.log
@@ -56,9 +64,12 @@ P2/
 **/build.log
 **/build_error.log
 **/check.log
+**/check.txt
+**/check_errors.txt
 **/server_keypair.txt
+**/logs/
+logs/
 
 # License and keys
 *.dat
 *.dat.bak
-

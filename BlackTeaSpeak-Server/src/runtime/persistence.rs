@@ -1,5 +1,4 @@
 use super::*;
-use crate::query::{CommandRequest, QueryResponse};
 
 impl BaselineRuntime {
     pub fn persist_state_if_configured(&self) {
@@ -78,36 +77,38 @@ impl BaselineRuntime {
                 .collect();
         }
         if schema_version >= 4 {
-            self.store.channel_groups = state
-                .channel_groups
-                .into_iter()
-                .map(|(group_id, group)| {
-                    (
-                        group_id,
-                        ChannelGroup {
-                            id: group.id,
-                            name: group.name,
-                            group_type: group.group_type,
-                            icon_id: group.icon_id,
-                            save_db: group.save_db,
-                            permissions: group
-                                .permissions
-                                .into_iter()
-                                .map(|(permission_name, assignment)| {
-                                    (
-                                        permission_name,
-                                        PermissionAssignment {
-                                            value: assignment.value,
-                                            negated: assignment.negated,
-                                            skipped: assignment.skipped,
-                                        },
-                                    )
-                                })
-                                .collect(),
-                        },
-                    )
-                })
-                .collect();
+            if !state.channel_groups.is_empty() {
+                self.store.channel_groups = state
+                    .channel_groups
+                    .into_iter()
+                    .map(|(group_id, group)| {
+                        (
+                            group_id,
+                            ChannelGroup {
+                                id: group.id,
+                                name: group.name,
+                                group_type: group.group_type,
+                                icon_id: group.icon_id,
+                                save_db: group.save_db,
+                                permissions: group
+                                    .permissions
+                                    .into_iter()
+                                    .map(|(permission_name, assignment)| {
+                                        (
+                                            permission_name,
+                                            PermissionAssignment {
+                                                value: assignment.value,
+                                                negated: assignment.negated,
+                                                skipped: assignment.skipped,
+                                            },
+                                        )
+                                    })
+                                    .collect(),
+                            },
+                        )
+                    })
+                    .collect();
+            }
             self.store.channel_group_assignments = state
                 .channel_group_assignments
                 .into_iter()
@@ -175,6 +176,12 @@ impl BaselineRuntime {
                             id: server.id,
                             port: server.port,
                             name: server.name,
+                            status: if server.status.is_empty() {
+                                String::from("online")
+                            } else {
+                                server.status
+                            },
+                            password: server.password,
                             unique_identifier: server.unique_identifier,
                             welcome_message: server.welcome_message,
                             host_message: server.host_message,
@@ -200,35 +207,38 @@ impl BaselineRuntime {
                     server_id,
                     channels
                         .into_iter()
-                        .map(|channel| Channel {
-                            id: channel.id,
-                            parent_id: channel.parent_id,
-                            order: channel.order,
-                            kind: channel.kind.into(),
-                            name: channel.name.clone(),
-                            topic: channel.topic.clone(),
-                            description: channel.description.clone(),
-                            password: String::new(),
-                            codec: 0,
-                            codec_quality: 5,
-                            maxclients: -1,
-                            maxfamilyclients: -1,
-                            flag_default: false,
-                            flag_password: false,
-                            permissions: channel
-                                .permissions
-                                .into_iter()
-                                .map(|(permission_name, assignment)| {
-                                    (
-                                        permission_name,
-                                        PermissionAssignment {
-                                            value: assignment.value,
-                                            negated: assignment.negated,
-                                            skipped: assignment.skipped,
-                                        },
-                                    )
-                                })
-                                .collect(),
+                        .map(|channel| {
+                            let flag_password = channel.flag_password || !channel.password.is_empty();
+                            Channel {
+                                id: channel.id,
+                                parent_id: channel.parent_id,
+                                order: channel.order,
+                                kind: channel.kind.into(),
+                                name: channel.name.clone(),
+                                topic: channel.topic.clone(),
+                                description: channel.description.clone(),
+                                password: channel.password.clone(),
+                                codec: u32::from(channel.codec),
+                                codec_quality: u32::from(channel.codec_quality),
+                                maxclients: channel.maxclients,
+                                maxfamilyclients: channel.maxfamilyclients,
+                                flag_default: channel.flag_default,
+                                flag_password,
+                                permissions: channel
+                                    .permissions
+                                    .into_iter()
+                                    .map(|(permission_name, assignment)| {
+                                        (
+                                            permission_name,
+                                            PermissionAssignment {
+                                                value: assignment.value,
+                                                negated: assignment.negated,
+                                                skipped: assignment.skipped,
+                                            },
+                                        )
+                                    })
+                                    .collect(),
+                            }
                         })
                         .collect(),
                 )
@@ -276,6 +286,61 @@ impl BaselineRuntime {
                 )
             })
             .collect();
+        self.store.offline_messages = state
+            .offline_messages
+            .into_iter()
+            .map(|(id, msg)| {
+                (
+                    id,
+                    OfflineMessage {
+                        id: msg.id,
+                        server_id: msg.server_id,
+                        sender_database_id: msg.sender_database_id,
+                        sender_unique_identifier: msg.sender_unique_identifier,
+                        sender_nickname: msg.sender_nickname,
+                        recipient_database_id: msg.recipient_database_id,
+                        recipient_unique_identifier: msg.recipient_unique_identifier,
+                        subject: msg.subject,
+                        message: msg.message,
+                        timestamp: msg.timestamp,
+                        flag_read: msg.flag_read,
+                    },
+                )
+            })
+            .collect();
+        self.store.complaints = state
+            .complaints
+            .into_iter()
+            .map(|c| ClientComplaint {
+                server_id: c.server_id,
+                target_database_id: c.target_database_id,
+                target_name: c.target_name,
+                from_database_id: c.from_database_id,
+                from_name: c.from_name,
+                message: c.message,
+                timestamp: c.timestamp,
+            })
+            .collect();
+        self.store.custom_client_properties = state
+            .custom_client_properties
+            .into_iter()
+            .map(|entry| ((entry.server_id, entry.client_database_id), entry.properties))
+            .collect();
+        if !state.server_logs.is_empty() {
+            self.store.server_logs = state
+                .server_logs
+                .into_iter()
+                .map(|entry| ServerLogEntry {
+                    id: entry.id,
+                    server_id: entry.server_id,
+                    timestamp: entry.timestamp,
+                    level: entry.level,
+                    channel: entry.channel,
+                    message: entry.message,
+                })
+                .collect();
+        }
+        self.store.instance_properties = state.instance_properties;
         if !state.music_bots.is_empty() {
             self.store.music_bots = state
                 .music_bots
@@ -286,6 +351,8 @@ impl BaselineRuntime {
                         server_id: bot.server_id,
                         client_database_id: bot.client_database_id,
                         linked_client_id: bot.linked_client_id,
+                        nickname: bot.nickname,
+                        channel_id: bot.channel_id,
                         playlist_id: if bot.playlist_id == 0 { bot.id } else { bot.playlist_id },
                         current_song_id: (bot.current_song_id != 0).then_some(bot.current_song_id),
                         next_song_id: bot.next_song_id,
@@ -358,6 +425,68 @@ impl BaselineRuntime {
                     (bot_id, bot)
                 })
                 .collect();
+
+            let persisted_bots: Vec<MusicBot> = self.store.music_bots.values().cloned().collect();
+            for bot in persisted_bots {
+                if bot.client_database_id >= self.store.next_client_database_id {
+                    self.store.next_client_database_id = bot.client_database_id.saturating_add(1);
+                }
+                if let Some(clid) = bot.linked_client_id {
+                    if clid >= self.store.next_query_client_id {
+                        self.store.next_query_client_id = clid.saturating_add(1);
+                    }
+                    let has_custom_channel =
+                        bot.channel_id != 0 && self.channel_exists(bot.server_id, bot.channel_id);
+                    let target_channel_id = if has_custom_channel {
+                        bot.channel_id
+                    } else {
+                        self.web_default_channel_id(bot.server_id).unwrap_or(1)
+                    };
+                    let nickname = if !bot.nickname.trim().is_empty() {
+                        bot.nickname.clone()
+                    } else {
+                        format!("MusicBot {}", bot.id)
+                    };
+                    if let Some(existing) = self.store.online_clients.get_mut(&clid) {
+                        if !bot.nickname.trim().is_empty() {
+                            existing.nickname = nickname;
+                        }
+                        if has_custom_channel {
+                            existing.channel_id = target_channel_id;
+                        }
+                        existing.extra_properties = Self::music_bot_extra_properties(&bot);
+                    } else {
+                        self.store.online_clients.insert(
+                            clid,
+                            OnlineClient {
+                                id: clid,
+                                database_id: bot.client_database_id,
+                                unique_identifier: format!(
+                                    "compat-musicbot-{}",
+                                    bot.client_database_id
+                                ),
+                                nickname,
+                                away: false,
+                                away_message: String::new(),
+                                input_muted: false,
+                                output_muted: false,
+                                server_id: bot.server_id,
+                                channel_id: target_channel_id,
+                                client_type: 0,
+                                version: String::from("BlackTeaSpeak 1.5.6 compat-musicbot"),
+                                platform: String::from("compat-rust"),
+                                country: String::from("ZZ"),
+                                connection_ip: String::new(),
+                                server_groups: vec![8],
+                                connected_at: current_unix_timestamp(),
+                                last_seen_at: current_unix_timestamp(),
+                                whisper_targets: None,
+                                extra_properties: Self::music_bot_extra_properties(&bot),
+                            },
+                        );
+                    }
+                }
+            }
         }
         self.store.tokens = state
             .tokens
@@ -411,12 +540,111 @@ impl BaselineRuntime {
         self.store.next_token_action_id = state
             .next_token_action_id
             .max(next_token_action_id_seed(&self.store.tokens));
+        let max_msg_id = self
+            .store
+            .offline_messages
+            .keys()
+            .copied()
+            .max()
+            .map(|id| id.saturating_add(1))
+            .unwrap_or(1);
+        self.store.next_offline_message_id = state.next_offline_message_id.max(max_msg_id);
+        let max_log_id = self
+            .store
+            .server_logs
+            .iter()
+            .map(|entry| entry.id)
+            .max()
+            .map(|id| id.saturating_add(1))
+            .unwrap_or(1);
+        self.store.next_log_id = state.next_log_id.max(max_log_id);
         for bot in self.store.music_bots.values_mut() {
             Self::normalize_music_bot_queue(bot);
         }
 
+        if self.store.server_groups.len() == 1
+            && self
+                .store
+                .server_groups
+                .get(&1)
+                .is_some_and(|g| g.name == "Server Admin")
+        {
+            self.store.server_groups.remove(&1);
+        }
+
+        if !self.store.server_groups.contains_key(&6) {
+            let admin_permissions = crate::runtime::permissions::build_named_permission_map(
+                &self.specs,
+                "Admin Server Query",
+                "QUERY",
+            );
+            self.store.server_groups.insert(
+                6,
+                ServerGroup {
+                    id: 6,
+                    name: String::from("Admin Server Query"),
+                    group_type: 2,
+                    icon_id: 500,
+                    save_db: true,
+                    permissions: admin_permissions,
+                },
+            );
+        }
+        if !self.store.server_groups.contains_key(&7) {
+            let guest_permissions = crate::runtime::permissions::build_named_permission_map(
+                &self.specs,
+                "Guest Server Query",
+                "QUERY",
+            );
+            self.store.server_groups.insert(
+                7,
+                ServerGroup {
+                    id: 7,
+                    name: String::from("Guest Server Query"),
+                    group_type: 2,
+                    icon_id: 0,
+                    save_db: true,
+                    permissions: guest_permissions,
+                },
+            );
+        }
+        if !self.store.server_groups.contains_key(&8) {
+            let mut normal_permissions = BTreeMap::new();
+            normal_permissions.insert(
+                String::from("i_server_group_needed_member_add_power"),
+                PermissionAssignment {
+                    value: 50,
+                    negated: false,
+                    skipped: false,
+                },
+            );
+            normal_permissions.insert(
+                String::from("i_server_group_needed_member_remove_power"),
+                PermissionAssignment {
+                    value: 50,
+                    negated: false,
+                    skipped: false,
+                },
+            );
+            self.store.server_groups.insert(
+                8,
+                ServerGroup {
+                    id: 8,
+                    name: String::from("Normal"),
+                    group_type: 1,
+                    icon_id: 0,
+                    save_db: true,
+                    permissions: normal_permissions,
+                },
+            );
+        }
+
         if !self.store.server_groups.values().any(|g| g.name == "Server Admin") {
-            let next_id = self.next_server_group_id();
+            let next_id = if !self.store.server_groups.contains_key(&9) {
+                9
+            } else {
+                self.next_server_group_id()
+            };
             let server_admin_permissions = crate::runtime::permissions::build_named_permission_map(&self.specs, "Server Admin", "SERVER");
             self.store.server_groups.insert(
                 next_id,
@@ -551,6 +779,8 @@ impl BaselineRuntime {
                             id: server.id,
                             port: server.port,
                             name: server.name.clone(),
+                            status: server.status.clone(),
+                            password: server.password.clone(),
                             unique_identifier: server.unique_identifier.clone(),
                             welcome_message: server.welcome_message.clone(),
                             host_message: server.host_message.clone(),
@@ -584,6 +814,13 @@ impl BaselineRuntime {
                                 name: channel.name.clone(),
                                 topic: channel.topic.clone(),
                                 description: channel.description.clone(),
+                                password: channel.password.clone(),
+                                codec: channel.codec,
+                                codec_quality: channel.codec_quality,
+                                maxclients: channel.maxclients,
+                                maxfamilyclients: channel.maxfamilyclients,
+                                flag_default: channel.flag_default,
+                                flag_password: channel.flag_password || !channel.password.is_empty(),
                                 permissions: channel
                                     .permissions
                                     .iter()
@@ -704,6 +941,67 @@ impl BaselineRuntime {
                     )
                 })
                 .collect(),
+            offline_messages: self
+                .store
+                .offline_messages
+                .iter()
+                .map(|(id, msg)| {
+                    (
+                        *id,
+                        PersistedOfflineMessage {
+                            id: msg.id,
+                            server_id: msg.server_id,
+                            sender_database_id: msg.sender_database_id,
+                            sender_unique_identifier: msg.sender_unique_identifier.clone(),
+                            sender_nickname: msg.sender_nickname.clone(),
+                            recipient_database_id: msg.recipient_database_id,
+                            recipient_unique_identifier: msg.recipient_unique_identifier.clone(),
+                            subject: msg.subject.clone(),
+                            message: msg.message.clone(),
+                            timestamp: msg.timestamp,
+                            flag_read: msg.flag_read,
+                        },
+                    )
+                })
+                .collect(),
+            complaints: self
+                .store
+                .complaints
+                .iter()
+                .map(|c| PersistedClientComplaint {
+                    server_id: c.server_id,
+                    target_database_id: c.target_database_id,
+                    target_name: c.target_name.clone(),
+                    from_database_id: c.from_database_id,
+                    from_name: c.from_name.clone(),
+                    message: c.message.clone(),
+                    timestamp: c.timestamp,
+                })
+                .collect(),
+            custom_client_properties: self
+                .store
+                .custom_client_properties
+                .iter()
+                .map(|((server_id, client_database_id), properties)| PersistedCustomClientProperty {
+                    server_id: *server_id,
+                    client_database_id: *client_database_id,
+                    properties: properties.clone(),
+                })
+                .collect(),
+            server_logs: self
+                .store
+                .server_logs
+                .iter()
+                .map(|entry| PersistedServerLogEntry {
+                    id: entry.id,
+                    server_id: entry.server_id,
+                    timestamp: entry.timestamp,
+                    level: entry.level,
+                    channel: entry.channel.clone(),
+                    message: entry.message.clone(),
+                })
+                .collect(),
+            instance_properties: self.store.instance_properties.clone(),
             music_bots: self
                 .store
                 .music_bots
@@ -716,6 +1014,12 @@ impl BaselineRuntime {
                             server_id: bot.server_id,
                             client_database_id: bot.client_database_id,
                             linked_client_id: bot.linked_client_id,
+                            nickname: self.music_bot_client_name(bot),
+                            channel_id: bot
+                                .linked_client_id
+                                .and_then(|clid| self.store.online_clients.get(&clid))
+                                .map(|c| c.channel_id)
+                                .unwrap_or(bot.channel_id),
                             playlist_id: bot.playlist_id,
                             current_song_id: bot.current_song_id.unwrap_or(0),
                             next_song_id: bot.next_song_id,
@@ -822,6 +1126,8 @@ impl BaselineRuntime {
             next_conversation_timestamp: self.store.next_conversation_timestamp,
             next_token_id: self.store.next_token_id,
             next_token_action_id: self.store.next_token_action_id,
+            next_offline_message_id: self.store.next_offline_message_id,
+            next_log_id: self.store.next_log_id,
         };
 
         state_store.save(&persisted_state)

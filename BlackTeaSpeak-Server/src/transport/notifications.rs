@@ -1,12 +1,3 @@
-use std::collections::HashMap;
-use std::io::{self, BufRead, BufReader, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::path::Path;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use anyhow::{Context, Result};
 use crate::query::*;
 use crate::runtime::*;
 use super::*;
@@ -23,6 +14,7 @@ pub fn execute_request_with_notifications(
     let before_client_snapshot =
         client_snapshot_before_request(runtime, request, before_session);
     let response = runtime.execute_request(request.clone(), session);
+    let mut pending_cleanups = std::mem::take(&mut runtime.pending_temp_cleanups);
     let after_channel_snapshot =
         channel_snapshot_after_request(runtime, request, session, &response);
     let after_server_snapshot =
@@ -58,16 +50,26 @@ pub fn execute_request_with_notifications(
             .selected_virtual_server_id
             .or(before_session.selected_virtual_server_id)
     {
+        pending_cleanups.extend(runtime.cleanup_temporary_channels(server_id, &cleanup_channel_ids));
         let cleanup_notifications = cleanup_notifications_from_runtime(
             server_id,
-            runtime.cleanup_temporary_channels(server_id, &cleanup_channel_ids),
+            pending_cleanups,
             session.client_id,
             session
                 .authenticated_login
                 .clone()
-                .unwrap_or_else(|| String::from("anonymous")),
+                .unwrap_or_else(|| {
+                    if !session.client_nickname.is_empty() {
+                        session.client_nickname.clone()
+                    } else {
+                        String::from("anonymous")
+                    }
+                }),
             runtime.query_session_unique_identifier(session),
         );
+        for notif in &cleanup_notifications {
+            runtime.broadcast_event(server_id, notif);
+        }
         runtime_notifications.extend(cleanup_notifications);
     }
     (response, runtime_notifications)
@@ -93,6 +95,7 @@ pub(crate) fn derive_runtime_notifications(
     let invoker_name = after_session
         .authenticated_login
         .clone()
+        .or_else(|| (!after_session.client_nickname.is_empty()).then(|| after_session.client_nickname.clone()))
         .unwrap_or_else(|| String::from("anonymous"));
     let invoker_uid = runtime.query_session_unique_identifier(after_session);
     let before_channel_snapshot_ref = before_channel_snapshot.as_ref();
@@ -277,6 +280,11 @@ pub(crate) fn derive_runtime_notifications(
             }];
         }
         "clientupdate"
+        | "clientedit"
+        | "tokenuse"
+        | "privilegekeyuse"
+        | "servergroupaddclient"
+        | "servergroupdelclient"
             if before_client_snapshot_ref != after_client_snapshot_ref
                 && let (Some(server_id), Some(before), Some(after)) = (
                     after_session.selected_virtual_server_id,
@@ -291,14 +299,14 @@ pub(crate) fn derive_runtime_notifications(
                 after: after.clone(),
             }];
         }
-        "musicbotcreate" if let Some(after) = after_client_snapshot_ref => {
+        "musicbotcreate" | "mbotcreate" if let Some(after) = after_client_snapshot_ref => {
             return vec![TransportNotification::ClientEnterView {
                 presence: session_presence_from_snapshot(after),
                 from_channel_id: None,
                 reason_id: 0,
             }];
         }
-        "musicbotdelete" if let Some(before) = before_client_snapshot_ref => {
+        "musicbotdelete" | "mbotdelete" if let Some(before) = before_client_snapshot_ref => {
             return vec![TransportNotification::ClientLeftView {
                 presence: session_presence_from_snapshot(before),
                 to_channel_id: None,
@@ -385,16 +393,28 @@ pub(crate) fn client_snapshot_before_request(
 ) -> Option<OnlineClientSnapshot> {
     let server_id = session.selected_virtual_server_id?;
     match request.command.as_str() {
-        "clientupdate" => {
+        "clientupdate" | "tokenuse" | "privilegekeyuse" => {
             if session.client_id == 0 {
                 return None;
             }
             runtime.online_client_snapshot(server_id, session.client_id)
         }
+        "servergroupaddclient" | "servergroupdelclient" => request
+            .named_args
+            .get("cldbid")
+            .and_then(|value| value.parse::<u64>().ok())
+            .and_then(|cldbid| runtime.online_client_id_by_database_id(server_id, cldbid))
+            .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
+        "clientedit" => request
+            .named_args
+            .get("clid")
+            .and_then(|value| value.parse::<u64>().ok())
+            .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
         "clientmove" => request
             .named_args
             .get("clid")
             .and_then(|value| value.parse::<u64>().ok())
+            .filter(|client_id| *client_id != 0)
             .or(Some(session.client_id).filter(|client_id| *client_id != 0))
             .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
         "clientkick" | "banclient" => request
@@ -402,7 +422,7 @@ pub(crate) fn client_snapshot_before_request(
             .get("clid")
             .and_then(|value| value.parse::<u64>().ok())
             .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
-        "musicbotdelete" => request
+        "musicbotdelete" | "mbotdelete" => request
             .named_args
             .get("botid")
             .or_else(|| request.named_args.get("bot_id"))
@@ -425,16 +445,28 @@ pub(crate) fn client_snapshot_after_request(
 
     let server_id = session.selected_virtual_server_id?;
     match request.command.as_str() {
-        "clientupdate" => {
+        "clientupdate" | "tokenuse" | "privilegekeyuse" => {
             if session.client_id == 0 {
                 return None;
             }
             runtime.online_client_snapshot(server_id, session.client_id)
         }
+        "servergroupaddclient" | "servergroupdelclient" => request
+            .named_args
+            .get("cldbid")
+            .and_then(|value| value.parse::<u64>().ok())
+            .and_then(|cldbid| runtime.online_client_id_by_database_id(server_id, cldbid))
+            .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
+        "clientedit" => request
+            .named_args
+            .get("clid")
+            .and_then(|value| value.parse::<u64>().ok())
+            .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
         "clientmove" => request
             .named_args
             .get("clid")
             .and_then(|value| value.parse::<u64>().ok())
+            .filter(|client_id| *client_id != 0)
             .or(Some(session.client_id).filter(|client_id| *client_id != 0))
             .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
         "clientkick" | "banclient" => request
@@ -442,7 +474,7 @@ pub(crate) fn client_snapshot_after_request(
             .get("clid")
             .and_then(|value| value.parse::<u64>().ok())
             .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
-        "musicbotcreate" => response
+        "musicbotcreate" | "mbotcreate" => response
             .rows
             .first()
             .and_then(|row| row.get("clid"))
@@ -454,11 +486,13 @@ pub(crate) fn client_snapshot_after_request(
 pub(crate) fn channel_id_from_request(request: &CommandRequest) -> Option<u32> {
     request.named_args.get("cid")?.parse::<u32>().ok()
 }
+#[allow(dead_code)]
 pub(crate) fn same_view_location(left: &SessionPresence, right: &SessionPresence) -> bool {
     left.client_id == right.client_id
         && left.server_id == right.server_id
         && left.channel_id == right.channel_id
 }
+#[allow(dead_code)]
 pub(crate) fn session_presence(session: &QuerySessionState) -> Option<SessionPresence> {
     let server_id = session.selected_virtual_server_id?;
     let (unique_identifier, client_type) = if session.is_desktop_client {
@@ -533,6 +567,47 @@ pub(crate) fn cleanup_notifications_from_runtime(
     notifications
 }
 pub(crate) fn wants_notification(session: &QuerySessionState, notification: &TransportNotification) -> bool {
+    if session.is_desktop_client {
+        match notification {
+            TransportNotification::ClientEnterView { presence, .. }
+            | TransportNotification::ClientLeftView { presence, .. }
+            | TransportNotification::ClientMoved { presence, .. } => {
+                if session.selected_virtual_server_id == Some(presence.server_id) {
+                    return true;
+                }
+            }
+            TransportNotification::ClientUpdated { server_id, .. }
+            | TransportNotification::ServerEdited { server_id, .. }
+            | TransportNotification::ChannelEdited { server_id, .. }
+            | TransportNotification::ChannelCreated { server_id, .. }
+            | TransportNotification::ChannelDeleted { server_id, .. }
+            | TransportNotification::ChannelMoved { server_id, .. } => {
+                if session.selected_virtual_server_id == Some(*server_id) {
+                    return true;
+                }
+            }
+            TransportNotification::TextMessage { target, .. } => {
+                if session.selected_virtual_server_id == Some(target.server_id) {
+                    match target.target_mode {
+                        3 => return true,
+                        2 => {
+                            if target.channel_id.is_none() || target.channel_id == session.current_channel_id {
+                                return true;
+                            }
+                        }
+                        1 => {
+                            if target.target_client_id == Some(session.client_id) {
+                                return true;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
     match notification {
         TransportNotification::ClientEnterView { presence, .. }
         | TransportNotification::ClientLeftView { presence, .. } => session
@@ -544,7 +619,7 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
                         NotificationEventKind::Server => true,
                         NotificationEventKind::Channel => subscription
                             .channel_id
-                            .is_some_and(|channel_id| channel_id == presence.channel_id),
+                            .is_some_and(|channel_id| channel_id == 0 || channel_id == presence.channel_id),
                         NotificationEventKind::TextServer
                         | NotificationEventKind::TextChannel
                         | NotificationEventKind::TextPrivate => false,
@@ -560,7 +635,9 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
                     NotificationEventKind::Server => true,
                     NotificationEventKind::Channel => subscription.channel_id.is_some_and(
                         |channel_id| {
-                            channel_id == presence.channel_id || channel_id == *from_channel_id
+                            channel_id == 0
+                                || channel_id == presence.channel_id
+                                || channel_id == *from_channel_id
                         },
                     ),
                     NotificationEventKind::TextServer
@@ -579,7 +656,7 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
                         NotificationEventKind::Server => true,
                         NotificationEventKind::Channel => subscription
                             .channel_id
-                            .is_some_and(|channel_id| channel_id == after.channel_id),
+                            .is_some_and(|channel_id| channel_id == 0 || channel_id == after.channel_id),
                         NotificationEventKind::TextServer
                         | NotificationEventKind::TextChannel
                         | NotificationEventKind::TextPrivate => false,
@@ -637,7 +714,7 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
                         NotificationEventKind::Server => true,
                         NotificationEventKind::Channel => subscription
                             .channel_id
-                            .is_some_and(|channel_id| channel_id == channel.id),
+                            .is_some_and(|channel_id| channel_id == 0 || channel_id == channel.id),
                         NotificationEventKind::TextServer
                         | NotificationEventKind::TextChannel
                         | NotificationEventKind::TextPrivate => false,
@@ -701,7 +778,7 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
                         target.target_mode == 2
                             && subscription
                                 .channel_id
-                                .is_some_and(|channel_id| Some(channel_id) == target.channel_id)
+                                .is_some_and(|channel_id| channel_id == 0 || Some(channel_id) == target.channel_id)
                     }
                     NotificationEventKind::TextPrivate => {
                         target.target_mode == 1
@@ -709,6 +786,9 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
                     }
                     NotificationEventKind::Server | NotificationEventKind::Channel => false,
                 })
+        }
+        TransportNotification::VideoBroadcastChanged { server_id, .. } => {
+            session.selected_virtual_server_id == Some(*server_id)
         }
     }
 }

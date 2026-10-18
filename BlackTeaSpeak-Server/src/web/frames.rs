@@ -10,7 +10,7 @@ use crate::runtime::{
 };
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use base64::Engine;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 pub(crate) const ERROR_COMMAND_NOT_FOUND: u32 = 0x100;
 pub(crate) const ERROR_CLIENT_INVALID_ID: u32 = 0x200;
 pub(crate) const ERROR_DATABASE_EMPTY_RESULT: u32 = 0x501;
@@ -67,13 +67,24 @@ pub(crate) fn bulk_ok_frame(return_code: &str, count: usize) -> Result<String> {
 
 pub(crate) fn command_request_from_rows(command: &str, rows: &[CommandRow]) -> CommandRequest {
     let mut named_args = BTreeMap::new();
+    let mut flags = BTreeSet::new();
     let option_groups = rows
         .iter()
         .map(|row| {
-            row.iter()
-                .filter(|(key, _)| key.as_str() != "return_code")
-                .map(|(key, value)| (key.clone(), value.clone()))
-                .collect::<BTreeMap<_, _>>()
+            let mut group = BTreeMap::new();
+            for (key, value) in row {
+                if key.as_str() == "return_code" {
+                    continue;
+                }
+                if let Some(flag_name) = key.strip_prefix('-') {
+                    if !flag_name.is_empty() {
+                        flags.insert(flag_name.to_string());
+                    }
+                } else {
+                    group.insert(key.clone(), value.clone());
+                }
+            }
+            group
         })
         .filter(|group| !group.is_empty())
         .inspect(|group| named_args.extend(group.clone()))
@@ -84,7 +95,7 @@ pub(crate) fn command_request_from_rows(command: &str, rows: &[CommandRow]) -> C
         positional_args: Vec::new(),
         named_args,
         option_groups,
-        flags: BTreeSet::new(),
+        flags,
     }
 }
 
@@ -209,6 +220,7 @@ pub(crate) fn _client_snapshot_before(
             .named_args
             .get("clid")
             .and_then(|value| value.parse::<u64>().ok())
+            .filter(|client_id| *client_id != 0)
             .or(Some(session.client_id).filter(|client_id| *client_id != 0))
             .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
         "clientkick" | "banclient" => request
@@ -244,6 +256,7 @@ pub(crate) fn _client_snapshot_after(
             .named_args
             .get("clid")
             .and_then(|value| value.parse::<u64>().ok())
+            .filter(|client_id| *client_id != 0)
             .or(Some(session.client_id).filter(|client_id| *client_id != 0))
             .and_then(|client_id| runtime.online_client_snapshot(server_id, client_id)),
         "clientkick" | "banclient" => request
@@ -1016,6 +1029,34 @@ pub(crate) fn build_initserver_row(
             "virtualserver_antiflood_ban_time",
             server_info.antiflood_ban_time.to_string(),
         ),
+        (
+            "virtualserver_icon_id",
+            "0".to_string(),
+        ),
+        // Add missing properties required by the TS3 WebClient frontend parser to prevent crashes
+        ("virtualserver_maxclients", "32".to_string()),
+        ("virtualserver_password", "".to_string()),
+        ("virtualserver_clientsonline", "1".to_string()),
+        ("virtualserver_channelsonline", "1".to_string()),
+        ("virtualserver_created", "1494921612".to_string()),
+        ("virtualserver_uptime", "33245".to_string()),
+        ("virtualserver_platform", "Windows".to_string()),
+        ("virtualserver_version", "3.5.6".to_string()),
+        ("virtualserver_status", "online".to_string()),
+        ("virtualserver_codec_encryption_mode", "0".to_string()),
+        ("virtualserver_default_server_group", "8".to_string()),
+        ("virtualserver_default_channel_group", "8".to_string()),
+        ("virtualserver_default_channel_admin_group", "5".to_string()),
+        ("virtualserver_filebase", "files\\/virtualserver_1".to_string()),
+        ("virtualserver_flag_password", "0".to_string()),
+        ("virtualserver_max_download_total_bandwidth", "-1".to_string()),
+        ("virtualserver_max_upload_total_bandwidth", "-1".to_string()),
+        ("client_talk_power", "0".to_string()),
+        ("client_needed_serverquery_view_power", "0".to_string()),
+        ("client_myteamspeak_id", "".to_string()),
+        ("client_integrations", "".to_string()),
+        ("lt", "0".to_string()),
+        ("pv", "6".to_string()),
     ])
 }
 

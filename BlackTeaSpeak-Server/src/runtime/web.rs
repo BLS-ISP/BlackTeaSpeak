@@ -1,20 +1,39 @@
 use super::*;
-use crate::query::{CommandRequest, QueryResponse};
+use crate::query::QueryResponse;
 
 impl BaselineRuntime {
     pub fn enforce_web_antiflood(
         &mut self,
         command_name: &str,
         selected_server_id: Option<u32>,
-        _current_channel_id: Option<u32>,
-        _actor_client_database_id: Option<u64>,
+        current_channel_id: Option<u32>,
+        actor_client_database_id: Option<u64>,
         connection_ip: Option<&str>,
         anti_flood_state: &mut AntiFloodSessionState,
     ) -> Option<QueryResponse> {
         let server_id = selected_server_id?;
+        let points_to_add = antiflood_command_cost(command_name);
+        if points_to_add == 0 {
+            return None;
+        }
+        if let Some(client_dbid) = actor_client_database_id
+            && let Some(actor_permissions) = self.effective_permissions_for_client(
+                server_id,
+                current_channel_id.unwrap_or(1),
+                client_dbid,
+            )
+            && check_required_permission(
+                &actor_permissions,
+                &["b_client_ignore_antiflood"],
+                "b_client_ignore_antiflood",
+            )
+            .is_ok()
+        {
+            return None;
+        }
+
         let config = self.anti_flood_config_for_server(server_id)?;
         let now_millis = current_unix_timestamp_millis();
-        let points_to_add = antiflood_command_cost(command_name);
 
         if antiflood_command_rejected(config, anti_flood_state, points_to_add, now_millis) {
             return Some(QueryResponse::error(
@@ -97,6 +116,46 @@ impl BaselineRuntime {
     ) {
         let default_channel_id = self.default_channel_id_for_server(server_id).unwrap_or(channel_id);
         let previous = self.store.online_clients.get(&client_id).cloned();
+        let persisted_groups = self
+            .store
+            .custom_client_properties
+            .get(&(0, database_id))
+            .and_then(|props| props.get("server_groups"))
+            .map(|raw| {
+                raw.split(',')
+                    .filter_map(|part| part.trim().parse::<u32>().ok())
+                    .collect::<Vec<_>>()
+            })
+            .filter(|groups| !groups.is_empty());
+        let now = current_unix_timestamp();
+        let is_new_session = previous.is_none();
+        let db_entry = self
+            .store
+            .clients
+            .entry(database_id)
+            .or_insert_with(|| Client {
+                database_id,
+                unique_identifier: unique_identifier.clone(),
+                nickname: nickname.clone(),
+                description: String::new(),
+                created_at: now,
+                last_connected_at: now,
+                total_connections: 0,
+                month_bytes_uploaded: 0,
+                month_bytes_downloaded: 0,
+                total_bytes_uploaded: 0,
+                total_bytes_downloaded: 0,
+                client_flag_avatar: String::new(),
+            });
+        db_entry.unique_identifier = unique_identifier.clone();
+        db_entry.nickname = nickname.clone();
+        db_entry.last_connected_at = now;
+        if is_new_session {
+            db_entry.total_connections = db_entry.total_connections.saturating_add(1);
+        }
+        let client_record_copy = db_entry.clone();
+        let _ = self.db.save_client(&client_record_copy);
+
         self.store.online_clients.insert(
             client_id,
             OnlineClient {
@@ -128,18 +187,40 @@ impl BaselineRuntime {
                 server_groups: previous
                     .as_ref()
                     .map(|client| client.server_groups.clone())
+                    .or(persisted_groups)
                     .unwrap_or_else(|| vec![8]),
                 connected_at: previous
                     .as_ref()
                     .map(|client| client.connected_at)
-                    .unwrap_or_else(current_unix_timestamp),
-                last_seen_at: current_unix_timestamp(),
+                    .unwrap_or(now),
+                last_seen_at: now,
+                whisper_targets: previous
+                    .as_ref()
+                    .and_then(|client| client.whisper_targets.clone()),
                 extra_properties: previous
                     .as_ref()
                     .map(|client| client.extra_properties.clone())
                     .unwrap_or_default(),
             },
         );
+    }
+
+    pub(crate) fn persist_web_client_server_groups(
+        &mut self,
+        database_id: u64,
+        server_groups: &[u32],
+    ) {
+        let formatted = server_groups
+            .iter()
+            .map(u32::to_string)
+            .collect::<Vec<_>>()
+            .join(",");
+        self.store
+            .custom_client_properties
+            .entry((0, database_id))
+            .or_default()
+            .insert(String::from("server_groups"), formatted);
+        self.persist_state_best_effort();
     }
 
     pub fn web_ban_rows(&mut self, server_filter: Option<u32>) -> Vec<BTreeMap<String, String>> {
@@ -579,7 +660,13 @@ impl BaselineRuntime {
             String::from("client_type_exact"),
             client_type_exact.to_string(),
         );
-        row.insert(String::from("client_description"), String::new());
+        let default_description = self
+            .store
+            .clients
+            .get(&client.database_id)
+            .map(|c| c.description.clone())
+            .unwrap_or_default();
+        row.insert(String::from("client_description"), default_description);
         row.insert(
             String::from("client_servergroups"),
             client
@@ -643,7 +730,11 @@ impl BaselineRuntime {
             String::from("client_is_channel_commander"),
             String::from("0"),
         );
-        row.insert(String::from("client_talk_power"), String::from("0"));
+        row.insert(
+            String::from("client_talk_power"),
+            self.client_talk_power(server_id, client.channel_id, client.database_id)
+                .to_string(),
+        );
         row.insert(String::from("client_talk_request"), String::from("0"));
         row.insert(String::from("client_talk_request_msg"), String::new());
         row.insert(String::from("client_is_talker"), String::from("0"));
@@ -657,7 +748,13 @@ impl BaselineRuntime {
             String::from("connection_client_ip"),
             client.connection_ip.clone(),
         );
-        row.extend(client.extra_properties.clone());
+        row.extend(
+            client
+                .extra_properties
+                .iter()
+                .filter(|(k, _)| !k.starts_with('_'))
+                .map(|(k, v)| (k.clone(), v.clone())),
+        );
         Some(row)
     }
 
@@ -959,6 +1056,19 @@ impl BaselineRuntime {
                     String::from("client_database_id"),
                     client.database_id.to_string(),
                 );
+                let cg_id = self.effective_channel_group_id_for_client(
+                    server_id,
+                    client.channel_id,
+                    client.database_id,
+                );
+                row.insert(
+                    String::from("client_channel_group_id"),
+                    cg_id.to_string(),
+                );
+                row.insert(
+                    String::from("client_channel_group_inherited_channel_id"),
+                    client.channel_id.to_string(),
+                );
                 row.insert(
                     String::from("client_servergroups"),
                     client
@@ -968,14 +1078,62 @@ impl BaselineRuntime {
                         .collect::<Vec<_>>()
                         .join(","),
                 );
+                row.insert(
+                    String::from("client_input_muted"),
+                    if client.input_muted {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                );
+                row.insert(
+                    String::from("client_output_muted"),
+                    if client.output_muted {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                );
+                row.insert(
+                    String::from("client_outputonly_muted"),
+                    String::from("0"),
+                );
+                row.insert(
+                    String::from("client_input_hardware"),
+                    String::from("1"),
+                );
+                row.insert(
+                    String::from("client_output_hardware"),
+                    String::from("1"),
+                );
+                row.insert(
+                    String::from("client_away"),
+                    if client.away {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                );
+                row.insert(String::from("client_away_message"), client.away_message);
+                let talk_power = self.client_talk_power(
+                    server_id,
+                    client.channel_id,
+                    client.database_id,
+                );
+                row.insert(String::from("client_talk_power"), talk_power.to_string());
                 row.insert(String::from("client_version"), client.version);
                 row.insert(String::from("client_platform"), client.platform);
                 row.insert(String::from("client_country"), client.country);
                 row.insert(String::from("connection_client_ip"), client.connection_ip);
-                row.extend(client.extra_properties);
+                row.extend(
+                    client
+                        .extra_properties
+                        .into_iter()
+                        .filter(|(k, _)| !k.starts_with('_')),
+                );
                 row
             })
-                .collect()
+            .collect()
     }
 
 }

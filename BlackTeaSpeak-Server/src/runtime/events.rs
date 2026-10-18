@@ -1,5 +1,4 @@
 use super::*;
-use crate::query::{CommandRequest, QueryResponse};
 
 impl BaselineRuntime {
     pub fn subscribe_events(&self, callback: EventCallback) {

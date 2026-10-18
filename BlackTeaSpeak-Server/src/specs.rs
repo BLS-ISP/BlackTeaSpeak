@@ -48,11 +48,16 @@ impl FoundationSpecs {
         let subsystems = read_json::<Vec<Value>>(&foundation_dir.join("subsystems.json"))?;
         let baseline_profile =
             read_json::<BaselineProfile>(&foundation_dir.join("query-baseline.json"))?;
-        let build_version = read_build_version(
-            &workspace_root
-                .join("BlackTeaSpeak-1.5.6")
-                .join("buildVersion.txt"),
-        )?;
+        let build_version_path = foundation_dir.join("buildVersion.txt");
+        let build_version = if build_version_path.exists() {
+            read_build_version(&build_version_path)?
+        } else {
+            read_build_version(
+                &workspace_root
+                    .join("BlackTeaSpeak-1.5.6")
+                    .join("buildVersion.txt"),
+            )?
+        };
 
         let commands = commands_list
             .into_iter()

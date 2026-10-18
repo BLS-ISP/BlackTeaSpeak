@@ -1,45 +1,24 @@
 use super::*;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, BufReader};
-use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::{Duration, Instant};
-use tokio::io::{AsyncBufReadExt, AsyncWriteExt};
+use std::time::Duration;
+use tokio::io::AsyncBufReadExt;
 
 use anyhow::{Context, Result, anyhow};
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
-use rcgen::generate_simple_self_signed;
 use rustls::pki_types::{PrivateKeyDer, PrivatePkcs8KeyDer};
-use rustls::{ServerConfig, ServerConnection, StreamOwned};
-use serde::Deserialize;
-use serde_json::{Map, Value, json};
-use tungstenite::error::Error as WebSocketError;
-use tungstenite::protocol::{CloseFrame, frame::coding::CloseCode};
-use tungstenite::{Message, accept};
+use rustls::ServerConfig;
 use wtransport::{Endpoint, ServerConfig as WTransportServerConfig, Identity};
 
-use crate::file_transfer::{
-    FileEntryInfo, FileTransferError, FileTransferEvent, FileTransferRegistry,
-    PreparedFileTransfer,
-};
-use crate::query::{CommandRequest, QueryResponse, encode_query_value};
-use crate::models::{
-    WhisperTargetSelection, WHISPER_TARGET_CHANNEL, WHISPER_TARGET_CLIENT,
-    WHISPER_TARGET_SERVER_GROUP, WHISPER_TARGET_SELF,
-};
+use crate::file_transfer::FileTransferRegistry;
 use crate::runtime::{
-    AntiFloodSessionState, BaselineRuntime, ChannelSnapshot, MusicBotNotifyPayload,
-    OnlineClientSnapshot, QuerySessionState, ServerSnapshot,
-    WebServerGroupMutationError, WebServerInitInfo, create_baseline_runtime,
-    create_baseline_runtime_with_state_path, stable_web_client_database_id,
-    stable_web_client_unique_identifier,
+    BaselineRuntime, create_baseline_runtime,
+    create_baseline_runtime_with_state_path,
 };
-use crate::transport::{SessionPresence, TransportNotification};
 
 pub struct BlackTeaWebTransportServer {
     pub(crate) bind_addr: SocketAddr,
@@ -160,7 +139,29 @@ impl BlackTeaWebTransportServer {
         rt.block_on(async { self.run_async().await })
     }
 
+    fn should_autorenew(cert_path: &Path, key_path: &Path) -> bool {
+        if !cert_path.exists() || !key_path.exists() {
+            return true;
+        }
+        if let Ok(metadata) = std::fs::metadata(cert_path) {
+            if let Ok(modified) = metadata.modified() {
+                if let Ok(elapsed) = modified.elapsed() {
+                    return elapsed.as_secs() > 7 * 24 * 3600;
+                }
+            }
+        }
+        false
+    }
+
     pub(crate) async fn run_async(mut self) -> Result<()> {
+        if self.cert_path.file_name().and_then(|n| n.to_str()).map_or(false, |s| s.contains("blackteaweb-localhost-cert")) {
+            if Self::should_autorenew(&self.cert_path, &self.key_path) {
+                println!("Autorenewing expired or old localhost certificates...");
+                if let Err(e) = generate_localhost_tls_assets(&self.cert_path, &self.key_path) {
+                    eprintln!("Failed to autorenew certificates: {e:#}");
+                }
+            }
+        }
         let identity = Identity::load_pemfiles(&self.cert_path, &self.key_path).await?;
         let config = WTransportServerConfig::builder()
             .with_bind_default(self.bind_addr.port())
@@ -195,11 +196,31 @@ impl BlackTeaWebTransportServer {
                     }
                     
                     let mut wt_payload = Vec::with_capacity(1 + 8 + payload.len());
-                    wt_payload.push(packet_type);
+                    let wt_packet_type = if packet_type == 0x0A || packet_type == 0x00 || packet_type == 1 {
+                        1
+                    } else {
+                        packet_type
+                    };
+                    wt_payload.push(wt_packet_type);
                     wt_payload.extend_from_slice(&sender_client_id.to_le_bytes());
                     wt_payload.extend_from_slice(&payload);
-                    for conn in targets {
-                        let _ = conn.send_datagram(wt_payload.clone());
+                    if wt_packet_type == 2 || wt_packet_type == 4 {
+                        let shared_frame = Arc::new(wt_payload);
+                        for conn in targets {
+                            let frame_ref = Arc::clone(&shared_frame);
+                            tokio::spawn(async move {
+                                if let Ok(opening) = conn.open_uni().await {
+                                    if let Ok(mut send_uni) = opening.await {
+                                        let _ = send_uni.write_all(&frame_ref).await;
+                                        let _ = send_uni.finish().await;
+                                    }
+                                }
+                            });
+                        }
+                    } else {
+                        for conn in targets {
+                            let _ = conn.send_datagram(wt_payload.clone());
+                        }
                     }
                 }
             });
@@ -290,8 +311,9 @@ pub fn generate_localhost_tls_assets(
     
     // WebTransport requires certificates to be valid for at most 14 days
     // when using serverCertificateHashes.
-    params.not_before = rcgen::date_time_ymd(2026, 5, 20);
-    params.not_after = rcgen::date_time_ymd(2026, 5, 28);
+    let now = time::OffsetDateTime::now_utc();
+    params.not_before = now - time::Duration::days(1);
+    params.not_after = now + time::Duration::days(10);
 
     let key_pair = rcgen::KeyPair::generate().context("failed to generate key pair")?;
     let generated_cert = params.self_signed(&key_pair).context("failed to generate localhost BlackTeaWeb certificate")?;
@@ -354,8 +376,9 @@ pub(crate) fn generate_fallback_tls_config() -> Result<Arc<ServerConfig>> {
             .collect::<Vec<_>>(),
     )?;
     
-    params.not_before = rcgen::date_time_ymd(2026, 5, 20);
-    params.not_after = rcgen::date_time_ymd(2026, 5, 28);
+    let now = time::OffsetDateTime::now_utc();
+    params.not_before = now - time::Duration::days(1);
+    params.not_after = now + time::Duration::days(10);
 
     let key_pair = rcgen::KeyPair::generate().context("failed to generate key pair")?;
     let generated_cert = params.self_signed(&key_pair).context("failed to generate fallback BlackTeaWeb certificate")?;
@@ -403,11 +426,112 @@ async fn handle_wtransport_client(
                         }
                     }
                     if let Some(sid) = server_id {
-                        let mut rt = datagram_runtime.lock().unwrap();
-                        rt.mark_client_seen(client_id);
-                        rt.route_btea_media_to_webtransport(sid, client_id, packet_type, payload);
-                        rt.route_btea_media_to_desktop(sid, client_id, packet_type, payload);
+                        let desktop_packet_type = if packet_type == 1 { 0x0A } else { packet_type };
+                        let rtc_mgr_opt = {
+                            let mut rt = datagram_runtime.lock().unwrap();
+                            rt.mark_client_seen(client_id);
+                            if packet_type == 1 || packet_type == 3 {
+                                if let Some(c) = rt.online_client_snapshot(sid, client_id) {
+                                    rt.broadcast_event(sid, &crate::transport::TransportNotification::TalkStatus {
+                                        server_id: sid,
+                                        channel_id: c.channel_id,
+                                        client_id,
+                                        is_talking: !payload.is_empty(),
+                                        is_whisper: packet_type == 3 || c.whisper_targets.is_some(),
+                                        whisper_targets: c.whisper_targets.clone(),
+                                    });
+                                }
+                                rt.route_btea_media_to_webtransport(sid, client_id, packet_type, payload);
+                                rt.route_btea_media_to_desktop(sid, client_id, desktop_packet_type, payload);
+                                None
+                            } else if !payload.is_empty() {
+                                rt.route_btea_media_to_webtransport(sid, client_id, packet_type, payload);
+                                if packet_type == 2 || packet_type == 4 {
+                                    Some(Arc::clone(&rt.rtc_manager))
+                                } else {
+                                    None
+                                }
+                            } else {
+                                None
+                            }
+                        };
+                        if let Some(rtc_mgr) = rtc_mgr_opt {
+                            let bt = if packet_type == 4 { 1 } else { 0 };
+                            rtc_mgr.forward_web_vp8_frame(client_id, bt, payload).await;
+                        }
                     }
+                }
+                Err(_) => break,
+            }
+        }
+    });
+
+    // Unidirectional QUIC streams for high-bitrate WebCodecs video / screen-share frames
+    let uni_session = wtransport_session.clone();
+    let uni_runtime = Arc::clone(&runtime);
+    let uni_sessions = Arc::clone(&sessions);
+    tokio::spawn(async move {
+        use tokio::io::AsyncReadExt;
+        loop {
+            match uni_session.accept_uni().await {
+                Ok(mut recv_uni) => {
+                    let uni_runtime = Arc::clone(&uni_runtime);
+                    let uni_sessions = Arc::clone(&uni_sessions);
+                    tokio::spawn(async move {
+                        let mut buf = Vec::with_capacity(65536);
+                        if recv_uni.read_to_end(&mut buf).await.is_ok() && buf.len() > 1 {
+                            let packet_type = buf[0];
+                            let payload = &buf[1..];
+                            let client_id = crate::web::WEB_CLIENT_ID_BASE + connection_id;
+                            let mut server_id = None;
+                            if let Ok(lock) = uni_sessions.lock() {
+                                if let Some(sess) = lock.get(&client_id) {
+                                    server_id = Some(sess.presence.server_id);
+                                }
+                            }
+                            if let Some(sid) = server_id {
+                                let (sender_channel_id, rtc_mgr) = {
+                                    let mut rt = uni_runtime.lock().unwrap();
+                                    rt.mark_client_seen(client_id);
+                                    let cid = rt.online_client_snapshot(sid, client_id).map(|c| c.channel_id).unwrap_or(0);
+                                    (cid, Arc::clone(&rt.rtc_manager))
+                                };
+                                if (packet_type == 2 || packet_type == 4) && payload.len() > 13 {
+                                    let bt = if packet_type == 4 { 1 } else { 0 };
+                                    rtc_mgr.forward_web_vp8_frame(client_id, bt, payload).await;
+                                }
+                                let mut targets = Vec::new();
+                                if let Ok(lock) = uni_sessions.lock() {
+                                    for session in lock.values() {
+                                        if session.presence.server_id == sid
+                                            && session.presence.channel_id == sender_channel_id
+                                            && session.presence.client_id != client_id
+                                        {
+                                            if let Some(conn) = &session.wtransport_session {
+                                                targets.push(conn.clone());
+                                            }
+                                        }
+                                    }
+                                }
+                                let mut frame = Vec::with_capacity(1 + 8 + payload.len());
+                                frame.push(packet_type);
+                                frame.extend_from_slice(&client_id.to_le_bytes());
+                                frame.extend_from_slice(payload);
+                                let shared_frame = Arc::new(frame);
+                                for conn in targets {
+                                    let frame_ref = Arc::clone(&shared_frame);
+                                    tokio::spawn(async move {
+                                        if let Ok(opening) = conn.open_uni().await {
+                                            if let Ok(mut send_uni) = opening.await {
+                                                let _ = send_uni.write_all(&frame_ref).await;
+                                                let _ = send_uni.finish().await;
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    });
                 }
                 Err(_) => break,
             }
@@ -447,6 +571,9 @@ async fn handle_wtransport_client(
                 last_activity = tokio::time::Instant::now();
                 let text = line_buf.trim_end();
                 if text.is_empty() {
+                    if let Ok(mut rt) = runtime.lock() {
+                        rt.mark_client_seen(session.client_id);
+                    }
                     send.write_all(b"\n").await?;
                     continue;
                 }
@@ -467,45 +594,22 @@ async fn handle_wtransport_client(
                             .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
                         session.visible_channel_ids(&rt)
                     };
-                    let existing_peers = list_session_presences(
-                        &sessions,
-                        after_presence.server_id,
-                        Some(after_presence.client_id),
-                    )?
-                    .into_iter()
-                    .filter(|presence| visible_channel_ids.contains(&presence.channel_id))
-                    .collect::<Vec<_>>();
-                    if before_presence.is_none() && !existing_peers.is_empty() {
-                        insert_frames_before_error(
-                            &mut outbound,
-                            vec![command_frame(
-                                "notifycliententerview",
-                                existing_peers
-                                    .iter()
-                                    .map(|presence| presence_enter_view_row(presence, None, 2))
-                                    .collect(),
-                            )?],
-                        );
-                    }
                     register_or_update_session(
                         &sessions,
                         after_presence.clone(),
                         session
                             .self_client_database_id()
-                            .expect("connected BlackTeaWeb session should expose a database id"),
+                            .unwrap_or(session.client_id + 1000),
                         visible_channel_ids,
                         Arc::clone(&pending_frames),
                     )?;
+                    if let Ok(mut lock) = sessions.lock() {
+                        if let Some(reg) = lock.get_mut(&after_presence.client_id) {
+                            reg.wtransport_session = Some(wtransport_session.clone());
+                        }
+                    }
                 }
                 session.sync_rtc_presence()?;
-                let mut direct_frames = Vec::new();
-                let peer_frames = derive_peer_frames(&before_presence, &after_presence)?;
-                if let Some(frame) = derive_direct_frame(&before_presence, &after_presence)? {
-                    direct_frames.push(frame);
-                }
-                if !peer_frames.is_empty() {
-                    broadcast_frames_for_presence_change(&sessions, &peer_frames)?;
-                }
                 let pending_permission_refreshes = session.drain_pending_permission_refreshes();
                 if !pending_permission_refreshes.is_empty() {
                     let rt = runtime
@@ -521,20 +625,23 @@ async fn handle_wtransport_client(
                 if !pending_broadcasts.is_empty() {
                     broadcast_queued_frames(&sessions, &pending_broadcasts)?;
                 }
-                let mut query_notifications =
-                    derive_query_notifications_from_presence(&before_presence, &after_presence);
+                let mut query_notifications = if before_presence.is_none() {
+                    derive_query_notifications_from_presence(&before_presence, &after_presence)
+                } else {
+                    Vec::new()
+                };
                 query_notifications.extend(session.drain_pending_query_notifications());
                 if !query_notifications.is_empty() {
                     if let Ok(rt) = runtime.lock() {
-                        for notif in &query_notifications {
-                            rt.broadcast_event(session.presence().unwrap().server_id, notif);
+                        if let Some(pres) = session.presence() {
+                            for notif in &query_notifications {
+                                rt.broadcast_event(pres.server_id, notif);
+                            }
                         }
                     }
                 }
-                if !direct_frames.is_empty() {
-                    insert_frames_before_error(&mut outbound, direct_frames);
-                }
-                outbound.extend(drain_pending_frames(&pending_frames)?);
+                let pending = drain_pending_frames(&pending_frames)?;
+                insert_frames_before_error(&mut outbound, pending);
                 for message in outbound {
                     trace_blackteaweb_frame(connection_id, "out", &message);
                     let mut data = message;
@@ -585,33 +692,12 @@ async fn handle_wtransport_client(
     };
     if !disconnect_cleanup_notifications.is_empty() {
         if let Ok(rt) = runtime.lock() {
-            for notif in &disconnect_cleanup_notifications {
-                rt.broadcast_event(session.presence().unwrap().server_id, notif);
+            if let Some(pres) = disconnect_presence.as_ref() {
+                for notif in &disconnect_cleanup_notifications {
+                    rt.broadcast_event(pres.server_id, notif);
+                }
             }
         }
-        let rt = runtime
-            .lock()
-            .map_err(|_| io::Error::other("BlackTeaWeb runtime lock poisoned"))?;
-        let cleanup_frames = visibility_aware_transport_broadcasts(
-            &sessions,
-            &rt,
-            Some(session.client_id),
-            &disconnect_cleanup_notifications,
-        )?;
-        broadcast_queued_frames(&sessions, &cleanup_frames)?;
-    }
-    if let Some(disconnect_presence) = disconnect_presence {
-        broadcast_frames_for_presence_change(
-            &sessions,
-            &[PresenceBroadcast::PeerLeft {
-                server_id: disconnect_presence.server_id,
-                exclude_client_id: Some(disconnect_presence.client_id),
-                presence: disconnect_presence,
-                to_channel_id: None,
-                reason_id: disconnect_reason_id,
-                reason_message: disconnect_reason_message.to_string(),
-            }],
-        )?;
     }
     Ok(())
 }

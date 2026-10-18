@@ -1,5 +1,4 @@
 use super::*;
-use rusqlite::params;
 
 impl Database {
     pub(crate) fn initialize_schema(&self) -> Result<()> {

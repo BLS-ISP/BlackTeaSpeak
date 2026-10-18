@@ -92,7 +92,7 @@ if ($Mode -eq "Dev") {
 }
 
 Write-Host "   Desktop Voice Socket     | " -NoNewline; Write-Host "udp://localhost:9987" -ForegroundColor Cyan -NoNewline; Write-Host "      | Listening" -ForegroundColor Green
-Write-Host "   Web Transport Socket     | " -NoNewline; Write-Host "tcp://localhost:9987" -ForegroundColor Cyan -NoNewline; Write-Host "      | Listening" -ForegroundColor Green
+Write-Host "   Web Transport Socket     | " -NoNewline; Write-Host "udp://localhost:9989" -ForegroundColor Cyan -NoNewline; Write-Host "      | Listening" -ForegroundColor Green
 Write-Host "   ServerQuery Interface    | " -NoNewline; Write-Host "tcp://localhost:10101" -ForegroundColor Cyan -NoNewline; Write-Host "     | Listening" -ForegroundColor Green
 Write-Host "   File Transfer Port       | " -NoNewline; Write-Host "tcp://localhost:30303" -ForegroundColor Cyan -NoNewline; Write-Host "     | Listening" -ForegroundColor Green
 Write-Host "   Web Client Web Interface | " -NoNewline; Write-Host "https://localhost:8081" -ForegroundColor Cyan -NoNewline; Write-Host "    | Listening" -ForegroundColor Green

@@ -142,4 +142,17 @@ impl Database {
         }
         Ok(())
     }
+
+    pub fn purge_compat_seed_users(&self) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let _ = conn.execute(
+            "DELETE FROM clients WHERE client_unique_id LIKE 'compat-seed-user-%'",
+            [],
+        );
+        let _ = conn.execute(
+            "DELETE FROM channel_group_assignments WHERE client_database_id IN (40, 41, 42)",
+            [],
+        );
+        Ok(())
+    }
 }

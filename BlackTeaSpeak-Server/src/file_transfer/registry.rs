@@ -1,18 +1,13 @@
 use std::collections::HashMap;
-use std::fmt::Write as _;
 use std::fs::{self, File};
-use std::io::{self, BufReader, Read, Seek, SeekFrom, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::io::{self};
+use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use anyhow::{Context, Result, anyhow};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Mutex;
+use anyhow::{Result, anyhow};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
-use rustls::pki_types::{PrivateKeyDer, PrivatePkcs8KeyDer};
-use rustls::{ServerConfig, ServerConnection, StreamOwned};
 
 use super::*;
 pub struct FileTransferRegistry {
@@ -251,6 +246,9 @@ impl FileTransferRegistry {
         if let Some(parent) = file_path.parent() {
             fs::create_dir_all(parent).map_err(map_io_error)?;
         }
+        if let Ok(file) = File::create(&file_path) {
+            let _ = file.set_len(size);
+        }
 
         let prepared = self.register_transfer(PendingTransfer {
             server_transfer_id: self.next_server_transfer_id.fetch_add(1, Ordering::SeqCst),
@@ -376,6 +374,26 @@ impl FileTransferRegistry {
             .lock()
             .ok()
             .and_then(|mut transfers| transfers.remove(transfer_key))
+    }
+
+    pub(crate) fn take_transfer_matching_prefix(
+        &self,
+        buf: &[u8],
+    ) -> Option<(String, PendingTransfer, usize)> {
+        let mut transfers = self.transfers.lock().ok()?;
+        let matched = transfers.keys().find_map(|key| {
+            let key_bytes = key.as_bytes();
+            if buf.starts_with(key_bytes) {
+                Some((key.clone(), key_bytes.len()))
+            } else if buf.starts_with(b"ftkey=") && buf[6..].starts_with(key_bytes) {
+                Some((key.clone(), 6 + key_bytes.len()))
+            } else {
+                None
+            }
+        });
+        let (key, consumed) = matched?;
+        let transfer = transfers.remove(&key)?;
+        Some((key, transfer, consumed))
     }
 
     pub(crate) fn emit_started(&self, transfer: &PendingTransfer) {

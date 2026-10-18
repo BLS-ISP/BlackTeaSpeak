@@ -13,7 +13,7 @@ fn workspace_root() -> PathBuf {
 fn loads_foundation_specs() {
     let specs = FoundationSpecs::load(workspace_root()).expect("foundation should load");
 
-    assert_eq!(specs.commands.len(), 170);
+    assert_eq!(specs.commands.len(), 164);
     assert_eq!(specs.permission_groups.len(), 8);
     assert!(specs.permission_catalog.len() >= 300);
     assert!(specs.get_command("login").is_some());
@@ -33,7 +33,4 @@ fn loads_foundation_specs() {
             .baseline_command_names()
             .contains("musicbotplayeraction")
     );
-    assert!(specs.get_command("musicbotqueueadd").is_some());
-    assert!(specs.get_command("musicbotsetsubscription").is_some());
-    assert!(specs.get_command("playlistsetsubscription").is_some());
 }

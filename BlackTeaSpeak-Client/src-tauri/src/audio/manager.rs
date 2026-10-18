@@ -26,8 +26,9 @@ pub struct AudioManager {
     pub auto_gain_control: Arc<AtomicBool>,
     pub echo_cancellation: Arc<AtomicBool>,
     pub client_volumes: Arc<Mutex<HashMap<u16, f32>>>,
-    // Shared receiver for playback
-    cons_rb: Arc<Mutex<tokio::sync::mpsc::UnboundedReceiver<f32>>>,
+    pub spatial_audio: Arc<Mutex<super::spatial_3d::SpatialAudioEngine>>,
+    // Shared receiver for stereo playback (left, right)
+    cons_rb: Arc<Mutex<tokio::sync::mpsc::UnboundedReceiver<(f32, f32)>>>,
 }
 
 pub fn f32_to_bits(v: f32) -> u32 {
@@ -55,6 +56,18 @@ fn get_device_name(dev: &cpal::Device) -> String {
 
 impl AudioManager {
     pub fn new(app_handle: Option<tauri::AppHandle>) -> Result<(Self, UnboundedReceiver<(bool, Vec<u8>)>), String> {
+        Self::new_with_spatial(
+            app_handle,
+            Arc::new(Mutex::new(super::spatial_3d::SpatialAudioEngine::default())),
+            Arc::new(Mutex::new(HashMap::new())),
+        )
+    }
+
+    pub fn new_with_spatial(
+        app_handle: Option<tauri::AppHandle>,
+        spatial_audio: Arc<Mutex<super::spatial_3d::SpatialAudioEngine>>,
+        client_volumes: Arc<Mutex<HashMap<u16, f32>>>,
+    ) -> Result<(Self, UnboundedReceiver<(bool, Vec<u8>)>), String> {
         let is_mic_muted = Arc::new(AtomicBool::new(false));
         let is_speaker_muted = Arc::new(AtomicBool::new(false));
         let is_ptt_pressed = Arc::new(AtomicBool::new(false));
@@ -68,15 +81,19 @@ impl AudioManager {
         let noise_suppression = Arc::new(AtomicBool::new(true));
         let auto_gain_control = Arc::new(AtomicBool::new(true));
         let echo_cancellation = Arc::new(AtomicBool::new(true));
-        let client_volumes = Arc::new(Mutex::new(HashMap::new()));
 
         let (tx_opus_out_sender, tx_opus_out_receiver) = unbounded_channel::<(bool, Vec<u8>)>();
-        let (tx_opus_in_sender, mut rx_opus_in_receiver) = unbounded_channel::<(u16, Vec<u8>)>();
+        let (tx_opus_in_sender, rx_opus_in_receiver) = unbounded_channel::<(u16, Vec<u8>)>();
 
-        let (prod, cons) = unbounded_channel::<f32>();
+        let (prod, cons) = unbounded_channel::<(f32, f32)>();
         let cons_rb = Arc::new(Mutex::new(cons));
 
-        super::codec::spawn_decoder_thread(rx_opus_in_receiver, prod, client_volumes.clone())?;
+        super::codec::spawn_decoder_thread(
+            rx_opus_in_receiver,
+            prod,
+            client_volumes.clone(),
+            spatial_audio.clone(),
+        )?;
 
         let mut manager = Self {
             input_stream: None,
@@ -96,6 +113,7 @@ impl AudioManager {
             auto_gain_control,
             echo_cancellation,
             client_volumes,
+            spatial_audio,
             cons_rb,
         };
 
@@ -372,8 +390,13 @@ impl AudioManager {
             host.default_output_device().ok_or("No default output device found")?
         };
 
+        let default_channels = device
+            .default_output_config()
+            .map(|c| c.channels())
+            .unwrap_or(2)
+            .clamp(1, 2);
         let config = StreamConfig {
-            channels: 1,
+            channels: default_channels,
             sample_rate: 48000,
             buffer_size: cpal::BufferSize::Default,
         };
@@ -384,6 +407,7 @@ impl AudioManager {
         let speaker_output_rms = self.speaker_output_rms.clone();
 
         let mut last_emit = std::time::Instant::now();
+        let out_channels = default_channels as usize;
 
         let stream = device.build_output_stream(
             &config,
@@ -398,13 +422,29 @@ impl AudioManager {
                 }
                 
                 let mut sum_sq = 0.0;
-                for sample in data.iter_mut() {
-                    let s = cons.try_recv().unwrap_or(0.0) * amp;
-                    *sample = s;
-                    sum_sq += s * s;
+                if out_channels >= 2 {
+                    for frame in data.chunks_exact_mut(out_channels) {
+                        let (l, r) = cons.try_recv().unwrap_or((0.0, 0.0));
+                        let sl = l * amp;
+                        let sr = r * amp;
+                        frame[0] = sl;
+                        frame[1] = sr;
+                        for extra in &mut frame[2..] {
+                            *extra = 0.0;
+                        }
+                        sum_sq += 0.5 * (sl * sl + sr * sr);
+                    }
+                } else {
+                    for sample in data.iter_mut() {
+                        let (l, r) = cons.try_recv().unwrap_or((0.0, 0.0));
+                        let s = 0.5 * (l + r) * amp;
+                        *sample = s;
+                        sum_sq += s * s;
+                    }
                 }
                 
-                let current_rms = (sum_sq / data.len() as f32).sqrt();
+                let frame_count = (data.len() / out_channels.max(1)).max(1) as f32;
+                let current_rms = (sum_sq / frame_count).sqrt();
                 speaker_output_rms.store(f32_to_bits(current_rms), Ordering::Relaxed);
 
                 // Output RMS to frontend

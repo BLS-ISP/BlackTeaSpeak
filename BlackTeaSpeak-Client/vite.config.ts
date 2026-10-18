@@ -12,6 +12,7 @@ export default defineConfig(async () => ({
     globals: true,
     environment: 'jsdom',
     setupFiles: './vitest.setup.ts',
+    exclude: ['**/node_modules/**', '**/e2e/**'],
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

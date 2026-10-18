@@ -1,234 +1,77 @@
-import { useState, useEffect } from "react";
-import { invoke } from "@tauri-apps/api/core";
-import ConnectedView from "./ConnectedView";
-import { Sidebar } from "./components/Sidebar";
-import { FavoritesTab } from "./components/tabs/FavoritesTab";
-import { AddFavoriteTab } from "./components/tabs/AddFavoriteTab";
-import { IdentitiesTab } from "./components/tabs/IdentitiesTab";
-import { ConnectTab } from "./components/tabs/ConnectTab";
-import { AudioService } from "./services/AudioService";
-import "./App.scss";
+import React, { useEffect } from 'react';
+import { TopToolbar } from './components/layout/TopToolbar';
+import { ConnectionBanner } from './components/layout/ConnectionBanner';
+import { StatusBar } from './components/layout/StatusBar';
+import { ServerChannelTree } from './components/tree/ServerChannelTree';
+import { InspectorPanel } from './components/tree/InspectorPanel';
+import { WebCodecsVideoStage } from './components/stage/WebCodecsVideoStage';
+import { SpatialAudioRadar } from './components/spatial/SpatialAudioRadar';
+import { MusicBotDeck } from './components/musicbot/MusicBotDeck';
+import { RichChatDock } from './components/chat/RichChatDock';
+import { ModalContainer } from './components/modals/ModalContainer';
+import { blackTeaStore, useBlackTeaStore } from './store/useBlackTeaStore';
 
-export type Identity = {
-  id: string;
-  name: string;
-  private_key: string;
-  public_key: string;
-  uid: string;
-  default_nickname: string;
-  audio_input_device?: string;
-  audio_output_device?: string;
-  input_amplification?: number;
-  output_amplification?: number;
-  voice_transmission_mode?: string;
-  voice_activation_threshold?: number;
-  ptt_hotkey?: string;
-  whisper_hotkey?: string;
-  whisper_targets?: { client_ids: string[], channel_ids: string[] };
-  noise_suppression?: boolean;
-  auto_gain_control?: boolean;
-  echo_cancellation?: boolean;
-};
-
-type Favorite = {
-  id: string;
-  name: string;
-  address: string;
-  password?: string;
-  nickname: string;
-  identity_id: string;
-};
-
-export type AppConfig = {
-  identities: Identity[];
-  favorites: Favorite[];
-};
-
-function App() {
-  const [activeTab, setActiveTab] = useState("favorites");
-  const [config, setConfig] = useState<AppConfig>({ identities: [], favorites: [] });
-  const [status, setStatus] = useState("");
-  const [isConnecting, setIsConnecting] = useState(false);
-  const [isConnected, setIsConnected] = useState(false);
-  
-  const [selectedIdentity, setSelectedIdentity] = useState<string>("");
-  const [activeIdentity, setActiveIdentity] = useState<Identity | null>(null);
-  const [newIdentityName, setNewIdentityName] = useState("");
-  
-  // Edit Identity State
-  const [editingIdentity, setEditingIdentity] = useState<Identity | null>(null);
+export const App: React.FC = () => {
+  const state = useBlackTeaStore();
 
   useEffect(() => {
-    loadConfig();
-  }, []);
-
-  async function loadConfig() {
-    try {
-      const cfg: AppConfig = await invoke("load_config");
-      setConfig(cfg);
-      if (cfg.identities.length > 0 && !selectedIdentity) {
-        setSelectedIdentity(cfg.identities[0].id);
-      }
-    } catch (e) {
-      console.error("Failed to load config", e);
-    }
-  }
-
-  async function saveConfig(newConfig: AppConfig) {
-    try {
-      await invoke("save_config", { config: newConfig });
-      setConfig(newConfig);
-    } catch (e) {
-      console.error("Failed to save config", e);
-    }
-  }
-
-  async function handleConnect(targetAddress: string, targetNickname: string, targetIdentityId: string) {
-    setIsConnecting(true);
-    setStatus("Connecting...");
-    
-    let pubkey = null;
-    let actIdent = null;
-    if (targetIdentityId) {
-      const ident = config.identities.find(i => i.id === targetIdentityId);
-      if (ident) {
-        pubkey = ident.public_key;
-        actIdent = ident;
-        setActiveIdentity(ident);
-      }
-    }
-
-    try {
-      const response = await invoke("connect_to_server", { 
-        address: targetAddress,
-        nickname: targetNickname,
-        identityPublicKey: pubkey
-      });
-      setStatus(response as string);
-      AudioService.playConnected();
-      setIsConnected(true);
-    } catch (error) {
-      setStatus(`Error: ${error}`);
-      setIsConnected(false);
-    } finally {
-      setIsConnecting(false);
-    }
-  }
-
-  async function handleDisconnect() {
-    try {
-      await invoke("disconnect");
-    } catch (e) {
-      console.error(e);
-    }
-    AudioService.playDisconnected();
-    setIsConnected(false);
-    setStatus("Disconnected.");
-  }
-
-  async function handleGenerateIdentity() {
-    if (!newIdentityName.trim()) return;
-    try {
-      const newIdent: Identity = await invoke("generate_identity", { name: newIdentityName });
-      const newConfig = { ...config, identities: [...config.identities, newIdent] };
-      await saveConfig(newConfig);
-      setNewIdentityName("");
-    } catch (e) {
-      console.error("Failed to generate identity", e);
-    }
-  }
-
-  async function handleAddFavoriteSubmit(fav: any) {
-    const newFav: Favorite = {
-      id: "fav_" + Date.now().toString(),
-      name: fav.name,
-      address: fav.address,
-      password: fav.password,
-      nickname: fav.nickname,
-      identity_id: fav.identity_id
+    const isPttKeyMatch = (e: KeyboardEvent) => {
+      const targetKey = state.pttKey || 'Space';
+      return (
+        e.code === targetKey ||
+        e.key === targetKey ||
+        (targetKey.toLowerCase() === 'space' && e.code === 'Space')
+      );
     };
-    const newConfig = { ...config, favorites: [...config.favorites, newFav] };
-    await saveConfig(newConfig);
-    setActiveTab('favorites');
-  }
 
-  async function handleDeleteIdentity(id: string) {
-    const newConfig = { ...config, identities: config.identities.filter(i => i.id !== id) };
-    await saveConfig(newConfig);
-  }
-
-  async function handleSaveIdentity(identity: Identity) {
-    const newConfig = {
-      ...config,
-      identities: config.identities.map(i => i.id === identity.id ? identity : i)
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+      if (isPttKeyMatch(e) && state.transmissionMode === 'ptt') {
+        e.preventDefault();
+        blackTeaStore.setPttPressed(true);
+      }
     };
-    await saveConfig(newConfig);
-  }
-
-  async function handleDeleteFavorite(id: string) {
-    const newConfig = { ...config, favorites: config.favorites.filter(f => f.id !== id) };
-    await saveConfig(newConfig);
-  }
-
-  if (isConnected) {
-    return (
-      <ConnectedView 
-        onDisconnect={handleDisconnect} 
-        identity={activeIdentity || config.identities[0] || ({} as Identity)}
-        onIdentityUpdated={(newIdent) => setActiveIdentity(newIdent)}
-      />
-    );
-  }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (isPttKeyMatch(e) && state.transmissionMode === 'ptt') {
+        blackTeaStore.setPttPressed(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [state.transmissionMode, state.pttKey]);
 
   return (
-    <div className="app-container">
-      <Sidebar 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-        isConnecting={isConnecting} 
-        status={status} 
-      />
+    <div className="app-shell">
+      <TopToolbar />
+      <ConnectionBanner />
 
-      <div className="main-content">
-        {status && <div className="global-status">{status}</div>}
-        
-        {activeTab === 'favorites' && (
-          <FavoritesTab 
-            config={config} 
-            isConnecting={isConnecting} 
-            setActiveTab={setActiveTab} 
-            handleConnect={handleConnect} 
-            handleDeleteFavorite={handleDeleteFavorite} 
-          />
-        )}
+      <main className="workspace-split">
+        <ServerChannelTree />
 
-        {activeTab === 'add_favorite' && (
-          <AddFavoriteTab 
-            config={config} 
-            setActiveTab={setActiveTab} 
-            handleAddFavoriteSubmit={handleAddFavoriteSubmit} 
-          />
-        )}
+        <div className="center-stage-column">
+          <WebCodecsVideoStage />
+          <SpatialAudioRadar />
+          <MusicBotDeck />
+          <RichChatDock />
+        </div>
 
-        {activeTab === 'identities' && (
-          <IdentitiesTab 
-            config={config} 
-            handleGenerateIdentity={handleGenerateIdentity} 
-            handleDeleteIdentity={handleDeleteIdentity} 
-            handleSaveIdentity={handleSaveIdentity} 
-          />
-        )}
+        <InspectorPanel />
+      </main>
 
-        {activeTab === 'connect' && (
-          <ConnectTab 
-            config={config} 
-            isConnecting={isConnecting} 
-            handleConnect={handleConnect} 
-          />
-        )}
-      </div>
+      <StatusBar />
+      <ModalContainer />
+
+      {state.statusToast && (
+        <div className="toast-notification">{state.statusToast}</div>
+      )}
     </div>
   );
-}
+};
 
 export default App;
+

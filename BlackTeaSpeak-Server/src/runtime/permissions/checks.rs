@@ -56,7 +56,17 @@ pub(crate) fn load_blackteaweb_permission_ids(workspace_root: &Path) -> BTreeMap
         .join("js")
         .join("permission")
         .join("PermissionType.ts");
-    parse_blackteaweb_permission_ids(&path).unwrap_or_default()
+    if let Some(map) = parse_blackteaweb_permission_ids(&path) {
+        return map;
+    }
+    let path_nested = workspace_root
+        .join("BlackTeaSpeak-Server")
+        .join("BlackTeaWeb")
+        .join("shared")
+        .join("js")
+        .join("permission")
+        .join("PermissionType.ts");
+    parse_blackteaweb_permission_ids(&path_nested).unwrap_or_default()
 }
 
 pub(crate) fn parse_blackteaweb_permission_ids(path: &Path) -> Option<BTreeMap<String, u32>> {
@@ -485,6 +495,8 @@ pub(crate) fn seed_store(
             id: 1,
             port: 9987,
             name: String::from("BlackTeaSpeak Compat"),
+            status: String::from("online"),
+            password: String::new(),
             unique_identifier: String::from("compat-baseline-uid"),
             welcome_message: String::from("Welcome to BlackTeaSpeak Compat"),
             host_message: String::new(),
@@ -614,6 +626,7 @@ pub(crate) fn seed_store(
             connection_ip: String::from("198.51.100.10"),
             server_groups: vec![8],
             connected_at: current_unix_timestamp(),
+            whisper_targets: None,
             extra_properties: BTreeMap::new(),
         },
     );
@@ -638,6 +651,7 @@ pub(crate) fn seed_store(
             connection_ip: String::from("198.51.100.11"),
             server_groups: vec![8],
             connected_at: current_unix_timestamp(),
+            whisper_targets: None,
             extra_properties: BTreeMap::new(),
         },
     );
@@ -662,6 +676,7 @@ pub(crate) fn seed_store(
             connection_ip: String::from("198.51.100.12"),
             server_groups: vec![8],
             connected_at: current_unix_timestamp(),
+            whisper_targets: None,
             extra_properties: {
                 let mut row = BTreeMap::new();
                 row.insert(String::from("client_type_exact"), String::from("4"));
@@ -706,6 +721,8 @@ pub(crate) fn seed_store(
             server_id: 1,
             client_database_id: 42,
             linked_client_id: Some(12),
+            nickname: String::from("DJ Mix"),
+            channel_id: 2,
             playlist_id: 1,
             current_song_id: None,
             next_song_id: 1,
@@ -736,17 +753,43 @@ pub(crate) fn seed_store(
         client_permissions: Vec::new(),
         conversation_messages: BTreeMap::new(),
         private_messages: BTreeMap::new(),
+        offline_messages: BTreeMap::new(),
+        complaints: Vec::new(),
+        custom_client_properties: BTreeMap::new(),
+        server_logs: vec![
+            ServerLogEntry {
+                id: 1,
+                server_id: 0,
+                timestamp: current_unix_timestamp(),
+                level: 4,
+                channel: String::from("ServerLibPriv"),
+                message: String::from("TeamSpeak 3 Server started"),
+            },
+            ServerLogEntry {
+                id: 2,
+                server_id: 1,
+                timestamp: current_unix_timestamp(),
+                level: 4,
+                channel: String::from("VirtualServerBase"),
+                message: String::from("listening on 0.0.0.0:9987"),
+            },
+        ],
+        instance_properties: BTreeMap::new(),
         tokens: BTreeMap::new(),
+        server_temp_passwords: Vec::new(),
         active_bans: BTreeMap::new(),
         online_clients,
         clients,
         music_bots,
+        active_broadcasts: BTreeMap::new(),
         next_query_client_id: 1,
         next_client_database_id: 100,
         next_conversation_timestamp: 1,
         next_ban_id: 1,
         next_token_id: 1,
         next_token_action_id: 1,
+        next_offline_message_id: 1,
+        next_log_id: 3,
         db: std::sync::Arc::new(crate::database::Database::new(":memory:").unwrap()),
     }
 }
@@ -810,9 +853,14 @@ mod tests {
         let mut session = login_query_serveradmin(&mut runtime, 9001);
 
         let instanceinfo = runtime.execute("instanceinfo", &mut session);
-        assert!(instanceinfo.contains("serverinstance_template_serveradmin_group=9"));
+        println!("DEBUG: instanceinfo = {}", instanceinfo);
 
         let groups = runtime.execute("servergrouplist", &mut session);
+        println!("DEBUG: servergrouplist = {}", groups);
+        println!("DEBUG: store server_groups = {:?}", runtime.store.server_groups.keys());
+
+        assert!(instanceinfo.contains("serverinstance_template_serveradmin_group=9"));
+
         assert!(groups.contains("sgid=9"));
         assert!(groups.contains(r"name=Server\sAdmin"));
     }
@@ -969,5 +1017,78 @@ mod tests {
         assert!(!groups_after_del.contains("sgid=6"));
         assert!(groups_after_del.contains("sgid=8"));
         assert!(!groups_after_del.contains("query account not found"));
+    }
+
+    #[test]
+    fn grant_permission_ids_and_persistent_dbid_resolution_work() {
+        let mut runtime = create_test_runtime("grant-permids-and-persistent-dbid");
+        let mut session = login_query_serveradmin(&mut runtime, 9001);
+
+        let base_id = runtime.permission_id_for_name("i_channel_join_power");
+        let grant_id = runtime.permission_id_for_name("i_needed_modify_power_channel_join_power");
+        assert_eq!(grant_id, base_id | 0x8000);
+        assert_eq!(
+            runtime.permission_name_for_id(grant_id).as_deref(),
+            Some("i_needed_modify_power_channel_join_power")
+        );
+
+        let add_grant = runtime.execute(
+            &format!("servergroupaddperm sgid=8 permid={grant_id} permvalue=65 permskip=0 permnegated=0"),
+            &mut session,
+        );
+        assert!(add_grant.contains("error id=0 msg=ok"));
+
+        let permlist_id = runtime.execute("servergrouppermlist sgid=8", &mut session);
+        assert!(permlist_id.contains(&format!(
+            "permid={grant_id} permnegated=0 permskip=0 permvalue=65"
+        )));
+
+        let permlist_sid = runtime.execute("servergrouppermlist sgid=8 -permsid", &mut session);
+        assert!(permlist_sid.contains(
+            "permsid=i_needed_modify_power_channel_join_power permskip=0 permvalue=65"
+        ));
+
+        // Verify persistent dbid & server group preservation across reconnects
+        runtime.upsert_web_client(
+            501,
+            1,
+            1,
+            String::from("PersistentUser"),
+            String::from("uid-persist-test-1"),
+            2001,
+            String::from("3.6.2"),
+            String::from("Windows"),
+            String::from("127.0.0.1"),
+        );
+        let add_sg = runtime.execute("servergroupaddclient sgid=6 cldbid=2001", &mut session);
+        assert!(add_sg.contains("error id=0 msg=ok"));
+        runtime.remove_session_client(501, 8, String::from("leaving"));
+
+        let resolved_dbid = runtime
+            .store
+            .clients
+            .iter()
+            .find(|(_, c)| c.unique_identifier == "uid-persist-test-1")
+            .map(|(dbid, _)| *dbid);
+        assert_eq!(resolved_dbid, Some(2001));
+
+        runtime.upsert_web_client(
+            502,
+            1,
+            1,
+            String::from("PersistentUser"),
+            String::from("uid-persist-test-1"),
+            2001,
+            String::from("3.6.2"),
+            String::from("Windows"),
+            String::from("127.0.0.1"),
+        );
+        let reconnected = runtime
+            .store
+            .online_clients
+            .get(&502)
+            .expect("reconnected client should exist");
+        assert_eq!(reconnected.database_id, 2001);
+        assert!(reconnected.server_groups.contains(&6));
     }
 }

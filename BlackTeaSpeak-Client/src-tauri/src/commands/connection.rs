@@ -16,7 +16,8 @@ pub async fn connect_to_server(
     state: State<'_, AppState>,
     app_handle: tauri::AppHandle,
 ) -> Result<String, String> {
-    let (ip, port_str) = address.split_once(':').unwrap_or((&address, "9987"));
+    let resolved_address = crate::network::tsdns_client::resolve_server_address_with_tsdns(&address).await;
+    let (ip, port_str) = resolved_address.rsplit_once(':').unwrap_or((&resolved_address, "9987"));
     let tcp_port = port_str;
     let tcp_address = format!("{}:{}", ip, tcp_port);
     let udp_address = format!("{}:{}", ip, port_str);
@@ -71,7 +72,7 @@ pub async fn connect_to_server(
     let session_shared_secret = hasher2.finalize().to_vec();
 
     let (mut rx_tcp, tx_tcp) = tcp_stream.into_split();
-    let tx_tcp_arc = Arc::new(tokio::sync::Mutex::new((tx_tcp, 1u16, session_shared_secret.clone())));
+    let tx_tcp_arc = Arc::new(tokio::sync::Mutex::new((tx_tcp, 1u16, 0u16, session_shared_secret.clone())));
 
     // Send a clientinit command over TCP
     let mut payload = format!("clientinit client_nickname={} client_version=BTEA_TEST_CLIENT", nickname);
@@ -84,11 +85,11 @@ pub async fn connect_to_server(
         let mut tx_lock = tx_tcp_arc.lock().await;
         let packet_id = tx_lock.1;
         tx_lock.1 = tx_lock.1.wrapping_add(1);
-        let secret = tx_lock.2.clone();
+        let secret = tx_lock.3.clone();
         
         let mut header = [0u8; 5];
         header[0..2].copy_from_slice(&packet_id.to_be_bytes());
-        header[2..4].copy_from_slice(&0u16.to_be_bytes()); // client_id
+        header[2..4].copy_from_slice(&0u16.to_be_bytes()); // client_id before init
         header[4] = 0x02; // Command packet
         
         let encrypted_out = crate::btea::encrypt_btea_packet(
@@ -115,7 +116,7 @@ pub async fn connect_to_server(
         return Err(format!("Failed to read response length: {}", e));
     }
     let res_len = u32::from_be_bytes(len_buf) as usize;
-    if res_len > 65536 || res_len < 13 {
+    if res_len > 2 * 1024 * 1024 || res_len < 13 {
         return Err("Response size invalid".into());
     }
     
@@ -125,6 +126,7 @@ pub async fn connect_to_server(
     }
     
     let mut cmd = String::new();
+    let mut assigned_client_id = u16::from_be_bytes([resp_buf[10], resp_buf[11]]);
     
     let mut mac = [0u8; 8];
     mac.copy_from_slice(&resp_buf[0..8]);
@@ -141,8 +143,23 @@ pub async fn connect_to_server(
         packet_id, 0, flags, &header, &payload_with_mac, &session_shared_secret, true
     ) {
         if let Ok(c) = String::from_utf8(decrypted) {
+            if assigned_client_id == 0 {
+                for token in c.split_whitespace() {
+                    if let Some(val) = token.strip_prefix("client_id=").or_else(|| token.strip_prefix("aclid=")) {
+                        if let Ok(parsed) = val.parse::<u16>() {
+                            assigned_client_id = parsed;
+                            break;
+                        }
+                    }
+                }
+            }
             cmd = c;
         }
+    }
+
+    {
+        let mut tx_lock = tx_tcp_arc.lock().await;
+        tx_lock.2 = assigned_client_id;
     }
 
     let udp_socket = match UdpSocket::bind("0.0.0.0:0").await {
@@ -156,7 +173,11 @@ pub async fn connect_to_server(
     let shared_secret_clone = session_shared_secret.clone();
     let socket_arc = Arc::new(udp_socket);
     
-    if let Ok((am, mut rx_opus_out)) = crate::audio::AudioManager::new(Some(app_handle.clone())) {
+    if let Ok((am, mut rx_opus_out)) = crate::audio::AudioManager::new_with_spatial(
+        Some(app_handle.clone()),
+        state.plugin_sdk.spatial_audio.clone(),
+        state.plugin_sdk.client_volumes.clone(),
+    ) {
         let tx_opus_in = am.tx_opus_in.clone();
         
         *state.audio_manager.lock().await = Some(am);
@@ -171,7 +192,7 @@ pub async fn connect_to_server(
             loop {
                 if rx_tcp.read_exact(&mut len_buf).await.is_err() { break; }
                 let len = u32::from_be_bytes(len_buf) as usize;
-                if len > 65536 || len < 13 { break; }
+                if len > 2 * 1024 * 1024 || len < 13 { break; }
                 let mut buf = vec![0u8; len];
                 if rx_tcp.read_exact(&mut buf).await.is_err() { break; }
                 
@@ -227,7 +248,7 @@ pub async fn connect_to_server(
                         ) {
                             let packet_type = res_flags & 0x0F;
                             let sender_client_id = u16::from_be_bytes([res_header[2], res_header[3]]);
-                            if packet_type == 0x0A || packet_type == 0x01 { // Voice or Whisper
+                            if packet_type == 0x0A || packet_type == 0x0B || packet_type == 0x01 { // Voice or Whisper
                                 let _ = tx_opus_in.send((sender_client_id, decrypted));
                             }
                         }
@@ -240,20 +261,26 @@ pub async fn connect_to_server(
         let secret_send = shared_secret_clone;
         // UDP Sender Loop (for Voice and Keepalive)
         tokio::spawn(async move {
-            let mut next_packet_id: u16 = 4; 
+            let mut next_packet_id: u16 = 4;
+            let mut send_initial_keepalive = true;
             loop {
-                let (flags, payload_bytes) = match tokio::time::timeout(std::time::Duration::from_secs(15), rx_opus_out.recv()).await {
-                    Ok(Some((is_whisper, opus_data))) => (if is_whisper { 0x0B } else { 0x0A }, opus_data),
-                    Ok(None) => break, // Channel closed
-                    Err(_) => {
-                        // Timeout: Send keepalive packet
-                        (0x00, vec![])
+                let (flags, payload_bytes) = if send_initial_keepalive {
+                    send_initial_keepalive = false;
+                    (0x00, vec![])
+                } else {
+                    match tokio::time::timeout(std::time::Duration::from_secs(15), rx_opus_out.recv()).await {
+                        Ok(Some((is_whisper, opus_data))) => (if is_whisper { 0x0B } else { 0x0A }, opus_data),
+                        Ok(None) => break, // Channel closed
+                        Err(_) => {
+                            // Timeout: Send keepalive packet
+                            (0x00, vec![])
+                        }
                     }
                 };
 
                 let mut header = [0u8; 5];
                 header[0..2].copy_from_slice(&next_packet_id.to_be_bytes());
-                header[2..4].copy_from_slice(&0u16.to_be_bytes()); // client_id not needed for outbound
+                header[2..4].copy_from_slice(&assigned_client_id.to_be_bytes());
                 header[4] = flags;
 
                 let encrypted = match crate::btea::encrypt_btea_packet(
@@ -289,11 +316,12 @@ pub async fn send_command(command: String, state: State<'_, AppState>) -> Result
         let mut tx_lock = writer.lock().await;
         let packet_id = tx_lock.1;
         tx_lock.1 = tx_lock.1.wrapping_add(1);
-        let secret = tx_lock.2.clone();
+        let client_id = tx_lock.2;
+        let secret = tx_lock.3.clone();
         
         let mut header = [0u8; 5];
         header[0..2].copy_from_slice(&packet_id.to_be_bytes());
-        header[2..4].copy_from_slice(&0u16.to_be_bytes());
+        header[2..4].copy_from_slice(&client_id.to_be_bytes());
         header[4] = 0x02;
         
         let encrypted_out = crate::btea::encrypt_btea_packet(
@@ -323,11 +351,12 @@ pub async fn disconnect(state: State<'_, AppState>) -> Result<(), String> {
         let mut tx_lock = writer.lock().await;
         let packet_id = tx_lock.1;
         tx_lock.1 = tx_lock.1.wrapping_add(1);
-        let secret = tx_lock.2.clone();
+        let client_id = tx_lock.2;
+        let secret = tx_lock.3.clone();
         
         let mut header = [0u8; 5];
         header[0..2].copy_from_slice(&packet_id.to_be_bytes());
-        header[2..4].copy_from_slice(&0u16.to_be_bytes());
+        header[2..4].copy_from_slice(&client_id.to_be_bytes());
         header[4] = 0x02;
         
         let encrypted_out = crate::btea::encrypt_btea_packet(
@@ -385,6 +414,9 @@ pub async fn set_ptt_state(active: bool, state: tauri::State<'_, AppState>) -> R
 
 #[tauri::command]
 pub async fn set_client_volume(client_id: u16, volume: f32, state: tauri::State<'_, AppState>) -> Result<(), String> {
+    if let Ok(mut vols) = state.plugin_sdk.client_volumes.lock() {
+        vols.insert(client_id, volume);
+    }
     if let Some(am) = &*state.audio_manager.lock().await {
         am.client_volumes.lock().unwrap().insert(client_id, volume);
     }
@@ -401,3 +433,47 @@ pub async fn set_whisper_state(active: bool, state: State<'_, AppState>) -> Resu
         Err("Not connected".into())
     }
 }
+
+#[derive(serde::Serialize, serde::Deserialize, Default)]
+pub struct DiscoveredCertHash {
+    pub sha256: Option<String>,
+    pub webtransport_port: Option<u16>,
+}
+
+#[tauri::command]
+pub async fn discover_server_cert_hash(host: String) -> Result<DiscoveredCertHash, String> {
+    let clean_host = host
+        .trim()
+        .rsplit_once(':')
+        .map(|(h, _)| h)
+        .unwrap_or(host.trim());
+    let target_host = if clean_host.is_empty() { "127.0.0.1" } else { clean_host };
+
+    let client = reqwest::Client::builder()
+        .danger_accept_invalid_certs(true)
+        .timeout(Duration::from_secs(3))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    let urls = [
+        format!("http://{}:8081/cert-hash", target_host),
+        format!("https://{}:8080/cert-hash", target_host),
+    ];
+
+    for url in &urls {
+        if let Ok(resp) = client.get(url).send().await {
+            if resp.status().is_success() {
+                if let Ok(text) = resp.text().await {
+                    if let Ok(parsed) = serde_json::from_str::<DiscoveredCertHash>(&text) {
+                        if parsed.sha256.is_some() {
+                            return Ok(parsed);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(DiscoveredCertHash::default())
+}
+

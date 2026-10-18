@@ -8,7 +8,7 @@ Checks ports, builds the binary if missing, generates certificates if needed, an
 .PARAMETER QueryBind
 The address/port to bind the ServerQuery TCP socket to. Default: 0.0.0.0:10101
 .PARAMETER WebBind
-The address/port to bind the Web transport TCP socket to. Default: 0.0.0.0:9987
+The address/port to bind the Web transport UDP socket to. Default: 0.0.0.0:9989
 .PARAMETER DesktopBind
 The address/port to bind the Desktop UDP socket to. Default: 0.0.0.0:9987
 .PARAMETER FileBind
@@ -25,7 +25,7 @@ Run the server in the current window instead of launching a new console window.
 
 param (
     [string]$QueryBind = "0.0.0.0:10101",
-    [string]$WebBind = "0.0.0.0:9987",
+    [string]$WebBind = "0.0.0.0:9989",
     [string]$DesktopBind = "0.0.0.0:9987",
     [string]$FileBind = "0.0.0.0:30303",
     [string]$WebClientBind = "0.0.0.0:8081",

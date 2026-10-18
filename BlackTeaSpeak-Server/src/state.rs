@@ -99,6 +99,20 @@ pub struct PersistedChannel {
     #[serde(default)]
     pub description: String,
     #[serde(default)]
+    pub password: String,
+    #[serde(default = "default_channel_codec")]
+    pub codec: u32,
+    #[serde(default = "default_channel_codec_quality")]
+    pub codec_quality: u32,
+    #[serde(default = "default_channel_maxclients")]
+    pub maxclients: i32,
+    #[serde(default = "default_channel_maxclients")]
+    pub maxfamilyclients: i32,
+    #[serde(default)]
+    pub flag_default: bool,
+    #[serde(default)]
+    pub flag_password: bool,
+    #[serde(default)]
     pub permissions: BTreeMap<String, PersistedPermissionAssignment>,
 }
 
@@ -108,6 +122,10 @@ pub struct PersistedVirtualServer {
     pub port: u16,
     pub name: String,
     pub unique_identifier: String,
+    #[serde(default = "default_virtual_server_status")]
+    pub status: String,
+    #[serde(default)]
+    pub password: String,
     #[serde(default)]
     pub welcome_message: String,
     #[serde(default)]
@@ -213,6 +231,10 @@ pub struct PersistedMusicBot {
     pub client_database_id: u64,
     pub linked_client_id: Option<u64>,
     #[serde(default)]
+    pub nickname: String,
+    #[serde(default)]
+    pub channel_id: u32,
+    #[serde(default)]
     pub playlist_id: u32,
     #[serde(default)]
     pub current_song_id: u32,
@@ -285,6 +307,70 @@ pub struct PersistedSessionSnapshot {
     pub notification_subscriptions: Vec<PersistedNotificationSubscription>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PersistedOfflineMessage {
+    pub id: u64,
+    pub server_id: u32,
+    pub sender_database_id: u64,
+    pub sender_unique_identifier: String,
+    pub sender_nickname: String,
+    pub recipient_database_id: u64,
+    pub recipient_unique_identifier: String,
+    pub subject: String,
+    pub message: String,
+    pub timestamp: u64,
+    #[serde(default)]
+    pub flag_read: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PersistedClientComplaint {
+    pub server_id: u32,
+    pub target_database_id: u64,
+    pub target_name: String,
+    pub from_database_id: u64,
+    pub from_name: String,
+    pub message: String,
+    pub timestamp: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PersistedCustomClientProperty {
+    pub server_id: u32,
+    pub client_database_id: u64,
+    #[serde(default)]
+    pub properties: BTreeMap<String, String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PersistedServerLogEntry {
+    pub id: u64,
+    pub server_id: u32,
+    pub timestamp: u64,
+    pub level: u32,
+    pub channel: String,
+    pub message: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VirtualServerSnapshotPayload {
+    pub server: PersistedVirtualServer,
+    #[serde(default)]
+    pub channels: Vec<PersistedChannel>,
+    #[serde(default)]
+    pub server_groups: BTreeMap<u32, PersistedServerGroup>,
+    #[serde(default)]
+    pub channel_groups: BTreeMap<u32, PersistedChannelGroup>,
+    #[serde(default)]
+    pub channel_group_assignments: Vec<PersistedChannelGroupAssignment>,
+    #[serde(default)]
+    pub channel_client_permissions: Vec<PersistedChannelClientPermissionTarget>,
+    #[serde(default)]
+    pub client_permissions: Vec<PersistedClientPermissionTarget>,
+    #[serde(default)]
+    pub custom_client_properties: Vec<PersistedCustomClientProperty>,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PersistedRuntimeState {
     #[serde(default = "default_schema_version")]
@@ -310,6 +396,16 @@ pub struct PersistedRuntimeState {
     #[serde(default)]
     pub private_messages: BTreeMap<u32, Vec<PersistedPrivateConversationMessage>>,
     #[serde(default)]
+    pub offline_messages: BTreeMap<u64, PersistedOfflineMessage>,
+    #[serde(default)]
+    pub complaints: Vec<PersistedClientComplaint>,
+    #[serde(default)]
+    pub custom_client_properties: Vec<PersistedCustomClientProperty>,
+    #[serde(default)]
+    pub server_logs: Vec<PersistedServerLogEntry>,
+    #[serde(default)]
+    pub instance_properties: BTreeMap<String, String>,
+    #[serde(default)]
     pub music_bots: BTreeMap<u32, PersistedMusicBot>,
     #[serde(default)]
     pub tokens: BTreeMap<u32, PersistedToken>,
@@ -323,6 +419,10 @@ pub struct PersistedRuntimeState {
     pub next_token_id: u32,
     #[serde(default = "default_next_token_action_id")]
     pub next_token_action_id: u32,
+    #[serde(default = "default_next_offline_message_id")]
+    pub next_offline_message_id: u64,
+    #[serde(default = "default_next_log_id")]
+    pub next_log_id: u64,
 }
 
 impl Default for PersistedRuntimeState {
@@ -339,6 +439,11 @@ impl Default for PersistedRuntimeState {
             client_permissions: Vec::new(),
             conversation_messages: BTreeMap::new(),
             private_messages: BTreeMap::new(),
+            offline_messages: BTreeMap::new(),
+            complaints: Vec::new(),
+            custom_client_properties: Vec::new(),
+            server_logs: Vec::new(),
+            instance_properties: BTreeMap::new(),
             music_bots: BTreeMap::new(),
             tokens: BTreeMap::new(),
             session_snapshots: BTreeMap::new(),
@@ -346,8 +451,22 @@ impl Default for PersistedRuntimeState {
             next_conversation_timestamp: default_next_conversation_timestamp(),
             next_token_id: default_next_token_id(),
             next_token_action_id: default_next_token_action_id(),
+            next_offline_message_id: default_next_offline_message_id(),
+            next_log_id: default_next_log_id(),
         }
     }
+}
+
+fn default_next_offline_message_id() -> u64 {
+    1
+}
+
+fn default_next_log_id() -> u64 {
+    1
+}
+
+fn default_virtual_server_status() -> String {
+    String::from("online")
 }
 
 #[derive(Debug, Clone)]
@@ -363,11 +482,15 @@ impl RuntimeStateStore {
     }
 
     pub fn default_path(workspace_root: impl AsRef<Path>) -> PathBuf {
-        workspace_root
-            .as_ref()
-            .join("BlackTeaSpeak-Server")
-            .join("data")
-            .join("runtime-state.json")
+        let root = workspace_root.as_ref();
+        let direct = root.join("data").join("runtime-state.json");
+        if direct.exists() || root.join("data").join("foundation").exists() {
+            direct
+        } else {
+            root.join("BlackTeaSpeak-Server")
+                .join("data")
+                .join("runtime-state.json")
+        }
     }
 
     pub fn load(&self) -> Result<Option<PersistedRuntimeState>> {
@@ -459,3 +582,16 @@ fn default_antiflood_ban_time() -> u32 {
 fn default_savedb() -> bool {
     true
 }
+
+fn default_channel_codec() -> u32 {
+    4
+}
+
+fn default_channel_codec_quality() -> u32 {
+    6
+}
+
+fn default_channel_maxclients() -> i32 {
+    -1
+}
+

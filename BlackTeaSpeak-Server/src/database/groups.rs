@@ -237,4 +237,16 @@ impl Database {
         }
         Ok(vec)
     }
+
+    pub fn clear_all_permissions_and_groups(&self) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute("DELETE FROM group_server_permissions", [])?;
+        conn.execute("DELETE FROM group_channel_permissions", [])?;
+        conn.execute("DELETE FROM server_groups", [])?;
+        conn.execute("DELETE FROM channel_groups", [])?;
+        conn.execute("DELETE FROM client_permissions", [])?;
+        conn.execute("DELETE FROM server_group_members", [])?;
+        conn.execute("DELETE FROM channel_group_members", [])?;
+        Ok(())
+    }
 }

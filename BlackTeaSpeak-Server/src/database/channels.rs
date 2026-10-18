@@ -121,4 +121,17 @@ impl Database {
         }
         Ok(map)
     }
+
+    pub fn delete_channel(&self, server_id: u32, channel_id: u32) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        conn.execute(
+            "DELETE FROM channels WHERE channel_id = ?1 AND server_id = ?2",
+            params![channel_id, server_id],
+        )?;
+        conn.execute(
+            "DELETE FROM channel_permissions WHERE channel_id = ?1 AND server_id = ?2",
+            params![channel_id, server_id],
+        )?;
+        Ok(())
+    }
 }

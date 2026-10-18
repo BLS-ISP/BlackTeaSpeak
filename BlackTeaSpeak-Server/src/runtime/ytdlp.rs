@@ -6,12 +6,22 @@ use super::musicbot::ResolvedMusicMetadata;
 
 impl BaselineRuntime {
     pub(super) fn probe_youtube_music_metadata(url: &str) -> Option<ResolvedMusicMetadata> {
-        let ytdlp = resolve_music_command(
-            "TEASPEAK_COMPAT_YTDLP",
-            &["yt-dlp", "youtube-dl"],
-        )?;
+        Self::probe_youtube_music_metadata_detailed(url).ok()
+    }
+
+    pub(crate) fn probe_youtube_music_metadata_detailed(
+        url: &str,
+    ) -> Result<ResolvedMusicMetadata, String> {
+        let ytdlp = resolve_music_command("TEASPEAK_COMPAT_YTDLP", &["yt-dlp", "youtube-dl"])
+            .ok_or_else(|| {
+                String::from("yt-dlp wurde auf dem Server nicht gefunden (data/tools/yt-dlp.exe)")
+            })?;
         let output = Command::new(ytdlp)
             .args([
+                "--js-runtimes",
+                "node",
+                "-f",
+                "140/bestaudio[ext=m4a]/bestaudio/best",
                 "--dump-single-json",
                 "--no-warnings",
                 "--no-playlist",
@@ -19,12 +29,28 @@ impl BaselineRuntime {
                 url,
             ])
             .output()
-            .ok()?;
+            .map_err(|e| format!("yt-dlp Prozessfehler: {e}"))?;
         if !output.status.success() {
-            return None;
+            let stderr_text = String::from_utf8_lossy(&output.stderr);
+            let reason = stderr_text
+                .lines()
+                .rev()
+                .map(str::trim)
+                .find(|l| !l.is_empty())
+                .unwrap_or("Ungültiger oder nicht verfügbarer YouTube-Link")
+                .trim_start_matches("ERROR:")
+                .trim();
+            return Err(reason.to_string());
         }
 
-        let payload = serde_json::from_slice::<serde_json::Value>(&output.stdout).ok()?;
+        let payload = serde_json::from_slice::<serde_json::Value>(&output.stdout)
+            .map_err(|_| String::from("Ungültige Metadaten-Antwort von YouTube"))?;
+        if let Some(direct_url) = payload.get("url").and_then(|value| value.as_str()) {
+            crate::runtime::musicbot::audio_engine::cache_youtube_direct_url(
+                url,
+                direct_url.to_string(),
+            );
+        }
         let title = payload
             .get("title")
             .and_then(|value| value.as_str())
@@ -44,6 +70,12 @@ impl BaselineRuntime {
         let length_seconds = payload
             .get("duration")
             .and_then(|value| value.as_u64())
+            .or_else(|| {
+                payload
+                    .get("duration")
+                    .and_then(|value| value.as_f64())
+                    .map(|f| f.round() as u64)
+            })
             .and_then(|value| u32::try_from(value).ok())
             .unwrap_or_default();
         let live_stream = payload
@@ -57,7 +89,7 @@ impl BaselineRuntime {
             })
             .unwrap_or(false);
 
-        Some(ResolvedMusicMetadata {
+        Ok(ResolvedMusicMetadata {
             loaded: true,
             title,
             description,
@@ -78,6 +110,8 @@ impl BaselineRuntime {
         };
         let output = Command::new(ytdlp)
             .args([
+                "--js-runtimes",
+                "node",
                 "-x",
                 "--audio-format",
                 "mp3",
@@ -88,7 +122,7 @@ impl BaselineRuntime {
             ])
             .output()
             .ok();
-        
+
         output.map(|o| o.status.success()).unwrap_or(false)
     }
 }

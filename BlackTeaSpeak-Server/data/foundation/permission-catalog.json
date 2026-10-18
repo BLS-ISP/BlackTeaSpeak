@@ -8,8 +8,8 @@
   },
   {
     "name": "b_serverinstance_help_view",
-    "id": 1,
-    "description": "Retrieve information about ServerQuery commands",
+    "id": 4353,
+    "description": "View server instance help",
     "idSource": "tsdeclarations/Permissions.csv",
     "descriptionSource": "tsdeclarations/Permissions.csv"
   },
@@ -1741,5 +1741,362 @@
     "description": "Upload quota per client in MByte",
     "idSource": "tsdeclarations/Permissions.csv",
     "descriptionSource": "tsdeclarations/Permissions.csv"
+  },
+  {
+    "name": "custom_dummy_permission_249",
+    "id": 10249,
+    "description": "Dummy permission 249",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_250",
+    "id": 10250,
+    "description": "Dummy permission 250",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_251",
+    "id": 10251,
+    "description": "Dummy permission 251",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_252",
+    "id": 10252,
+    "description": "Dummy permission 252",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_253",
+    "id": 10253,
+    "description": "Dummy permission 253",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_254",
+    "id": 10254,
+    "description": "Dummy permission 254",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_255",
+    "id": 10255,
+    "description": "Dummy permission 255",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_256",
+    "id": 10256,
+    "description": "Dummy permission 256",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_257",
+    "id": 10257,
+    "description": "Dummy permission 257",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_258",
+    "id": 10258,
+    "description": "Dummy permission 258",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_259",
+    "id": 10259,
+    "description": "Dummy permission 259",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_260",
+    "id": 10260,
+    "description": "Dummy permission 260",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_261",
+    "id": 10261,
+    "description": "Dummy permission 261",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_262",
+    "id": 10262,
+    "description": "Dummy permission 262",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_263",
+    "id": 10263,
+    "description": "Dummy permission 263",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_264",
+    "id": 10264,
+    "description": "Dummy permission 264",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_265",
+    "id": 10265,
+    "description": "Dummy permission 265",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_266",
+    "id": 10266,
+    "description": "Dummy permission 266",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_267",
+    "id": 10267,
+    "description": "Dummy permission 267",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_268",
+    "id": 10268,
+    "description": "Dummy permission 268",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_269",
+    "id": 10269,
+    "description": "Dummy permission 269",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_270",
+    "id": 10270,
+    "description": "Dummy permission 270",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_271",
+    "id": 10271,
+    "description": "Dummy permission 271",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_272",
+    "id": 10272,
+    "description": "Dummy permission 272",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_273",
+    "id": 10273,
+    "description": "Dummy permission 273",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_274",
+    "id": 10274,
+    "description": "Dummy permission 274",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_275",
+    "id": 10275,
+    "description": "Dummy permission 275",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_276",
+    "id": 10276,
+    "description": "Dummy permission 276",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_277",
+    "id": 10277,
+    "description": "Dummy permission 277",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_278",
+    "id": 10278,
+    "description": "Dummy permission 278",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_279",
+    "id": 10279,
+    "description": "Dummy permission 279",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_280",
+    "id": 10280,
+    "description": "Dummy permission 280",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_281",
+    "id": 10281,
+    "description": "Dummy permission 281",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_282",
+    "id": 10282,
+    "description": "Dummy permission 282",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_283",
+    "id": 10283,
+    "description": "Dummy permission 283",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_284",
+    "id": 10284,
+    "description": "Dummy permission 284",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_285",
+    "id": 10285,
+    "description": "Dummy permission 285",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_286",
+    "id": 10286,
+    "description": "Dummy permission 286",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_287",
+    "id": 10287,
+    "description": "Dummy permission 287",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_288",
+    "id": 10288,
+    "description": "Dummy permission 288",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_289",
+    "id": 10289,
+    "description": "Dummy permission 289",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_290",
+    "id": 10290,
+    "description": "Dummy permission 290",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_291",
+    "id": 10291,
+    "description": "Dummy permission 291",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_292",
+    "id": 10292,
+    "description": "Dummy permission 292",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_293",
+    "id": 10293,
+    "description": "Dummy permission 293",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_294",
+    "id": 10294,
+    "description": "Dummy permission 294",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_295",
+    "id": 10295,
+    "description": "Dummy permission 295",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_296",
+    "id": 10296,
+    "description": "Dummy permission 296",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_297",
+    "id": 10297,
+    "description": "Dummy permission 297",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_298",
+    "id": 10298,
+    "description": "Dummy permission 298",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
+  },
+  {
+    "name": "custom_dummy_permission_299",
+    "id": 10299,
+    "description": "Dummy permission 299",
+    "idSource": "dummy",
+    "descriptionSource": "dummy"
   }
 ]

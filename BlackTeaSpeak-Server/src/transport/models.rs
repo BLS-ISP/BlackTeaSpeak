@@ -1,15 +1,4 @@
-use std::collections::HashMap;
-use std::io::{self, BufRead, BufReader, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::path::Path;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use anyhow::{Context, Result};
-use crate::query::*;
 use crate::runtime::*;
-use super::*;
 pub const DEFAULT_QUERY_BIND: &str = "127.0.0.1:10101";
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SessionPresence {
@@ -105,5 +94,9 @@ pub enum TransportNotification {
         invoker_id: u64,
         invoker_name: String,
         invoker_uid: String,
+    },
+    VideoBroadcastChanged {
+        server_id: u32,
+        channel_id: u32,
     },
 }

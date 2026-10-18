@@ -1,7 +1,6 @@
-use rusqlite::{params, Connection, Result};
+use rusqlite::{Connection, Result};
 use std::path::Path;
-use std::sync::{Arc, Mutex};
-use rusqlite::OptionalExtension;
+use std::sync::Mutex;
 
 pub mod schema;
 pub mod servers;

@@ -15,7 +15,7 @@ cargo build --release --bin blackteaspeak_server
 Write-Host "Starting BlackTeaSpeak Backend..."
 # The ports requested:
 # 9987 udp: Desktop Client Voice/Handshake (--desktop-bind)
-# 9987 tcp: BlackTeaWeb TCP Compatibility (--web-bind)
+# 9989 udp: BlackTeaWeb WebTransport Compatibility (--web-bind)
 # 10101 tcp: ServerQuery (--query-bind)
 # 30303 tcp: File Transfer (--file-bind)
 # 80/443 tcp: Web Client HTTP/HTTPS (--web-client-bind)
@@ -27,7 +27,7 @@ $env:RUST_LOG="info"
 
 .\target\release\blackteaspeak_server.exe serve-all `
     --desktop-bind "0.0.0.0:9987" `
-    --web-bind "0.0.0.0:9987" `
+    --web-bind "0.0.0.0:9989" `
     --query-bind "0.0.0.0:10101" `
     --file-bind "0.0.0.0:30303" `
     --web-client-bind "0.0.0.0:443"

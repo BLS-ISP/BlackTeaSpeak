@@ -13,8 +13,22 @@ impl BaselineRuntime {
         if let Some(server_id) = session.selected_virtual_server_id
             && let Some(config) = self.anti_flood_config_for_server(server_id)
         {
-            let connection_ip = session.connection_ip.trim();
-            if !connection_ip.is_empty() {
+            let mut ignore_antiflood = false;
+            if let Ok((_actor, actor_permissions)) = self.query_actor_effective_permissions(session) {
+                if check_required_permission(
+                    &actor_permissions,
+                    &["b_client_ignore_antiflood"],
+                    "b_client_ignore_antiflood",
+                )
+                .is_ok()
+                {
+                    ignore_antiflood = true;
+                }
+            }
+
+            if !ignore_antiflood {
+                let ip_str = session.connection_ip.trim();
+                let connection_ip = if ip_str.is_empty() { "127.0.0.1" } else { ip_str };
                 let now_millis = current_unix_timestamp_millis();
                 let points_to_add = antiflood_command_cost(&command_name);
                 if self.shared_ip_antiflood_rejected(
@@ -31,9 +45,41 @@ impl BaselineRuntime {
         }
 
         let before_session = session.clone();
+        let candidate_cleanup_cid = session.selected_virtual_server_id.and_then(|server_id| {
+            match command_name.as_str() {
+                "clientmove" | "clientkick" | "banclient" => {
+                    let target_clid = request
+                        .named_args
+                        .get("clid")
+                        .and_then(|v| v.parse::<u64>().ok())
+                        .filter(|&id| id != 0)
+                        .unwrap_or(session.client_id);
+                    self.store
+                        .online_clients
+                        .get(&target_clid)
+                        .filter(|c| c.server_id == server_id)
+                        .map(|c| (server_id, c.channel_id))
+                        .or_else(|| session.current_channel_id.map(|cid| (server_id, cid)))
+                }
+                "musicbotdelete" => request
+                    .named_args
+                    .get("botid")
+                    .or_else(|| request.named_args.get("bot_id"))
+                    .and_then(|v| v.parse::<u64>().ok())
+                    .and_then(|bot_id| self.music_bot_client_snapshot_by_identifier(server_id, bot_id))
+                    .map(|snap| (server_id, snap.channel_id)),
+                _ => None,
+            }
+        });
         let response = self.dispatch(request, session);
         self.sync_session_snapshot(&before_session, session);
         self.sync_session_client(session, &command_name);
+        if response.error_id == 0
+            && let Some((server_id, old_cid)) = candidate_cleanup_cid
+            && let Some(cleanup) = self.cleanup_temporary_channel(server_id, old_cid)
+        {
+            self.pending_temp_cleanups.push(cleanup);
+        }
         self.persist_state_best_effort();
         response
     }
@@ -68,14 +114,65 @@ impl BaselineRuntime {
             "clientlist" => self.handle_clientlist(&request, session),
             "clientinfo" => self.handle_clientinfo(&request, session),
             "clientupdate" => self.handle_clientupdate(&request, session),
+            "clientedit" => self.handle_clientedit(&request, session),
             "serveredit" => self.handle_serveredit(&request, session),
+            "servercreate" => self.handle_servercreate(&request, session),
+            "serverdelete" => self.handle_serverdelete(&request, session),
+            "serverstart" => self.handle_serverstart(&request, session),
+            "serverstop" => self.handle_serverstop(&request, session),
+            "serverprocessstop" => self.handle_serverprocessstop(&request, session),
+            "serversnapshotcreate" => self.handle_serversnapshotcreate(&request, session),
+            "serversnapshotdeploy" => self.handle_serversnapshotdeploy(&request, session),
+            "instanceedit" => self.handle_instanceedit(&request, session),
+            "gm" => self.handle_gm(&request, session),
+            "logadd" => self.handle_logadd(&request, session),
+            "logview" | "logquery" => self.handle_logview(&request, session),
+            "bantriggerlist" => self.handle_bantriggerlist(&request, session),
+            "conversationfetch" => self.handle_conversationfetch(&request, session),
+            "conversationhistory" => self.handle_conversationhistory(&request, session),
+            "servertemppasswordadd" => self.handle_servertemppasswordadd(&request, session),
+            "servertemppassworddel" => self.handle_servertemppassworddel(&request, session),
+            "servertemppasswordlist" => self.handle_servertemppasswordlist(session),
             "clientaddperm" => self.handle_clientaddperm(&request, session),
             "clientdelperm" => self.handle_clientdelperm(&request, session),
             "clientpermlist" => self.handle_clientpermlist(&request, session),
             "clientmove" => self.handle_clientmove(&request, session),
+            "custominfo" => self.handle_custominfo(&request, session),
+            "customsearch" => self.handle_customsearch(&request, session),
+            "customset" | "clientcustomset" => self.handle_customset(&request, session),
+            "customdelete" | "clientcustomdelete" => self.handle_customdelete(&request, session),
+            "clientdblist" => self.handle_clientdblist(&request, session),
+            "clientdbinfo" => self.handle_clientdbinfo(&request, session),
+            "clientdbedit" => self.handle_clientdbedit(&request, session),
+            "clientdbdelete" => self.handle_clientdbdelete(&request, session),
+            "clientdbfind" => self.handle_clientdbfind(&request, session),
+            "channelfind" => self.handle_channelfind(&request, session),
+            "messageadd" => self.handle_messageadd(&request, session),
+            "messagedel" => self.handle_messagedel(&request, session),
+            "messageget" => self.handle_messageget(&request, session),
+            "messagelist" => self.handle_messagelist(session),
+            "messageupdateflag" => self.handle_messageupdateflag(&request, session),
+            "complainadd" => self.handle_complainadd(&request, session),
+            "complaindel" => self.handle_complaindel(&request, session),
+            "complaindelall" => self.handle_complaindelall(&request, session),
+            "complainlist" => self.handle_complainlist(&request, session),
             "ftinitupload" => self.handle_ftinitupload(&request, session),
             "ftinitdownload" => self.handle_ftinitdownload(&request, session),
-            "ftgetfilelist" | "ftlist" => self.handle_ftgetfilelist(&request, session),
+            "ftgetfilelist" => self.handle_ftgetfilelist(&request, session),
+            "ftlist" => {
+                if request.named_args.contains_key("cid")
+                    || request.named_args.contains_key("path")
+                    || request
+                        .option_groups
+                        .iter()
+                        .any(|g| g.contains_key("cid") || g.contains_key("path"))
+                {
+                    self.handle_ftgetfilelist(&request, session)
+                } else {
+                    self.handle_ftlist(session)
+                }
+            }
+            "ftstop" => self.handle_ftstop(&request, session),
             "ftcreatedir" => self.handle_ftcreatedir(&request, session),
             "ftdeletefile" | "ftdelete" => self.handle_ftdeletefile(&request, session),
             "ftrenamefile" => self.handle_ftrenamefile(&request, session),
@@ -85,6 +182,8 @@ impl BaselineRuntime {
             "permidgetbyname" => self.handle_permidgetbyname(&request, session),
             "permissionlist" => self.handle_permissionlist(session),
             "permoverview" => self.handle_permoverview(&request, session),
+            "permreset" => self.handle_permreset(session),
+            "desktopgetmyperms" => self.handle_desktopgetmyperms(session),
             "channelclientaddperm" => self.handle_channelclientaddperm(&request, session),
             "channelclientdelperm" => self.handle_channelclientdelperm(&request, session),
             "channelclientpermlist" => self.handle_channelclientpermlist(&request, session),
@@ -96,6 +195,10 @@ impl BaselineRuntime {
             "channeldelete" => self.handle_channeldelete(&request, session),
             "channeledit" => self.handle_channeledit(&request, session),
             "channelmove" => self.handle_channelmove(&request, session),
+            "channelsubscribe" => self.handle_channelsubscribe(&request, session),
+            "channelunsubscribe" => self.handle_channelunsubscribe(&request, session),
+            "channelsubscribeall" => self.handle_channelsubscribeall(session),
+            "channelunsubscribeall" => self.handle_channelunsubscribeall(session),
             "channelgroupadd" => self.handle_channelgroupadd(&request, session),
             "channelgroupaddperm" => self.handle_channelgroupaddperm(&request, session),
             "channelgroupclientlist" => self.handle_channelgroupclientlist(&request, session),
@@ -130,30 +233,41 @@ impl BaselineRuntime {
             "privilegekeylist" => self.handle_privilegekeylist(&request, session),
             "privilegekeyuse" => self.handle_tokenuse(&request, session),
             "use" => self.handle_use(&request, session),
-            "serverrequestconnectioninfo" => self.handle_serverrequestconnectioninfo(session),
+            "serverrequestconnectioninfo" | "serverconnectioninfo" => {
+                self.handle_serverrequestconnectioninfo(session)
+            }
             "serveridgetbyport" => self.handle_serveridgetbyport(&request, session),
             "hostinfo" => self.handle_hostinfo(session),
             "instanceinfo" => self.handle_instanceinfo(session),
-            "listfeaturesupport" => self.handle_listfeaturesupport(),
+            "listfeaturesupport" | "featurelist" => self.handle_listfeaturesupport(),
             "bindinglist" => self.handle_bindinglist(&request, session),
             "propertylist" => self.handle_propertylist(&request),
             "serverlist" => self.handle_serverlist(&request, session),
             "version" => self.handle_version(),
             "whoami" => self.handle_whoami(session),
             "serverinfo" => self.handle_serverinfo(session),
-            "channellist" => self.handle_channellist(session),
-            "musicbotlist" => self.handle_musicbotlist(session),
-            "musicbotcreate" => self.handle_musicbotcreate(&request, session),
-            "musicbotdelete" => self.handle_musicbotdelete(&request, session),
-            "musicbotqueueadd" => self.handle_musicbotqueueadd(&request, session),
+            "servergetvariables" => self.handle_servergetvariables(session),
+            "clientgetvariables" => self.handle_clientgetvariables(&request, session),
+            "channellist" => self.handle_channellist(&request, session),
+            "musicbotlist" | "mbotlist" => self.handle_musicbotlist(session),
+            "musicbotcreate" | "mbotcreate" => self.handle_musicbotcreate(&request, session),
+            "musicbotdelete" | "mbotdelete" => self.handle_musicbotdelete(&request, session),
+            "musicbotqueueadd" | "mbotstream" => self.handle_musicbotqueueadd(&request, session),
             "musicbotqueuelist" => self.handle_musicbotqueuelist(&request, session),
             "musicbotqueueremove" => self.handle_musicbotqueueremove(&request, session),
             "musicbotqueuereorder" => self.handle_musicbotqueuereorder(&request, session),
-            "musicbotplayeraction" => self.handle_musicbotplayeraction(&request, session),
+            "musicbotplayeraction" | "mbotplayer" => self.handle_musicbotplayeraction(&request, session),
             "musicbotplayerinfo" => self.handle_musicbotplayerinfo(&request, session),
             "musicbotsetsubscription" => self.handle_musicbotsetsubscription(&request, session),
+            "musicbotplaylistassign" => self.handle_musicbotplaylistassign(&request, session),
+            "playlistcreate" => self.handle_playlistcreate(&request, session),
+            "playlistdelete" => self.handle_playlistdelete(&request, session),
             "playlistaddperm" => self.handle_playlistaddperm(&request, session),
+            "playlistdelperm" => self.handle_playlistdelperm(&request, session),
             "playlistclientaddperm" => self.handle_playlistclientaddperm(&request, session),
+            "playlistdelclientperm" | "playlistclientdelperm" => {
+                self.handle_playlistdelclientperm(&request, session)
+            }
             "playlistclientlist" => self.handle_playlistclientlist(&request, session),
             "playlistclientpermlist" => self.handle_playlistclientpermlist(&request, session),
             "playlistedit" => self.handle_playlistedit(&request, session),
@@ -166,12 +280,38 @@ impl BaselineRuntime {
             "playlistsongremove" => self.handle_playlistsongremove(&request, session),
             "playlistsongreorder" => self.handle_playlistsongreorder(&request, session),
             "playlistsongsetcurrent" => self.handle_playlistsongsetcurrent(&request, session),
+            "apikeyadd" => self.handle_apikeyadd(&request, session),
+            "apikeylist" => self.handle_apikeylist(&request, session),
+            "apikeydel" => self.handle_apikeydel(&request, session),
             "querycreate" => self.handle_querycreate(&request, session),
             "queryrename" => self.handle_queryrename(&request, session),
             "querychangepassword" => self.handle_querychangepassword(&request, session),
             "querydelete" => self.handle_querydelete(&request, session),
             "setclientchannelgroup" => self.handle_setclientchannelgroup(&request, session),
             "clientsetserverquerylogin" => self.handle_clientsetserverquerylogin(&request, session),
+            "tsdnsadd" => self.handle_tsdnsadd(&request, session),
+            "tsdnsdel" => self.handle_tsdnsdel(&request, session),
+            "tsdnslist" => self.handle_tsdnslist(&request, session),
+            "tsdnsresolve" => self.handle_tsdnsresolve(&request, session),
+            "conversationmessagedelete" => self.handle_conversationmessagedelete(&request, session),
+            "handshakebegin" => self.handle_handshakebegin(&request, session),
+            "handshakeidentityproof" | "handshakeindentityproof" => {
+                self.handle_handshakeidentityproof(&request, session)
+            }
+            "rtcsessiondescribe" => self.handle_rtcsessiondescribe(&request, session),
+            "rtcsessionreset" => self.handle_rtcsessionreset(session),
+            "rtcicecandidate" => self.handle_rtcicecandidate(&request, session),
+            "broadcastvideo" => self.handle_broadcastvideo(&request, session),
+            "broadcastvideoconfigure" => QueryResponse::ok(),
+            "broadcastaudio" => self.handle_broadcastaudio(&request, session),
+            "broadcastvideojoin" => self.handle_broadcastvideojoin(&request, session),
+            "broadcastaudiojoin" => self.handle_broadcastaudiojoin(&request, session),
+            "broadcastleave" | "broadcastvideoleave" | "broadcastaudioleave" => {
+                self.handle_broadcastleave(&request, session)
+            }
+            "broadcastlist" => self.handle_broadcastlist(&request, session),
+            "whispersessioninitialize" => self.handle_whispersessioninitialize(&request, session),
+            "whispersessionreset" => self.handle_whispersessionreset(session),
             other => QueryResponse::error(
                 259,
                 format!("command {} not implemented in baseline", other),
@@ -198,6 +338,50 @@ impl BaselineRuntime {
                 | "clientgetuidfromclid"
                 | "clientlist"
                 | "clientinfo"
+                | "clientupdate"
+                | "clientedit"
+                | "clientgetvariables"
+                | "custominfo"
+                | "customsearch"
+                | "customset"
+                | "clientcustomset"
+                | "customdelete"
+                | "clientcustomdelete"
+                | "clientdblist"
+                | "clientdbinfo"
+                | "clientdbedit"
+                | "clientdbdelete"
+                | "clientdbfind"
+                | "channelfind"
+                | "messageadd"
+                | "messagedel"
+                | "messageget"
+                | "messagelist"
+                | "messageupdateflag"
+                | "complainadd"
+                | "complaindel"
+                | "complaindelall"
+                | "complainlist"
+                | "serveredit"
+                | "servercreate"
+                | "serverdelete"
+                | "serverstart"
+                | "serverstop"
+                | "serverprocessstop"
+                | "serversnapshotcreate"
+                | "serversnapshotdeploy"
+                | "instanceedit"
+                | "gm"
+                | "logadd"
+                | "logview"
+                | "logquery"
+                | "bantriggerlist"
+                | "conversationfetch"
+                | "conversationhistory"
+                | "conversationmessagedelete"
+                | "servertemppasswordadd"
+                | "servertemppassworddel"
+                | "servertemppasswordlist"
                 | "clientpoke"
                 | "clientkick"
                 | "clientaddperm"
@@ -210,6 +394,7 @@ impl BaselineRuntime {
                 | "bandelall"
                 | "clientmove"
                 | "permoverview"
+                | "permreset"
                 | "channelclientaddperm"
                 | "channelclientdelperm"
                 | "channelclientpermlist"
@@ -225,6 +410,10 @@ impl BaselineRuntime {
                 | "channeldelete"
                 | "channeledit"
                 | "channelmove"
+                | "channelsubscribe"
+                | "channelunsubscribe"
+                | "channelsubscribeall"
+                | "channelunsubscribeall"
                 | "channelgroupadd"
                 | "channelgroupaddperm"
                 | "channelgroupclientlist"
@@ -261,23 +450,56 @@ impl BaselineRuntime {
                 | "setclientchannelgroup"
                 | "use"
                 | "serverrequestconnectioninfo"
+                | "serverconnectioninfo"
                 | "serveridgetbyport"
                 | "hostinfo"
                 | "instanceinfo"
                 | "listfeaturesupport"
+                | "featurelist"
                 | "bindinglist"
                 | "propertylist"
                 | "serverlist"
                 | "version"
                 | "whoami"
                 | "serverinfo"
+                | "servergetvariables"
                 | "channellist"
                 | "musicbotlist"
                 | "musicbotplayeraction"
                 | "musicbotcreate"
                 | "musicbotdelete"
+                | "musicbotqueueadd"
+                | "musicbotqueuelist"
+                | "musicbotqueueremove"
+                | "musicbotqueuereorder"
+                | "musicbotplayerinfo"
+                | "musicbotsetsubscription"
+                | "musicbotplaylistassign"
+                | "playlistcreate"
+                | "playlistdelete"
+                | "playlistaddperm"
+                | "playlistdelperm"
+                | "playlistclientaddperm"
+                | "playlistdelclientperm"
+                | "playlistclientdelperm"
+                | "playlistclientlist"
+                | "playlistclientpermlist"
+                | "playlistedit"
+                | "playlistlist"
+                | "playlistinfo"
+                | "playlistpermlist"
+                | "playlistsetsubscription"
+                | "playlistsonglist"
+                | "playlistsongadd"
+                | "playlistsongremove"
+                | "playlistsongreorder"
+                | "playlistsongsetcurrent"
+                | "apikeyadd"
+                | "apikeylist"
+                | "apikeydel"
                 | "ftgetfilelist"
                 | "ftlist"
+                | "ftstop"
                 | "ftdeletefile"
                 | "ftdelete"
                 | "ftinitupload"
@@ -290,7 +512,26 @@ impl BaselineRuntime {
                 | "querychangepassword"
                 | "querydelete"
                 | "clientsetserverquerylogin"
+                | "tsdnsadd"
+                | "tsdnsdel"
+                | "tsdnslist"
+                | "tsdnsresolve"
+                | "handshakebegin"
+                | "handshakeidentityproof"
+                | "handshakeindentityproof"
+                | "rtcsessiondescribe"
+                | "rtcsessionreset"
+                | "rtcicecandidate"
+                | "broadcastvideo"
+                | "broadcastaudio"
+                | "broadcastvideojoin"
+                | "broadcastaudiojoin"
+                | "broadcastleave"
+                | "broadcastlist"
+                | "whispersessioninitialize"
+                | "whispersessionreset"
         )
     }
 
 }
+

@@ -1,1 +1,0 @@
-import "../ui/react-elements/modal/external/renderer/EntryPoint";

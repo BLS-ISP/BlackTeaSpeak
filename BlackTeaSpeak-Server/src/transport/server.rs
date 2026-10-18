@@ -1,12 +1,3 @@
-use std::collections::HashMap;
-use std::io::{self, BufRead, BufReader, Write};
-use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::path::Path;
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::Duration;
-use anyhow::{Context, Result};
 use crate::query::*;
 use crate::runtime::*;
 use super::*;
@@ -16,7 +7,8 @@ pub(crate) fn matches_channel_tree_subscription(
     previous_parent_id: Option<u32>,
 ) -> bool {
     subscription_channel_id.is_some_and(|channel_id| {
-        channel_id == channel.id
+        channel_id == 0
+            || channel_id == channel.id
             || channel_id == channel.parent_id
             || previous_parent_id == Some(channel_id)
     })
@@ -64,19 +56,25 @@ pub fn render_notification(notification: &TransportNotification) -> String {
             invoker_id,
             invoker_name,
             invoker_uid,
-        } => render_message(
-            "notifyclientmoved",
-            &[
-                ("clid", presence.client_id.to_string()),
-                ("cfid", from_channel_id.to_string()),
-                ("ctid", presence.channel_id.to_string()),
-                ("reasonid", reason_id.to_string()),
-                ("reasonmsg", reason_message.clone()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", invoker_uid.clone()),
-            ],
-        ),
+        } => {
+            let mut fields = vec![
+                (String::from("cfid"), from_channel_id.to_string()),
+                (String::from("ctid"), presence.channel_id.to_string()),
+                (String::from("reasonid"), reason_id.to_string()),
+            ];
+            if *reason_id != 0 {
+                if !reason_message.is_empty() || *reason_id == 4 {
+                    fields.push((String::from("reasonmsg"), reason_message.clone()));
+                }
+                if *invoker_id > 0 || !invoker_name.is_empty() {
+                    fields.push((String::from("invokerid"), invoker_id.to_string()));
+                    fields.push((String::from("invokername"), invoker_name.clone()));
+                    fields.push((String::from("invokeruid"), invoker_uid.clone()));
+                }
+            }
+            fields.push((String::from("clid"), presence.client_id.to_string()));
+            render_message_owned("notifyclientmoved", fields)
+        }
         TransportNotification::ClientLeftView {
             presence,
             to_channel_id,
@@ -86,20 +84,29 @@ pub fn render_notification(notification: &TransportNotification) -> String {
             invoker_name,
             invoker_uid,
             ban_time,
-        } => render_message(
-            "notifyclientleftview",
-            &[
-                ("clid", presence.client_id.to_string()),
-                ("cfid", presence.channel_id.to_string()),
-                ("ctid", to_channel_id.unwrap_or(0).to_string()),
-                ("reasonid", reason_id.to_string()),
-                ("reasonmsg", reason_message.clone()),
-                ("invokerid", invoker_id.to_string()),
-                ("invokername", invoker_name.clone()),
-                ("invokeruid", invoker_uid.clone()),
-                ("bantime", ban_time.unwrap_or(0).to_string()),
-            ],
-        ),
+        } => {
+            let mut fields = vec![
+                (String::from("cfid"), presence.channel_id.to_string()),
+                (String::from("ctid"), to_channel_id.unwrap_or(0).to_string()),
+                (String::from("reasonid"), reason_id.to_string()),
+            ];
+            if *invoker_id > 0
+                || !invoker_name.is_empty()
+                || matches!(*reason_id, 1 | 4 | 5 | 6 | 11)
+            {
+                fields.push((String::from("invokerid"), invoker_id.to_string()));
+                fields.push((String::from("invokername"), invoker_name.clone()));
+                fields.push((String::from("invokeruid"), invoker_uid.clone()));
+            }
+            fields.push((String::from("reasonmsg"), reason_message.clone()));
+            if let Some(bt) = ban_time {
+                fields.push((String::from("bantime"), bt.to_string()));
+            } else if *reason_id == 6 {
+                fields.push((String::from("bantime"), String::from("0")));
+            }
+            fields.push((String::from("clid"), presence.client_id.to_string()));
+            render_message_owned("notifyclientleftview", fields)
+        }
         TransportNotification::ChannelEdited {
             channel,
             invoker_id,
@@ -109,8 +116,92 @@ pub fn render_notification(notification: &TransportNotification) -> String {
             "notifychanneledited",
             &[
                 ("cid", channel.id.to_string()),
+                ("cpid", channel.parent_id.to_string()),
+                ("pid", channel.parent_id.to_string()),
+                ("channel_order", channel.order.to_string()),
                 ("channel_name", channel.name.clone()),
                 ("channel_topic", channel.topic.clone()),
+                ("channel_description", channel.description.clone()),
+                ("channel_codec", channel.codec.to_string()),
+                ("channel_codec_quality", channel.codec_quality.to_string()),
+                ("channel_maxclients", channel.maxclients.to_string()),
+                (
+                    "channel_maxfamilyclients",
+                    channel.maxfamilyclients.to_string(),
+                ),
+                (
+                    "channel_flag_permanent",
+                    if channel.kind.is_permanent() {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_semi_permanent",
+                    if channel.kind.is_semi_permanent() {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_default",
+                    if channel.flag_default {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_password",
+                    if channel.flag_password {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_maxclients_unlimited",
+                    if channel.maxclients < 0 {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_maxfamilyclients_unlimited",
+                    if channel.maxfamilyclients < 0 {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_needed_talk_power",
+                    channel.needed_talk_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_join_power",
+                    channel.needed_join_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_subscribe_power",
+                    channel.needed_subscribe_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_description_view_power",
+                    channel.needed_description_view_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_modify_power",
+                    channel.needed_modify_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_delete_power",
+                    channel.needed_delete_power.to_string(),
+                ),
+                ("channel_icon_id", channel.icon_id.to_string()),
                 ("invokerid", invoker_id.to_string()),
                 ("invokername", invoker_name.clone()),
                 ("invokeruid", format!("query-{}", invoker_id)),
@@ -126,9 +217,91 @@ pub fn render_notification(notification: &TransportNotification) -> String {
             &[
                 ("cid", channel.id.to_string()),
                 ("cpid", channel.parent_id.to_string()),
+                ("pid", channel.parent_id.to_string()),
                 ("channel_order", channel.order.to_string()),
                 ("channel_name", channel.name.clone()),
                 ("channel_topic", channel.topic.clone()),
+                ("channel_description", channel.description.clone()),
+                ("channel_codec", channel.codec.to_string()),
+                ("channel_codec_quality", channel.codec_quality.to_string()),
+                ("channel_maxclients", channel.maxclients.to_string()),
+                (
+                    "channel_maxfamilyclients",
+                    channel.maxfamilyclients.to_string(),
+                ),
+                (
+                    "channel_flag_permanent",
+                    if channel.kind.is_permanent() {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_semi_permanent",
+                    if channel.kind.is_semi_permanent() {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_default",
+                    if channel.flag_default {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_password",
+                    if channel.flag_password {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_maxclients_unlimited",
+                    if channel.maxclients < 0 {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_flag_maxfamilyclients_unlimited",
+                    if channel.maxfamilyclients < 0 {
+                        String::from("1")
+                    } else {
+                        String::from("0")
+                    },
+                ),
+                (
+                    "channel_needed_talk_power",
+                    channel.needed_talk_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_join_power",
+                    channel.needed_join_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_subscribe_power",
+                    channel.needed_subscribe_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_description_view_power",
+                    channel.needed_description_view_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_modify_power",
+                    channel.needed_modify_power.to_string(),
+                ),
+                (
+                    "i_channel_needed_delete_power",
+                    channel.needed_delete_power.to_string(),
+                ),
+                ("channel_icon_id", channel.icon_id.to_string()),
                 ("invokerid", invoker_id.to_string()),
                 ("invokername", invoker_name.clone()),
                 ("invokeruid", format!("query-{}", invoker_id)),
@@ -159,7 +332,9 @@ pub fn render_notification(notification: &TransportNotification) -> String {
             &[
                 ("cid", channel.id.to_string()),
                 ("cpid", channel.parent_id.to_string()),
+                ("pid", channel.parent_id.to_string()),
                 ("order", channel.order.to_string()),
+                ("channel_order", channel.order.to_string()),
                 ("channel_name", channel.name.clone()),
                 ("invokerid", invoker_id.to_string()),
                 ("invokername", invoker_name.clone()),
@@ -204,6 +379,9 @@ pub fn render_notification(notification: &TransportNotification) -> String {
                 ("invokeruid", invoker_uid.clone()),
             ],
         ),
+        TransportNotification::VideoBroadcastChanged { channel_id, .. } => {
+            render_message("notifybroadcastvideo", &[("cid", channel_id.to_string())])
+        }
     }
 }
 pub(crate) fn render_message(name: &str, fields: &[(&str, String)]) -> String {
@@ -266,6 +444,61 @@ pub(crate) fn client_update_fields(
                 String::from("0")
             },
         ));
+    }
+    if before.server_groups != after.server_groups {
+        fields.push((
+            String::from("client_servergroups"),
+            after
+                .server_groups
+                .iter()
+                .map(u32::to_string)
+                .collect::<Vec<_>>()
+                .join(","),
+        ));
+    }
+    if before.version != after.version {
+        fields.push((String::from("client_version"), after.version.clone()));
+    }
+    if before.platform != after.platform {
+        fields.push((String::from("client_platform"), after.platform.clone()));
+    }
+    if before.country != after.country {
+        fields.push((String::from("client_country"), after.country.clone()));
+    }
+    for key in [
+        "client_outputonly_muted",
+        "client_description",
+        "client_is_talker",
+        "client_talk_power",
+        "client_talk_request",
+        "client_talk_request_msg",
+        "client_is_channel_commander",
+        "client_is_priority_speaker",
+        "client_is_recording",
+        "client_input_hardware",
+        "client_output_hardware",
+        "client_input_deactivated",
+        "client_nickname_phonetic",
+        "client_meta_data",
+        "client_flag_avatar",
+        "client_badges",
+        "client_flag_video_broadcasting",
+        "client_flag_screen_broadcasting",
+        "player_state",
+        "player_volume",
+        "client_playlist_id",
+        "client_disabled",
+        "client_flag_notify_song_change",
+        "client_bot_type",
+        "client_uptime_mode",
+    ] {
+        let before_val = before.extra_properties.get(key);
+        let after_val = after.extra_properties.get(key);
+        if before_val != after_val
+            && let Some(val) = after_val
+        {
+            fields.push((String::from(key), val.clone()));
+        }
     }
 
     fields
@@ -341,3 +574,100 @@ pub(crate) fn server_edited_fields(
     fields.push((String::from("invokeruid"), format!("query-{}", invoker_id)));
     fields
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::transport::SessionPresence;
+
+    fn sample_presence(clid: u64, cid: u32) -> SessionPresence {
+        SessionPresence {
+            client_id: clid,
+            login_name: String::from("TestUser"),
+            unique_identifier: String::from("uid-test"),
+            client_type: 0,
+            server_id: 1,
+            channel_id: cid,
+        }
+    }
+
+    #[test]
+    fn self_move_omits_invoker_fields_while_admin_move_includes_them() {
+        let self_move = TransportNotification::ClientMoved {
+            presence: sample_presence(5, 2),
+            from_channel_id: 1,
+            reason_id: 0,
+            reason_message: String::new(),
+            invoker_id: 5,
+            invoker_name: String::from("TestUser"),
+            invoker_uid: String::from("uid-test"),
+        };
+        assert_eq!(
+            render_notification(&self_move),
+            "notifyclientmoved cfid=1 ctid=2 reasonid=0 clid=5"
+        );
+
+        let admin_move = TransportNotification::ClientMoved {
+            presence: sample_presence(5, 3),
+            from_channel_id: 2,
+            reason_id: 1,
+            reason_message: String::new(),
+            invoker_id: 1,
+            invoker_name: String::from("Admin"),
+            invoker_uid: String::from("uid-admin"),
+        };
+        assert_eq!(
+            render_notification(&admin_move),
+            "notifyclientmoved cfid=2 ctid=3 reasonid=1 invokerid=1 invokername=Admin invokeruid=uid-admin clid=5"
+        );
+    }
+
+    #[test]
+    fn left_view_encodings_match_ts3_and_teaspeak_expectations() {
+        let voluntary = TransportNotification::ClientLeftView {
+            presence: sample_presence(7, 1),
+            to_channel_id: None,
+            reason_id: 8,
+            reason_message: String::from("leaving"),
+            invoker_id: 0,
+            invoker_name: String::new(),
+            invoker_uid: String::new(),
+            ban_time: None,
+        };
+        assert_eq!(
+            render_notification(&voluntary),
+            "notifyclientleftview cfid=1 ctid=0 reasonid=8 reasonmsg=leaving clid=7"
+        );
+
+        let kicked = TransportNotification::ClientLeftView {
+            presence: sample_presence(7, 1),
+            to_channel_id: None,
+            reason_id: 5,
+            reason_message: String::from("Bye"),
+            invoker_id: 2,
+            invoker_name: String::from("Mod"),
+            invoker_uid: String::from("uid-mod"),
+            ban_time: None,
+        };
+        assert_eq!(
+            render_notification(&kicked),
+            "notifyclientleftview cfid=1 ctid=0 reasonid=5 invokerid=2 invokername=Mod invokeruid=uid-mod reasonmsg=Bye clid=7"
+        );
+
+        let banned = TransportNotification::ClientLeftView {
+            presence: sample_presence(7, 1),
+            to_channel_id: None,
+            reason_id: 6,
+            reason_message: String::from("Rule violation"),
+            invoker_id: 2,
+            invoker_name: String::from("Mod"),
+            invoker_uid: String::from("uid-mod"),
+            ban_time: Some(3600),
+        };
+        assert_eq!(
+            render_notification(&banned),
+            "notifyclientleftview cfid=1 ctid=0 reasonid=6 invokerid=2 invokername=Mod invokeruid=uid-mod reasonmsg=Rule\\sviolation bantime=3600 clid=7"
+        );
+    }
+}
+

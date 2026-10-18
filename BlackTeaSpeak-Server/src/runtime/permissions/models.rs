@@ -1,8 +1,5 @@
 use super::*;
-use super::*;
-use std::fs;
 
-use crate::models::PermissionGroupSpec;
 
 pub(crate) const ERROR_INSUFFICIENT_PERMISSIONS: u32 = 0xA08;
 
@@ -19,10 +16,10 @@ pub(crate) struct PermissionActorContext {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct PermissionAssignment {
-    pub(crate) value: i64,
-    pub(crate) negated: bool,
-    pub(crate) skipped: bool,
+pub struct PermissionAssignment {
+    pub value: i64,
+    pub negated: bool,
+    pub skipped: bool,
 }
 
 #[derive(Debug, Clone)]

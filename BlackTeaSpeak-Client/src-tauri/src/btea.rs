@@ -112,8 +112,9 @@ pub fn decrypt_btea_packet(
 pub struct AppState {
     pub session_secret: Mutex<Option<Vec<u8>>>,
     pub socket: Mutex<Option<Arc<UdpSocket>>>,
-    pub tcp_writer: Mutex<Option<Arc<tokio::sync::Mutex<(tokio::net::tcp::OwnedWriteHalf, u16, Vec<u8>)>>>>,
+    pub tcp_writer: Mutex<Option<Arc<tokio::sync::Mutex<(tokio::net::tcp::OwnedWriteHalf, u16, u16, Vec<u8>)>>>>,
     pub audio_manager: Mutex<Option<crate::audio::AudioManager>>,
+    pub plugin_sdk: crate::plugins::PluginSdkSharedState,
 }
 
 impl AppState {
@@ -123,6 +124,8 @@ impl AppState {
             socket: Mutex::new(None),
             tcp_writer: Mutex::new(None),
             audio_manager: Mutex::new(None),
+            plugin_sdk: crate::plugins::PluginSdkSharedState::default(),
         }
     }
 }
+

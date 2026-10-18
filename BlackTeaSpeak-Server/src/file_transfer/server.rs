@@ -1,17 +1,12 @@
-use std::collections::HashMap;
-use std::fmt::Write as _;
 use std::fs::{self, File};
-use std::io::{self, BufReader, Read, Seek, SeekFrom, Write};
+use std::io::{self, Read, Seek, SeekFrom, Write};
 use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
+use std::path::Path;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 use anyhow::{Context, Result, anyhow};
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
-use rustls::pki_types::{PrivateKeyDer, PrivatePkcs8KeyDer};
 use rustls::{ServerConfig, ServerConnection, StreamOwned};
 
 use super::*;
@@ -87,6 +82,11 @@ pub(crate) fn handle_transfer_client(
         .set_write_timeout(Some(Duration::from_secs(30)))
         .context("failed to set file transfer write timeout")?;
 
+    let mut first_byte = [0u8; 1];
+    if stream.peek(&mut first_byte).unwrap_or(0) == 1 && first_byte[0] != 0x16 {
+        return handle_raw_tcp_transfer(stream, registry);
+    }
+
     let mut tls_stream = StreamOwned::new(
         ServerConnection::new(tls_config).context("failed to create file transfer TLS server connection")?,
         stream,
@@ -150,6 +150,104 @@ pub(crate) fn handle_transfer_client(
                     Err(error)
                 }
             }
+        }
+    }
+}
+
+fn handle_raw_tcp_transfer(
+    mut stream: TcpStream,
+    registry: Arc<FileTransferRegistry>,
+) -> Result<()> {
+    let mut header_buf = Vec::with_capacity(256);
+    let mut scratch = [0u8; 4096];
+    let (transfer, mut remaining_payload) = loop {
+        let n = stream
+            .read(&mut scratch)
+            .context("failed to read raw TCP transfer key")?;
+        if n == 0 {
+            return Err(anyhow!("unexpected EOF while reading raw TCP transfer key"));
+        }
+        header_buf.extend_from_slice(&scratch[..n]);
+        if let Some((_key, transfer, consumed)) =
+            registry.take_transfer_matching_prefix(&header_buf)
+        {
+            let rest = header_buf[consumed..].to_vec();
+            break (transfer, rest);
+        }
+        if header_buf.len() > 1024 {
+            return Err(anyhow!("invalid or unknown raw TCP transfer key"));
+        }
+    };
+
+    registry.emit_started(&transfer);
+    match transfer.direction {
+        FileTransferDirection::Download => {
+            let mut file =
+                File::open(&transfer.file_path).context("failed to open raw download file")?;
+            file.seek(SeekFrom::Start(transfer.seek_position))
+                .context("failed to seek raw download file")?;
+            let mut bytes_transferred = 0u64;
+            loop {
+                let n = file
+                    .read(&mut scratch)
+                    .context("failed to read raw download file")?;
+                if n == 0 {
+                    break;
+                }
+                stream
+                    .write_all(&scratch[..n])
+                    .context("failed to write raw download stream")?;
+                bytes_transferred = bytes_transferred.saturating_add(n as u64);
+            }
+            stream.flush().ok();
+            registry.emit_progress(&transfer, bytes_transferred);
+            registry.emit_status(&transfer, FILE_TRANSFER_STATUS_COMPLETE, "ok");
+            Ok(())
+        }
+        FileTransferDirection::Upload => {
+            if remaining_payload.len() > transfer.size as usize
+                && (remaining_payload.starts_with(b"\r\n") || remaining_payload.starts_with(b"\n"))
+            {
+                if remaining_payload.starts_with(b"\r\n") {
+                    remaining_payload.drain(..2);
+                } else {
+                    remaining_payload.drain(..1);
+                }
+            }
+            if let Some(parent) = transfer.file_path.parent() {
+                fs::create_dir_all(parent)
+                    .context("failed to create raw upload parent directory")?;
+            }
+            let mut file =
+                File::create(&transfer.file_path).context("failed to create raw upload file")?;
+            if transfer.seek_position > 0 {
+                file.seek(SeekFrom::Start(transfer.seek_position))
+                    .context("failed to seek raw upload file")?;
+            }
+            let mut bytes_transferred = 0u64;
+            if !remaining_payload.is_empty() {
+                let to_write =
+                    remaining_payload.len().min(transfer.size as usize);
+                file.write_all(&remaining_payload[..to_write])
+                    .context("failed to write initial raw upload bytes")?;
+                bytes_transferred = bytes_transferred.saturating_add(to_write as u64);
+            }
+            while bytes_transferred < transfer.size {
+                let want = ((transfer.size - bytes_transferred) as usize).min(scratch.len());
+                let n = stream
+                    .read(&mut scratch[..want])
+                    .context("failed to read raw upload stream")?;
+                if n == 0 {
+                    break;
+                }
+                file.write_all(&scratch[..n])
+                    .context("failed to write raw upload file")?;
+                bytes_transferred = bytes_transferred.saturating_add(n as u64);
+            }
+            file.flush().context("failed to flush raw upload file")?;
+            registry.emit_progress(&transfer, bytes_transferred);
+            registry.emit_status(&transfer, FILE_TRANSFER_STATUS_COMPLETE, "ok");
+            Ok(())
         }
     }
 }

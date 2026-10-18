@@ -1,44 +1,11 @@
 use super::*;
-use std::collections::{BTreeMap, BTreeSet, HashMap};
-use std::fs::{self, File};
-use std::io::{self, BufReader};
-use std::net::{SocketAddr, TcpListener, TcpStream};
-use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
-use std::sync::{Arc, Mutex};
-use std::thread;
-use std::time::{Duration, Instant};
+use std::collections::{BTreeMap, BTreeSet};
+use std::io::{self};
 
-use anyhow::{Context, Result, anyhow};
-use base64::Engine;
-use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
-use rcgen::generate_simple_self_signed;
-use rustls::pki_types::{PrivateKeyDer, PrivatePkcs8KeyDer};
-use rustls::{ServerConfig, ServerConnection, StreamOwned};
-use serde::Deserialize;
-use serde_json::{Map, Value, json};
-use tungstenite::error::Error as WebSocketError;
-use tungstenite::protocol::{CloseFrame, frame::coding::CloseCode};
-use tungstenite::{Message, accept};
-use wtransport::{Endpoint, ServerConfig as WTransportServerConfig, Identity};
+use anyhow::Result;
 
-use crate::file_transfer::{
-    FileEntryInfo, FileTransferError, FileTransferEvent, FileTransferRegistry,
-    PreparedFileTransfer,
-};
-use crate::query::{CommandRequest, QueryResponse, encode_query_value};
-use crate::models::{
-    WhisperTargetSelection, WHISPER_TARGET_CHANNEL, WHISPER_TARGET_CLIENT,
-    WHISPER_TARGET_SERVER_GROUP, WHISPER_TARGET_SELF,
-};
-use crate::runtime::{
-    AntiFloodSessionState, BaselineRuntime, ChannelSnapshot, MusicBotNotifyPayload,
-    OnlineClientSnapshot, QuerySessionState, ServerSnapshot,
-    WebServerGroupMutationError, WebServerInitInfo, create_baseline_runtime,
-    create_baseline_runtime_with_state_path, stable_web_client_database_id,
-    stable_web_client_unique_identifier,
-};
-use crate::transport::{SessionPresence, TransportNotification};
+use crate::runtime::BaselineRuntime;
+use crate::transport::TransportNotification;
 
 pub(crate) fn presence_with_channel_id(presence: &BlackTeaWebPresence, channel_id: u32) -> BlackTeaWebPresence {
     let mut overridden = presence.clone();
@@ -273,14 +240,16 @@ pub(crate) fn session_frames_for_transport_notifications(
                     .unwrap_or_else(|| blackteaweb_presence_from_transport_presence(presence));
 
                 if session.presence.client_id == presence.client_id {
-                    frames.push(command_frame(
-                        "notifycliententerview",
-                        vec![presence_enter_view_row(
-                            &bridged_presence,
-                            *from_channel_id,
-                            *reason_id,
-                        )],
-                    )?);
+                    if from_channel_id.is_some() && !suppress_origin_peer_frames {
+                        frames.push(command_frame(
+                            "notifycliententerview",
+                            vec![presence_enter_view_row(
+                                &bridged_presence,
+                                *from_channel_id,
+                                *reason_id,
+                            )],
+                        )?);
+                    }
                 } else if !suppress_origin_peer_frames
                     && after_visible_channel_ids.contains(&bridged_presence.channel_id)
                 {
@@ -307,6 +276,53 @@ pub(crate) fn session_frames_for_transport_notifications(
                             && after_visible_channel_ids.contains(&after_presence.channel_id)))
                 {
                     frames.push(command_frame("notifyclientupdated", vec![row])?);
+                }
+                if !suppress_origin_peer_frames
+                    && (after.client_type_exact == 4
+                        || after.unique_identifier.starts_with("compat-musicbot-"))
+                {
+                    let music_sync_changed = before.extra_properties.get("_music_sync_state")
+                        != after.extra_properties.get("_music_sync_state")
+                        || before.extra_properties.get("player_volume")
+                            != after.extra_properties.get("player_volume");
+                    let music_loaded_changed = before.extra_properties.get("_music_loaded_songs")
+                        != after.extra_properties.get("_music_loaded_songs");
+                    if (music_sync_changed || music_loaded_changed)
+                        && let Some(payload) =
+                            runtime.music_bot_notify_payload_by_identifier(*server_id, after.id)
+                    {
+                        if music_loaded_changed && payload.playlist_id > 0 {
+                            let prev_loaded = before
+                                .extra_properties
+                                .get("_music_loaded_songs")
+                                .map(String::as_str)
+                                .unwrap_or("");
+                            for loaded_row in &payload.loaded_songs {
+                                if let Some(sid_str) = loaded_row.get("song_id")
+                                    && !prev_loaded.split(',').any(|entry| entry == sid_str)
+                                {
+                                    frames.push(command_frame(
+                                        "notifyplaylistsongloaded",
+                                        vec![loaded_row.clone()],
+                                    )?);
+                                }
+                            }
+                        }
+                        if music_sync_changed {
+                            frames.push(command_frame(
+                                "notifymusicplayerinfo",
+                                vec![payload.player_info],
+                            )?);
+                            frames.push(command_frame(
+                                "notifymusicplayersongchange",
+                                vec![payload.song_change],
+                            )?);
+                            frames.push(command_frame(
+                                "notifymusicstatusupdate",
+                                vec![payload.status_update],
+                            )?);
+                        }
+                    }
                 }
             }
             TransportNotification::ClientMoved {
@@ -509,7 +525,7 @@ pub(crate) fn session_frames_for_transport_notifications(
                     && let Some(mut row) = runtime
                         .web_channel_row_for_visibility(*server_id, channel.id, after_visible_channel_ids)
                 {
-                    let order = row.remove("channel_order").unwrap_or_else(|| String::from("0"));
+                    let order = row.get("channel_order").cloned().unwrap_or_else(|| String::from("0"));
                     row.insert(String::from("order"), order);
                     row.insert(String::from("invokerid"), invoker_id.to_string());
                     row.insert(String::from("invokername"), invoker_name.clone());
@@ -545,6 +561,18 @@ pub(crate) fn session_frames_for_transport_notifications(
                         frames.push(command_frame("notifychanneledited", vec![row])?);
                     }
                 }
+            }
+            TransportNotification::VideoBroadcastChanged { server_id, .. }
+                if *server_id == session.presence.server_id =>
+            {
+                let mut broadcast_rows = runtime.active_broadcast_rows(*server_id, None);
+                if broadcast_rows.is_empty() {
+                    broadcast_rows.push(BTreeMap::from([(
+                        String::from("empty"),
+                        String::from("1"),
+                    )]));
+                }
+                frames.push(command_frame("notifybroadcasts", broadcast_rows)?);
             }
             _ => {}
         }

@@ -19,7 +19,7 @@ impl Database {
                 server.id,
                 server.name,
                 server.welcome_message,
-                "", // Password
+                server.password,
                 server.max_clients,
                 server.port,
             ],
@@ -28,19 +28,22 @@ impl Database {
     }
     pub fn load_virtual_servers(&self) -> Result<std::collections::BTreeMap<u32, crate::runtime::VirtualServer>> {
         let conn = self.conn.lock().unwrap();
-        let mut stmt = conn.prepare("SELECT server_id, server_name, server_welcomemessage, server_maxclients, server_port FROM servers")?;
+        let mut stmt = conn.prepare("SELECT server_id, server_name, server_welcomemessage, server_maxclients, server_port, server_password FROM servers")?;
         let server_iter = stmt.query_map([], |row| {
             let id: u32 = row.get(0)?;
             let port: u16 = row.get(4)?;
             let name: String = row.get(1)?;
             let welcome_message: String = row.get(2)?;
             let max_clients: u32 = row.get(3)?;
+            let password: String = row.get::<_, Option<String>>(5)?.unwrap_or_default();
             
             // Reconstruct VirtualServer
             Ok(crate::runtime::VirtualServer {
                 id,
                 port,
                 name,
+                status: String::from("online"),
+                password,
                 unique_identifier: crate::desktop_crypto::get_stable_server_uid(),
                 welcome_message,
                 host_message: String::new(),
@@ -60,5 +63,13 @@ impl Database {
             map.insert(server.id, server);
         }
         Ok(map)
+    }
+
+    pub fn delete_virtual_server(&self, server_id: u32) -> Result<()> {
+        let conn = self.conn.lock().unwrap();
+        let _ = conn.execute("DELETE FROM channel_permissions WHERE server_id = ?1", params![server_id]);
+        let _ = conn.execute("DELETE FROM channels WHERE server_id = ?1", params![server_id]);
+        let _ = conn.execute("DELETE FROM servers WHERE server_id = ?1", params![server_id]);
+        Ok(())
     }
 }
