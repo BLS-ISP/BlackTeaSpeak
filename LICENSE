@@ -1,0 +1,198 @@
+BLACKTEASPEAK PROPRIETARY BINARY USE & SOURCE-AVAILABLE LICENSE
+(BLACKTEASPEAK PROPRIETÄRE LIZENZ FÜR BINARY-NUTZUNG & QUELLCODE-EINSICHT)
+
+Version 1.0 — Effective Date: October 2026
+Copyright (c) 2026 BLS-ISP / GeneraBlack (https://github.com/BLS-ISP/BlackTeaSpeak)
+All rights reserved. / Alle Rechte vorbehalten.
+
+================================================================================
+TEIL A: DEUTSCHE FASSUNG (RECHTSVERBINDLICH)
+================================================================================
+
+WICHTIGER HINWEIS: DIES IST KEINE OPEN-SOURCE-LIZENZ.
+Durch das Herunterladen, Installieren, Ausführen oder Einsehen dieser Software
+("BlackTeaSpeak", einschließlich BlackTeaSpeak-Server, BlackTeaSpeak-Client,
+BlackTeaWeb, des BTEA-Protokolls sowie sämtlicher zugehöriger Quelltexte,
+Binärdateien, Dokumentationen und Assets) erklären Sie sich mit den folgenden
+Lizenzbedingungen einverstanden. Wenn Sie diesen Bedingungen nicht zustimmen,
+sind Sie nicht berechtigt, die Software oder Teile davon zu nutzen.
+
+§ 1 Begriffsbestimmungen
+1. "Rechteinhaber" bezeichnet BLS-ISP / GeneraBlack sowie die offiziellen
+   Rechtsnachfolger des Projekts (https://github.com/BLS-ISP/BlackTeaSpeak).
+2. "Software" bezeichnet sämtliche im offiziellen Repository veröffentlichten
+   Quellcodes, Bibliotheken, Protokollspezifikationen, Konfigurationsdateien,
+   Benutzeroberflächen sowie die daraus erzeugten offiziellen Binärdateien
+   (Kompilate / Executables / Installer).
+3. "Offizielle Binärdateien" bezeichnet ausschließlich die unveränderten, vom
+   Rechteinhaber über die offiziellen Release- und CI/CD-Kanäle bereitgestellten
+   kompilierten Programmversionen.
+
+§ 2 Eingeräumte Nutzungsrechte (Private & Nicht-Kommerzielle Nutzung der Binaries)
+Unter der Bedingung der vollständigen Einhaltung dieser Lizenz gewährt der
+Rechteinhaber Ihnen ein einfaches, widerrufliches, nicht-exklusives,
+nicht-übertragbares und nicht-unterlizenzierbares Recht:
+1. die unveränderten Offiziellen Binärdateien für eigene, private und
+   ausschließlich nicht-kommerzielle Zwecke herunterzuladen, zu installieren
+   und auszuführen (z. B. Betrieb eines privaten Community-, Gaming- oder
+   Vereins-Sprachservers ohne Gewinnerzielungsabsicht);
+2. den im offiziellen Repository bereitgestellten Quellcode ausschließlich zu
+   Informations-, Prüfungs- und Sicherheitsanalyse-Zwecken ("Source-Available"
+   zur Transparenzprüfung) einzusehen.
+
+§ 3 Strikte Verbote (Keine Weiterentwicklung, Keine Verteilung, Keine Kommerzielle Nutzung)
+Soweit nicht ausdrücklich durch einen gesonderten, schriftlichen Lizenzvertrag
+mit dem Rechteinhaber genehmigt, ist Ihnen Folgendes STRENGSTENS UNTERSAGT:
+
+1. VERBOT EXTERNER WEITERENTWICKLUNG & MODIFIKATION:
+   Es ist untersagt, die Software (weder Quellcode noch Binärdateien) außerhalb
+   des offiziellen Repositories zu verändern, weiterzuentwickeln, anzupassen,
+   zu übersetzen, zu patchen, abgeleitete Werke ("Derivative Works") oder
+   eigene Abspaltungen ("Forks") zu erstellen oder Teile des Codes in fremde
+   Softwareprojekte zu übernehmen. Beiträge ("Contributions" / Pull Requests)
+   dürfen ausschließlich direkt an das offizielle Repository des Rechteinhabers
+   gerichtet werden.
+
+2. VERBOT DER WEITERVERTEILUNG (NO REDISTRIBUTION):
+   Es ist untersagt, den Quellcode, selbst kompilierte Versionen oder die
+   Offiziellen Binärdateien (weder im Originalzustand noch in veränderter Form)
+   über Drittplattformen, eigene Webseiten, Filehoster, Paketmanager, Mirrors
+   oder Archive zu verbreiten, öffentlich zugänglich zu machen, zu bündeln oder
+   weiterzugeben. Die Verbreitung unter eigenem oder fremdem Namen ("Rebranding")
+   sowie das Entfernen oder Verfälschen von Urheberrechts-, Marken- oder
+   Sicherheitshinweisen ist ausdrücklich verboten.
+
+3. VERBOT KOMMERZIELLER NUTZUNG OHNE LIZENZVERTRAG:
+   Jegliche kommerzielle, gewerbliche oder auf Einnahmenerzielung gerichtete
+   Nutzung der Software ist ohne einen vorab geschlossenen, schriftlichen
+   kommerziellen Lizenzvertrag mit dem Rechteinhaber untersagt. Als verbotene
+   kommerzielle Nutzung gelten insbesondere (aber nicht ausschließlich):
+   a) das entgeltliche oder gewerbliche Anbieten, Vermieten, Verpachten oder
+      Bereitstellen von BlackTeaSpeak-Serverinstanzen, Channels oder Slots
+      (z. B. durch Hoster, ATHPs, Game-Server-Provider oder Cloud-Anbieter);
+   b) die Nutzung der Software als Managed Service (SaaS / PaaS) oder als
+      Bestandteil kostenpflichtiger Mitgliedschaften, Pakete oder Produkte;
+   c) der Verkauf von Lizenzen, Zugangsschlüsseln, Rängen oder Supportleistungen
+      im Zusammenhang mit der Software;
+   d) der Einsatz der Software im internen oder externen Geschäftsbetrieb
+      eines gewinnorientierten Unternehmens.
+
+§ 4 Marken- und Kennzeichenschutz
+Die Bezeichnungen "BlackTeaSpeak", "BlackTeaWeb" und "BTEA" sowie die zugehörigen
+Logos sind geschützte Kennzeichen des Rechteinhabers. Diese Lizenz gewährt
+keinerlei Rechte zur Nutzung dieser Namen oder Kennzeichen für eigene Produkte,
+Domains oder Dienstleistungen.
+
+§ 5 Automatische Beendigung bei Vertragsverstoß
+Bei jedem Verstoß gegen eine Bestimmung dieser Lizenz (insbesondere gegen § 3)
+erlöschen sämtliche Ihnen nach § 2 eingeräumten Nutzungsrechte automatisch und
+mit sofortiger Wirkung, ohne dass es einer Kündigung oder Abmahnung durch den
+Rechteinhaber bedarf. Weitergehende zivil- und strafrechtliche Ansprüche auf
+Unterlassung, Schadensersatz und Gewinnabschöpfung bleiben ausdrücklich
+vorbehalten.
+
+§ 6 Gewährleistungs- und Haftungsausschluss
+DIE SOFTWARE WIRD "WIE BESEHEN" ("AS IS") OHNE JEGLICHE AUSDRÜCKLICHE ODER
+STILLSCHWEIGENDE GEWÄHRLEISTUNG BEREITGESTELLT. DER RECHTEINHABER ÜBERNIMMT
+KEINE HAFTUNG FÜR SCHÄDEN, DATENVERLUSTE ODER BETRIEBSUNTERBRECHUNGEN, DIE AUS
+DER NUTZUNG ODER NICHTNUTZBARKEIT DER SOFTWARE ENTSTEHEN, SOWEIT GESETZLICH
+ZULÄSSIG.
+
+§ 7 Kommerzielle Lizenzierung & Kontakt
+Für kommerzielle Nutzungslizenzen, Hosting-Partnerschaften (ATHP) oder
+Sondergenehmigungen wenden Sie sich bitte an den Rechteinhaber über:
+https://github.com/BLS-ISP/BlackTeaSpeak
+
+
+================================================================================
+PART B: ENGLISH VERSION (BINDING INTERNATIONAL TRANSLATION)
+================================================================================
+
+IMPORTANT NOTICE: THIS IS NOT AN OPEN-SOURCE LICENSE.
+By downloading, installing, executing, or viewing this software ("BlackTeaSpeak",
+including BlackTeaSpeak-Server, BlackTeaSpeak-Client, BlackTeaWeb, the BTEA
+protocol, and all associated source code, binaries, documentation, and assets),
+you agree to be bound by the terms of this License. If you do not agree to these
+terms, you are not authorized to use the Software in any way.
+
+1. Definitions
+1.1 "Copyright Holder" means BLS-ISP / GeneraBlack and the official legal
+    owners of the project (https://github.com/BLS-ISP/BlackTeaSpeak).
+1.2 "Software" means all source code, libraries, protocol specifications,
+    configuration files, user interfaces, and the resulting compiled binaries
+    published in the official repository.
+1.3 "Official Binaries" means strictly the unmodified, pre-compiled executable
+    files and installers distributed directly by the Copyright Holder through
+    its official release and CI/CD channels.
+
+2. Grant of License (Personal & Non-Commercial Binary Use Only)
+Subject to your strict and continuous compliance with all terms of this License,
+the Copyright Holder grants you a limited, revocable, non-exclusive,
+non-transferable, and non-sublicensable license to:
+2.1 download, install, and execute the unmodified Official Binaries solely for
+    your own personal, private, and non-commercial purposes (e.g., operating a
+    private community, clan, or non-profit voice server free of charge);
+2.2 view the source code published in the official repository solely for
+    educational, auditing, and security verification purposes.
+
+3. Strict Prohibitions (No External Development, No Redistribution, No Commercial Use)
+Unless explicitly authorized in a separate, written Commercial License Agreement
+signed by the Copyright Holder, you are STRICTLY PROHIBITED from:
+
+3.1 NO EXTERNAL DEVELOPMENT, MODIFICATION, OR DERIVATIVE WORKS:
+    You may not modify, adapt, alter, translate, patch, reverse-engineer,
+    decompile, create derivative works of, or maintain external forks of the
+    Software (whether in source or binary form), nor incorporate any portion of
+    the Software into any other software or project. Any contributions must be
+    submitted exclusively as pull requests to the Copyright Holder's official
+    repository.
+
+3.2 NO REDISTRIBUTION OR MIRRORING:
+    You may not distribute, redistribute, publish, mirror, host for download,
+    bundle, sublicense, or otherwise make available the source code, self-compiled
+    builds, or the Official Binaries (whether modified or unmodified) to any
+    third party or on any third-party website, archive, or package repository.
+    Rebranding the Software or removing/altering any copyright, attribution, or
+    security notices is strictly forbidden.
+
+3.3 NO COMMERCIAL USE OUTSIDE OF A WRITTEN LICENSE AGREEMENT:
+    You may not use the Software for any commercial, for-profit, or
+    revenue-generating purpose without a valid, separate written Commercial
+    License Agreement from the Copyright Holder. Prohibited commercial uses
+    include, without limitation:
+    a) selling, renting, leasing, or hosting BlackTeaSpeak server instances,
+       virtual servers, channels, or slots for a fee or other consideration
+       (including Game Server Providers, Voice Hosting Providers / ATHPs, and
+       Cloud Providers);
+    b) offering the Software as a managed service (SaaS / PaaS) or bundling it
+       with paid subscriptions, memberships, or commercial products;
+    c) selling licenses, privilege keys, ranks, access, or commercial support
+       services related to the Software;
+    d) using the Software within the internal or external operations of any
+       for-profit business or commercial entity.
+
+4. Trademarks
+"BlackTeaSpeak", "BlackTeaWeb", and "BTEA" are proprietary identifiers of the
+Copyright Holder. Nothing in this License grants you any right to use these
+names, logos, or trademarks for your own domains, products, or services.
+
+5. Automatic Termination
+Any breach of the terms of this License (in particular Section 3) shall result
+in the automatic and immediate termination of all rights granted to you under
+Section 2, without notice. Upon termination, you must immediately cease all use
+of the Software and destroy all copies in your possession. The Copyright Holder
+reserves all rights to seek injunctive relief, statutory damages, and recovery
+of profits.
+
+6. Disclaimer of Warranty & Limitation of Liability
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+7. Commercial Licensing Inquiries
+To obtain a Commercial License Agreement for hosting, commercial deployment, or
+enterprise integration, please contact the Copyright Holder via:
+https://github.com/BLS-ISP/BlackTeaSpeak

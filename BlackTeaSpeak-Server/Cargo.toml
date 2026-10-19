@@ -1,7 +1,9 @@
 [package]
 name = "blackteaspeak_server"
-version = "0.1.0"
+version = "2.0.0"
 edition = "2024"
+license-file = "../LICENSE"
+publish = false
 
 [dependencies]
 anyhow = "1.0"

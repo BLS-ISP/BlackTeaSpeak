@@ -53,6 +53,7 @@ jobs:
           mkdir server-release\BlackTeaWeb
           xcopy /E /I BlackTeaSpeak-Server\BlackTeaWeb\dist server-release\BlackTeaWeb\dist
           copy BlackTeaSpeak-Server\target\release\blackteaspeak_server.exe server-release\
+          copy LICENSE server-release\
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
@@ -110,6 +111,7 @@ jobs:
           mkdir -p server-release/BlackTeaWeb
           cp -r BlackTeaSpeak-Server/BlackTeaWeb/dist server-release/BlackTeaWeb/
           cp BlackTeaSpeak-Server/target/release/blackteaspeak_server server-release/
+          cp LICENSE server-release/
           cd server-release && zip -r ../BlackTeaSpeak-Server-Debian.zip ./*
 
       - name: Upload Artifacts
@@ -168,6 +170,7 @@ jobs:
           mkdir -p server-release/BlackTeaWeb
           cp -r BlackTeaSpeak-Server/BlackTeaWeb/dist server-release/BlackTeaWeb/
           cp BlackTeaSpeak-Server/target/release/blackteaspeak_server server-release/
+          cp LICENSE server-release/
           cd server-release && zip -r ../BlackTeaSpeak-Server-Fedora.zip ./*
 
       - name: Upload Artifacts

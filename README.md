@@ -57,4 +57,17 @@ npm run tauri dev
 ## Contributing
 BlackTeaSpeak is currently in the **INDEV** phase. All architectural flows, protocol packets, and schema interactions are documented in the `docs/` tree. Please consult the documentation before opening pull requests to ensure changes align with the overarching state machine design.
 
-Please Help me out i am Realy bad with UI/UX! definitly need some aditional developers.
+## License / Lizenz
+
+**Copyright © 2026 BLS-ISP / GeneraBlack. All rights reserved.**
+
+BlackTeaSpeak is distributed under the **[BlackTeaSpeak Proprietary Binary Use & Source-Available License](LICENSE)** (this is **not** an open-source license):
+
+- **Permitted (Erlaubt):** Downloading and executing the unmodified **Official Binaries** for personal, private, and non-commercial use (e.g., private community or gaming voice servers free of charge), as well as inspecting the source code in this repository for transparency and security auditing.
+- **Strictly Prohibited Without a Written License Agreement (Strengstens untersagt ohne Lizenzvertrag):**
+  1. **No External Development or Modification:** Modifying, adapting, patching, rebranding, or creating external forks or derivative works outside the official repository is prohibited.
+  2. **No Redistribution:** Redistributing, mirroring, re-hosting, or bundling the source code or binaries on third-party websites or archives is prohibited.
+  3. **No Commercial Use:** Renting, leasing, paid hosting (ATHP / Game-Server / Cloud Hosting), SaaS offerings, or any commercial/business use without a separate written **Commercial License Agreement** with the copyright holder is strictly prohibited.
+
+See [`LICENSE`](LICENSE) for the full binding German and English license text.
+

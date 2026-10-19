@@ -2,6 +2,7 @@
   "name": "blackteaweb",
   "version": "2.0.0",
   "private": true,
+  "license": "SEE LICENSE IN ../../LICENSE",
   "type": "module",
   "description": "Modern BlackTeaSpeak Web Client powered by HTTP/3 WebTransport, WebCodecs (Opus & Video), and WebAudio 3D Spatial Audio",
   "scripts": {
