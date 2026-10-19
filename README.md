@@ -2,6 +2,20 @@
 
 **BlackTeaSpeak** is a modern, high-performance voice, text, and media routing server built entirely in Rust. Designed to replace legacy TeamSpeak 3 backends, BlackTeaSpeak offers unparalleled backward compatibility with legacy desktop clients while introducing native WebTransport and WebCodecs support for modern browser-based integrations.
 
+> [!CAUTION]
+> **SECURITY WARNING – Counterfeit "BlackTeaSpeak" Binaries & Unofficial Domains (`blackteaspeak.com`)**
+>
+> Counterfeit Windows server archives (`win.zip` containing `BlackTeaSpeakServer.exe`, `v1.0.2-OFF`) are being distributed by third parties (`Mr. Ali / Mirarus` / `Ali Güçlü`) using the **BlackTeaSpeak** name.
+>
+> * **Not Affiliated:** The official **BlackTeaSpeak** project (`github.com/GeneraBlack/BlackTeaSpeak`) is written from scratch in **Rust** and **never** phones home to any license server. We do **not** own or operate `blackteaspeak.com` or `license.blackteaspeak.com`.
+> * **What the Counterfeit Binary Actually Is:** Reverse engineering confirms that `BlackTeaSpeakServer.exe` (SHA256: `4fa9b70233665882c355cbf6d4bec56cd59d90182aa0d4d528e11aeae1484192`) is a modified C++ build of the legacy *TeaSpeak* codebase with strings find-and-replaced to `BlackTeaSpeak` (including typos such as `Built-in License | BlackBlackTeaSpeak` at offset `0x9b7ba8`).
+> * **Security Risks to Users of the Counterfeit Archive:**
+>   1. **Hidden Telemetry & Remote Killswitch:** The binary contains XOR-obfuscated strings (`strobf` at offsets `0x9bfb18` and `0x9bfda0`) that silently connect to `license.blackteaspeak.com:27786` (`164.132.105.158`, hosted on OVH) to transmit server/client telemetry and allow the remote operator to forcibly shut down or blacklist any running server instance (`"Kaçak Lisans Kullanımı Tespit Edildi!"` / `"Stopping server!"`).
+>   2. **Remote TLS Private Key Injection:** The server accepts and installs default Web-TLS certificates and private keys pushed remotely from `164.132.105.158` (`setWebCertRoot`), allowing the third-party operator to intercept encrypted web traffic.
+>   3. **Pre-packaged Private Keys:** The archive ships with static, pre-generated SSL private keys (`certs/default_privatekey.pem` and `certs/query_privatekey.pem`) known to the archive distributor.
+>
+> **Only download BlackTeaSpeak from this official repository (`github.com/GeneraBlack/BlackTeaSpeak`).**
+
 ## Features
 
 - **Legacy Backward Compatibility**: Connect using traditional TS3 clients. The server supports standard AES-EAX and Chacha20-Poly1305 encryption payloads.
