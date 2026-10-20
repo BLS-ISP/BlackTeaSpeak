@@ -3,6 +3,9 @@ name: Desktop Client Build
 on:
   push:
     branches: [ "**" ]
+    branches-ignore:
+      - "tauri-logs-*"
+      - "web-logs-*"
   pull_request:
     branches: [ "**" ]
 

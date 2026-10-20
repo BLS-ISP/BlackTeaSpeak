@@ -67,6 +67,161 @@ export async function deleteChannelFileAction(
   ctx.showToast(`Datei '${name}' gelöscht`);
 }
 
+export async function uploadChannelFileAction(
+  ctx: StoreContext,
+  cid: number,
+  file: File
+): Promise<void> {
+  try {
+    const curPath = ctx.getState().currentFilePath || '/';
+    const safeName = file.name.replace(/[/\\]/g, '_');
+    const fullPath = `${curPath.replace(/\/$/, '')}/${safeName}`;
+    ctx.showToast(`⬆️ Lade '${safeName}' in Channel #${cid} hoch...`);
+
+    const initResp = await ctx.protocol.sendCommand('ftinitupload', [
+      {
+        cid: String(cid),
+        path: curPath,
+        name: fullPath,
+        size: String(file.size),
+        overwrite: '1',
+        resume: '0',
+        cpw: '',
+      },
+    ]);
+    const row = initResp[0]?.data?.[0];
+    const ftkey = String(row?.ftkey ?? '');
+    const ftPort = Number(row?.port ?? 30303);
+    if (!ftkey) {
+      throw new Error('Kein Transfer-Key vom Server erhalten (fehlende Berechtigung?)');
+    }
+
+    const rawHost = ctx.getState().host || '127.0.0.1';
+    const cleanHost = rawHost.includes(':') ? rawHost.split(':')[0] : rawHost;
+    const encodedKey = encodeURIComponent(ftkey);
+    const endpoints = [
+      `http://${cleanHost}:8081/api/files/transfer?transfer-key=${encodedKey}`,
+      `https://${cleanHost}:8080/api/files/transfer?transfer-key=${encodedKey}`,
+      `/api/files/transfer?transfer-key=${encodedKey}`,
+    ];
+
+    let uploaded = false;
+    let lastErr = 'Transfer-Endpunkt nicht erreichbar';
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': file.type || 'application/octet-stream',
+            'X-Transfer-Key': ftkey,
+          },
+          body: file,
+        });
+        if (res.ok) {
+          uploaded = true;
+          break;
+        }
+        const errBody = await res.text().catch(() => '');
+        lastErr = errBody || `HTTP ${res.status}`;
+      } catch (e) {
+        lastErr = e instanceof Error ? e.message : String(e);
+      }
+    }
+
+    if (!uploaded) {
+      const formData = new FormData();
+      formData.append('file', file, safeName);
+      const fallbackRes = await fetch(
+        `https://${cleanHost}:${ftPort}/?transfer-key=${encodedKey}`,
+        {
+          method: 'POST',
+          body: formData,
+        }
+      );
+      if (!fallbackRes.ok) {
+        throw new Error(lastErr);
+      }
+    }
+
+    await fetchChannelFilesAction(ctx, cid, curPath);
+    ctx.showToast(`✅ '${safeName}' erfolgreich in Channel #${cid} hochgeladen`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    ctx.showToast(`Channel-Upload fehlgeschlagen: ${msg}`);
+  }
+}
+
+export async function downloadChannelFileAction(
+  ctx: StoreContext,
+  cid: number,
+  name: string
+): Promise<void> {
+  try {
+    const curPath = ctx.getState().currentFilePath || '/';
+    const fullPath = name.startsWith('/')
+      ? name
+      : `${curPath.replace(/\/$/, '')}/${name}`;
+    const initResp = await ctx.protocol.sendCommand('ftinitdownload', [
+      {
+        cid: String(cid),
+        path: curPath,
+        name: fullPath,
+        cpw: '',
+        seekpos: '0',
+      },
+    ]);
+    const row = initResp[0]?.data?.[0];
+    const ftkey = String(row?.ftkey ?? '');
+    const ftPort = Number(row?.port ?? 30303);
+    if (!ftkey) {
+      throw new Error('Kein Download-Key vom Server erhalten (fehlende Berechtigung?)');
+    }
+
+    const rawHost = ctx.getState().host || '127.0.0.1';
+    const cleanHost = rawHost.includes(':') ? rawHost.split(':')[0] : rawHost;
+    const encodedKey = encodeURIComponent(ftkey);
+    const encodedName = encodeURIComponent(name);
+    const endpoints = [
+      `http://${cleanHost}:8081/api/files/transfer?transfer-key=${encodedKey}&file-name=${encodedName}`,
+      `https://${cleanHost}:8080/api/files/transfer?transfer-key=${encodedKey}&file-name=${encodedName}`,
+      `/api/files/transfer?transfer-key=${encodedKey}&file-name=${encodedName}`,
+      `https://${cleanHost}:${ftPort}/?transfer-key=${encodedKey}&file-name=${encodedName}`,
+    ];
+
+    let blob: Blob | null = null;
+    let lastErr = 'Download-Endpunkt nicht erreichbar';
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, { method: 'GET' });
+        if (res.ok) {
+          blob = await res.blob();
+          break;
+        }
+        lastErr = `HTTP ${res.status}`;
+      } catch (e) {
+        lastErr = e instanceof Error ? e.message : String(e);
+      }
+    }
+
+    if (!blob) {
+      throw new Error(lastErr);
+    }
+
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = name;
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 15000);
+    ctx.showToast(`⬇️ Download gestartet: '${name}'`);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    ctx.showToast(`Download fehlgeschlagen: ${msg}`);
+  }
+}
+
 export async function refreshServerAdminDataAction(ctx: StoreContext): Promise<void> {
   await ctx.protocol.sendCommand('serverlist').catch(() => {});
   await ctx.protocol.sendCommand('tsdnslist').catch(() => {});

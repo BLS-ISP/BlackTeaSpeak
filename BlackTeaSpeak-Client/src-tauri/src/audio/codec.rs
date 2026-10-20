@@ -51,7 +51,7 @@ pub fn spawn_encoder_thread(
     tx_opus_out: UnboundedSender<(bool, Vec<u8>)>,
 ) -> Result<(), String> {
     std::thread::spawn(move || {
-        if let Ok(mut encoder) = Encoder::new(SampleRate::Hz48000, Channels::Mono, Application::Voip)
+        if let Ok(encoder) = Encoder::new(SampleRate::Hz48000, Channels::Mono, Application::Voip)
         {
             let runtime = tokio::runtime::Runtime::new().unwrap();
             runtime.block_on(async move {

@@ -30,10 +30,21 @@ export async function initializeDesktopEnvironmentAction(
     activeIdentityId: activeIdentity?.id ?? current.activeIdentityId,
     identityPublicKey: activeIdentity?.public_key ?? current.identityPublicKey,
     nickname: activeIdentity?.default_nickname || current.nickname,
+    pttKey: activeIdentity?.ptt_hotkey || current.pttKey,
     desktopFavorites: cfg.favorites,
     desktopAudioDevices: audioDevices,
     pluginSdkStatus: sdkStatus,
   });
+
+  if (activeIdentity) {
+    void ctx.voiceEngine.setAudioProcessingConfig({
+      echoCancellation: activeIdentity.echo_cancellation,
+      noiseSuppression: activeIdentity.noise_suppression,
+      autoGainControl: activeIdentity.auto_gain_control,
+      inputDevice: activeIdentity.audio_input_device,
+      outputDevice: activeIdentity.audio_output_device,
+    });
+  }
 }
 
 async function persistCurrentDesktopConfig(ctx: StoreContext): Promise<void> {
@@ -58,6 +69,13 @@ export function selectDesktopIdentityAction(
     identityPublicKey: found.public_key,
     nickname: found.default_nickname || state.nickname,
     pttKey: found.ptt_hotkey || state.pttKey,
+  });
+  void ctx.voiceEngine.setAudioProcessingConfig({
+    echoCancellation: found.echo_cancellation,
+    noiseSuppression: found.noise_suppression,
+    autoGainControl: found.auto_gain_control,
+    inputDevice: found.audio_input_device,
+    outputDevice: found.audio_output_device,
   });
   ctx.showToast(`Identität '${found.name}' ausgewählt`);
 }
@@ -123,6 +141,15 @@ export async function updateActiveIdentitySettingsAction(
     ...(updatedActive?.default_nickname ? { nickname: updatedActive.default_nickname } : {}),
     ...(updatedActive?.ptt_hotkey ? { pttKey: updatedActive.ptt_hotkey } : {}),
   });
+  if (updatedActive) {
+    await ctx.voiceEngine.setAudioProcessingConfig({
+      echoCancellation: updatedActive.echo_cancellation,
+      noiseSuppression: updatedActive.noise_suppression,
+      autoGainControl: updatedActive.auto_gain_control,
+      inputDevice: updatedActive.audio_input_device,
+      outputDevice: updatedActive.audio_output_device,
+    });
+  }
   await persistCurrentDesktopConfig(ctx);
 }
 

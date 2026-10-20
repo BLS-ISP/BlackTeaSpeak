@@ -1,5 +1,4 @@
 use crate::btea::AppState;
-use tauri::State;
 
 #[derive(serde::Serialize)]
 pub struct AudioDevices {

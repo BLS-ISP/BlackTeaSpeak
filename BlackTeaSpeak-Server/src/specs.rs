@@ -108,6 +108,19 @@ impl FoundationSpecs {
                 return Ok(candidate.to_path_buf());
             }
         }
+        for candidate in start.ancestors() {
+            let sub = candidate.join("BlackTeaSpeak-Server");
+            if sub.join("data").join("foundation").join("query-baseline.json").exists() {
+                return Ok(sub);
+            }
+        }
+        if let Ok(exe) = std::env::current_exe() {
+            for candidate in exe.ancestors() {
+                if candidate.join("data").join("foundation").join("query-baseline.json").exists() {
+                    return Ok(candidate.to_path_buf());
+                }
+            }
+        }
         bail!("workspace root with data/foundation/query-baseline.json not found")
     }
 

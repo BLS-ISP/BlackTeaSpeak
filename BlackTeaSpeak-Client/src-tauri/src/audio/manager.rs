@@ -1,10 +1,9 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use tauri::Emitter;
-use cpal::{StreamConfig, SampleFormat};
+use cpal::StreamConfig;
 use std::sync::{Arc, Mutex};
 use tokio::sync::mpsc::{unbounded_channel, UnboundedSender, UnboundedReceiver};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use std::time::Duration;
 use std::collections::HashMap;
 
 pub struct AudioManager {
@@ -202,10 +201,10 @@ impl AudioManager {
         let noise_suppression = self.noise_suppression.clone();
         let auto_gain_control = self.auto_gain_control.clone();
         let echo_cancellation = self.echo_cancellation.clone();
-        let tx_opus = self.tx_opus_out.clone();
+        let _tx_opus = self.tx_opus_out.clone();
         let last_talking_status = std::sync::Arc::new(std::sync::Mutex::new(false));
 
-        let (tx_raw_audio, mut rx_raw_audio) = unbounded_channel::<(bool, Vec<f32>)>();
+        let (tx_raw_audio, rx_raw_audio) = unbounded_channel::<(bool, Vec<f32>)>();
         let tx_opus_for_thread = self.tx_opus_out.clone();
 
         super::codec::spawn_encoder_thread(rx_raw_audio, tx_opus_for_thread)?;

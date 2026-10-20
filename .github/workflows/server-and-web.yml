@@ -3,6 +3,9 @@ name: Server and Web Client Build
 on:
   push:
     branches: [ "**" ]
+    branches-ignore:
+      - "tauri-logs-*"
+      - "web-logs-*"
   pull_request:
     branches: [ "**" ]
 
@@ -51,7 +54,9 @@ jobs:
         run: |
           mkdir server-release
           mkdir server-release\BlackTeaWeb
+          mkdir server-release\data
           xcopy /E /I BlackTeaSpeak-Server\BlackTeaWeb\dist server-release\BlackTeaWeb\dist
+          xcopy /E /I BlackTeaSpeak-Server\data\foundation server-release\data\foundation
           copy BlackTeaSpeak-Server\target\release\blackteaspeak_server.exe server-release\
           copy LICENSE server-release\
 
@@ -109,7 +114,9 @@ jobs:
       - name: Package Release
         run: |
           mkdir -p server-release/BlackTeaWeb
+          mkdir -p server-release/data
           cp -r BlackTeaSpeak-Server/BlackTeaWeb/dist server-release/BlackTeaWeb/
+          cp -r BlackTeaSpeak-Server/data/foundation server-release/data/
           cp BlackTeaSpeak-Server/target/release/blackteaspeak_server server-release/
           cp LICENSE server-release/
           cd server-release && zip -r ../BlackTeaSpeak-Server-Debian.zip ./*
@@ -168,7 +175,9 @@ jobs:
       - name: Package Release
         run: |
           mkdir -p server-release/BlackTeaWeb
+          mkdir -p server-release/data
           cp -r BlackTeaSpeak-Server/BlackTeaWeb/dist server-release/BlackTeaWeb/
+          cp -r BlackTeaSpeak-Server/data/foundation server-release/data/
           cp BlackTeaSpeak-Server/target/release/blackteaspeak_server server-release/
           cp LICENSE server-release/
           cd server-release && zip -r ../BlackTeaSpeak-Server-Fedora.zip ./*

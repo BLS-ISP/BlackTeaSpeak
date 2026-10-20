@@ -338,7 +338,7 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
         &key_path,
     )?;
     
-    let blackteaweb_dist_path = workspace_root.join("BlackTeaWeb").join("dist");
+    let blackteaweb_dist_path = if workspace_root.join("BlackTeaSpeak-Server").join("BlackTeaWeb").join("dist").exists() { workspace_root.join("BlackTeaSpeak-Server").join("BlackTeaWeb").join("dist") } else { workspace_root.join("BlackTeaWeb").join("dist") };
     let webtransport_port = web_bind_addr.parse::<std::net::SocketAddr>().ok().map(|addr| addr.port());
     let web_client_server = WebClientServer::bind(
         &web_client_bind_addr,
@@ -585,7 +585,7 @@ fn run_serve_all(workspace_root: &std::path::Path, args: &[String]) -> Result<()
         }
     });
     thread::spawn(move || {
-        if let Err(error) = web_client_server.run() {
+        if let Err(error) = web_client_server.with_file_transfer_registry(Arc::clone(&file_transfers)).run() {
             eprintln!("web client terminated: {error:#}");
         }
     });
@@ -615,6 +615,7 @@ fn run_serve_web(workspace_root: &std::path::Path, args: &[String]) -> Result<()
         rt.set_file_transfer_registry(Arc::clone(&file_transfers));
         rt.music_download_tx = Some(music_download_tx);
     }
+    blackteaspeak_server::runtime::spawn_music_bot_audio_engine(Arc::clone(&runtime));
     let dl_runtime = Arc::clone(&runtime);
     let dl_file_transfers = Arc::clone(&file_transfers);
     thread::spawn(move || {
@@ -657,7 +658,7 @@ fn run_serve_web(workspace_root: &std::path::Path, args: &[String]) -> Result<()
         &key_path,
     )?;
     
-    let blackteaweb_dist_path = workspace_root.join("BlackTeaWeb").join("dist");
+    let blackteaweb_dist_path = if workspace_root.join("BlackTeaSpeak-Server").join("BlackTeaWeb").join("dist").exists() { workspace_root.join("BlackTeaSpeak-Server").join("BlackTeaWeb").join("dist") } else { workspace_root.join("BlackTeaWeb").join("dist") };
     let webtransport_port = bind_addr.parse::<std::net::SocketAddr>().ok().map(|addr| addr.port());
     let web_client_server = WebClientServer::bind(
         &web_client_bind_addr,
@@ -705,7 +706,7 @@ fn run_serve_web(workspace_root: &std::path::Path, args: &[String]) -> Result<()
         }
     });
     thread::spawn(move || {
-        if let Err(error) = web_client_server.run() {
+        if let Err(error) = web_client_server.with_file_transfer_registry(Arc::clone(&file_transfers)).run() {
             eprintln!("web client terminated: {error:#}");
         }
     });

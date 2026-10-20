@@ -97,12 +97,14 @@ import {
   deleteChannelFileAction,
   deleteTsdnsAction,
   deleteVirtualServerAction,
+  downloadChannelFileAction,
   fetchChannelFilesAction,
   refreshServerAdminDataAction,
   renameChannelFileAction,
   toggleVirtualServerStateAction,
   updateVirtualServerAction,
   UpdateVirtualServerParams,
+  uploadChannelFileAction,
   upsertTsdnsAction,
 } from './actions/fileAndServerAdminActions';
 import {
@@ -438,6 +440,10 @@ class BlackTeaStoreManager implements StoreContext {
     renameChannelFileAction(this, cid, oldName, newName);
   public deleteChannelFile = (cid: number, name: string): Promise<void> =>
     deleteChannelFileAction(this, cid, name);
+  public uploadChannelFile = (cid: number, file: File): Promise<void> =>
+    uploadChannelFileAction(this, cid, file);
+  public downloadChannelFile = (cid: number, name: string): Promise<void> =>
+    downloadChannelFileAction(this, cid, name);
   public refreshServerAdminData = (): Promise<void> => refreshServerAdminDataAction(this);
   public updateVirtualServer = (params: UpdateVirtualServerParams): Promise<void> =>
     updateVirtualServerAction(this, params);

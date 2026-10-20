@@ -1,5 +1,5 @@
 #[tauri::command]
-pub async fn upload_file(app: tauri::AppHandle, ip: String, port: u16, ftkey: String, size: u64, file_data: Vec<u8>, client_ft_id: u32) -> Result<(), String> {
+pub async fn upload_file(_app: tauri::AppHandle, ip: String, port: u16, ftkey: String, _size: u64, file_data: Vec<u8>, _client_ft_id: u32) -> Result<(), String> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()
@@ -22,7 +22,7 @@ pub async fn upload_file(app: tauri::AppHandle, ip: String, port: u16, ftkey: St
 }
 
 #[tauri::command]
-pub async fn download_file(app: tauri::AppHandle, ip: String, port: u16, ftkey: String, size: u64, client_ft_id: u32) -> Result<Vec<u8>, String> {
+pub async fn download_file(_app: tauri::AppHandle, ip: String, port: u16, ftkey: String, _size: u64, _client_ft_id: u32) -> Result<Vec<u8>, String> {
     let client = reqwest::Client::builder()
         .danger_accept_invalid_certs(true)
         .build()

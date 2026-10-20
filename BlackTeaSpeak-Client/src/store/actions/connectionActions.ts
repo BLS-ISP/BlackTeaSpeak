@@ -29,6 +29,19 @@ export async function connectToServer(ctx: StoreContext): Promise<void> {
       `Verbunden mit ${ctx.getState().serverInfo.virtualserver_name} über HTTP/3 WebTransport (QUIC).`
     );
 
+    const activeIdentity = ctx
+      .getState()
+      .desktopIdentities.find((i) => i.id === ctx.getState().activeIdentityId);
+    if (activeIdentity) {
+      await ctx.voiceEngine.setAudioProcessingConfig({
+        echoCancellation: activeIdentity.echo_cancellation,
+        noiseSuppression: activeIdentity.noise_suppression,
+        autoGainControl: activeIdentity.auto_gain_control,
+        inputDevice: activeIdentity.audio_input_device,
+        outputDevice: activeIdentity.audio_output_device,
+      });
+    }
+
     ctx.voiceEngine.startMicrophone().catch((err) => {
       ctx.appendSystemChat(
         `Hinweis: Mikrofon konnte nicht gestartet werden (${err?.message || 'Kein Gerät'}). Empfang aktiv.`

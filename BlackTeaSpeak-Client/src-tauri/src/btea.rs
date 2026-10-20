@@ -1,8 +1,7 @@
 use aes::Aes128;
 use eax::{Eax, NewAead};
 use eax::aead::{Aead, Payload, generic_array::GenericArray};
-use sha2::{Sha256, Sha512, Digest};
-use tauri::State;
+use sha2::{Sha256, Digest};
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tokio::net::UdpSocket;

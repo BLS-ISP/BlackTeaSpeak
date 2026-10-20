@@ -1,16 +1,38 @@
 import React, { useRef, useState } from 'react';
 import {
+  Download,
   Edit3,
   FileText,
   Folder,
   FolderOpen,
   FolderPlus,
+  Play,
   RefreshCw,
   Trash2,
   Upload,
   X,
 } from 'lucide-react';
 import { blackTeaStore, useBlackTeaStore } from '../../store/useBlackTeaStore';
+
+const PLAYABLE_MEDIA_EXTS = new Set([
+  'mp3',
+  'ogg',
+  'opus',
+  'wav',
+  'flac',
+  'm4a',
+  'aac',
+  'webm',
+  'mp4',
+  'mkv',
+  'mov',
+  'avi',
+]);
+
+function isPlayableMediaFile(name: string): boolean {
+  const ext = name.split('.').pop()?.toLowerCase() ?? '';
+  return PLAYABLE_MEDIA_EXTS.has(ext);
+}
 
 export const FileBrowserModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const state = useBlackTeaStore();
@@ -20,6 +42,8 @@ export const FileBrowserModal: React.FC<{ onClose: () => void }> = ({ onClose })
   const channel = state.channels.find((c) => c.cid === targetCid);
   const [newFolderName, setNewFolderName] = useState('');
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const activeBot =
+    state.musicBots.find((b) => b.cid === state.currentChannelId) ?? state.musicBots[0];
 
   const handleChannelChange = (nextCid: number) => {
     setTargetCid(nextCid);
@@ -82,7 +106,7 @@ export const FileBrowserModal: React.FC<{ onClose: () => void }> = ({ onClose })
             onChange={(e) => {
               const file = e.target.files?.[0];
               if (file) {
-                void blackTeaStore.uploadLocalMusicFile(file);
+                void blackTeaStore.uploadChannelFile(targetCid, file);
                 e.target.value = '';
               }
             }}
@@ -90,7 +114,7 @@ export const FileBrowserModal: React.FC<{ onClose: () => void }> = ({ onClose })
           <button
             className="btn-secondary-sm"
             onClick={() => uploadInputRef.current?.click()}
-            title="Audio-/Mediendatei auf den Server hochladen"
+            title="Datei in das aktuelle Channel-Verzeichnis hochladen"
           >
             <Upload size={14} /> Datei-Upload
           </button>
@@ -127,61 +151,93 @@ export const FileBrowserModal: React.FC<{ onClose: () => void }> = ({ onClose })
           {state.files.length === 0 ? (
             <div className="muted-note">Keine Dateien in diesem Channel-Verzeichnis.</div>
           ) : (
-            state.files.map((f) => (
-              <div
-                key={f.name}
-                className="list-item-row clickable"
-                onClick={() => {
-                  if (f.type === 0) {
-                    const nextPath = `${state.currentFilePath.replace(/\/$/, '')}/${f.name}`;
-                    void blackTeaStore.fetchChannelFiles(targetCid, nextPath);
-                  }
-                }}
-              >
-                <div className="file-row-left">
-                  {f.type === 0 ? <Folder size={15} /> : <FileText size={15} />}
-                  <strong>{f.name}</strong>
-                  {f.type === 1 && (
-                    <span className="sub-id">{(f.size / 1024).toFixed(1)} KB</span>
-                  )}
-                </div>
+            state.files.map((f) => {
+              const relPath = `${state.currentFilePath.replace(/\/$/, '')}/${f.name}`.replace(
+                /^\/+/,
+                ''
+              );
+              return (
                 <div
-                  style={{ display: 'flex', gap: '6px' }}
-                  onClick={(e) => e.stopPropagation()}
+                  key={f.name}
+                  className="list-item-row clickable"
+                  onClick={() => {
+                    if (f.type === 0) {
+                      const nextPath = `${state.currentFilePath.replace(/\/$/, '')}/${f.name}`;
+                      void blackTeaStore.fetchChannelFiles(targetCid, nextPath);
+                    }
+                  }}
                 >
-                  <button
-                    className="btn-icon-xs"
-                    onClick={() => {
-                      const nextName = window.prompt(
-                        `Neuer Name für '${f.name}':`,
-                        f.name
-                      );
-                      if (nextName && nextName.trim() && nextName.trim() !== f.name) {
-                        void blackTeaStore.renameChannelFile(
-                          targetCid,
-                          f.name,
-                          nextName.trim()
+                  <div className="file-row-left">
+                    {f.type === 0 ? <Folder size={15} /> : <FileText size={15} />}
+                    <strong>{f.name}</strong>
+                    {f.type === 1 && (
+                      <span className="sub-id">{(f.size / 1024).toFixed(1)} KB</span>
+                    )}
+                  </div>
+                  <div
+                    style={{ display: 'flex', gap: '6px' }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {f.type === 1 && activeBot && isPlayableMediaFile(f.name) && (
+                      <button
+                        className="btn-icon-xs"
+                        onClick={() =>
+                          void blackTeaStore.loadMusicBotSong(
+                            activeBot.bot_id,
+                            `channel://${targetCid}/${relPath}`,
+                            true
+                          )
+                        }
+                        title={`Im MusicBot '${activeBot.bot_name}' abspielen`}
+                      >
+                        <Play size={13} />
+                      </button>
+                    )}
+                    {f.type === 1 && (
+                      <button
+                        className="btn-icon-xs"
+                        onClick={() =>
+                          void blackTeaStore.downloadChannelFile(targetCid, f.name)
+                        }
+                        title="Datei herunterladen"
+                      >
+                        <Download size={13} />
+                      </button>
+                    )}
+                    <button
+                      className="btn-icon-xs"
+                      onClick={() => {
+                        const nextName = window.prompt(
+                          `Neuer Name für '${f.name}':`,
+                          f.name
                         );
-                      }
-                    }}
-                    title="Umbenennen"
-                  >
-                    <Edit3 size={13} />
-                  </button>
-                  <button
-                    className="btn-icon-xs danger"
-                    onClick={() => {
-                      if (window.confirm(`'${f.name}' wirklich löschen?`)) {
-                        void blackTeaStore.deleteChannelFile(targetCid, f.name);
-                      }
-                    }}
-                    title="Löschen"
-                  >
-                    <Trash2 size={13} />
-                  </button>
+                        if (nextName && nextName.trim() && nextName.trim() !== f.name) {
+                          void blackTeaStore.renameChannelFile(
+                            targetCid,
+                            f.name,
+                            nextName.trim()
+                          );
+                        }
+                      }}
+                      title="Umbenennen"
+                    >
+                      <Edit3 size={13} />
+                    </button>
+                    <button
+                      className="btn-icon-xs danger"
+                      onClick={() => {
+                        if (window.confirm(`'${f.name}' wirklich löschen?`)) {
+                          void blackTeaStore.deleteChannelFile(targetCid, f.name);
+                        }
+                      }}
+                      title="Löschen"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

@@ -37,6 +37,12 @@ export class OpusVoiceEngine {
   private lastVoiceActiveAt = 0;
   private wasTransmitting = false;
 
+  private echoCancellation = true;
+  private noiseSuppression = true;
+  private autoGainControl = true;
+  private preferredInputDevice = 'Default';
+  private preferredOutputDevice = 'Default';
+
   private voicePacketsSent = 0;
   private voicePacketsReceived = 0;
   private encodeTimestampUs = 0;
@@ -52,6 +58,92 @@ export class OpusVoiceEngine {
     this.onTelemetry = options.onTelemetry ?? null;
   }
 
+  public async setAudioProcessingConfig(config: {
+    echoCancellation?: boolean | null;
+    noiseSuppression?: boolean | null;
+    autoGainControl?: boolean | null;
+    inputDevice?: string | null;
+    outputDevice?: string | null;
+  }): Promise<void> {
+    const prevInput = this.preferredInputDevice;
+    if (config.echoCancellation !== undefined && config.echoCancellation !== null) {
+      this.echoCancellation = config.echoCancellation;
+    }
+    if (config.noiseSuppression !== undefined && config.noiseSuppression !== null) {
+      this.noiseSuppression = config.noiseSuppression;
+    }
+    if (config.autoGainControl !== undefined && config.autoGainControl !== null) {
+      this.autoGainControl = config.autoGainControl;
+    }
+    if (config.inputDevice !== undefined && config.inputDevice !== null) {
+      this.preferredInputDevice = config.inputDevice;
+    }
+    if (config.outputDevice !== undefined && config.outputDevice !== null) {
+      this.preferredOutputDevice = config.outputDevice;
+      await this.applyOutputSinkDevice(config.outputDevice);
+    }
+
+    if (this.micStream) {
+      if (
+        config.inputDevice !== undefined &&
+        config.inputDevice !== null &&
+        config.inputDevice !== prevInput
+      ) {
+        await this.startMicrophone(config.inputDevice).catch(() => {});
+        return;
+      }
+      for (const track of this.micStream.getAudioTracks()) {
+        if (typeof track.applyConstraints === 'function') {
+          await track
+            .applyConstraints({
+              echoCancellation: this.echoCancellation,
+              noiseSuppression: this.noiseSuppression,
+              autoGainControl: this.autoGainControl,
+            })
+            .catch(() => {});
+        }
+      }
+    }
+  }
+
+  private async resolveBrowserAudioDeviceId(
+    kind: 'audioinput' | 'audiooutput',
+    deviceIdOrLabel?: string
+  ): Promise<string | undefined> {
+    if (!deviceIdOrLabel || deviceIdOrLabel === 'Default') return undefined;
+    if (!navigator.mediaDevices?.enumerateDevices) return undefined;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const filtered = devices.filter((d) => d.kind === kind);
+      const exact = filtered.find(
+        (d) =>
+          d.deviceId === deviceIdOrLabel ||
+          d.label.toLowerCase() === deviceIdOrLabel.toLowerCase() ||
+          d.label.toLowerCase().includes(deviceIdOrLabel.toLowerCase())
+      );
+      return exact?.deviceId;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private async applyOutputSinkDevice(deviceIdOrLabel?: string): Promise<void> {
+    if (!this.audioCtx) return;
+    const ctxWithSink = this.audioCtx as AudioContext & {
+      setSinkId?: (sinkId: string) => Promise<void>;
+    };
+    if (typeof ctxWithSink.setSinkId !== 'function') return;
+    try {
+      const resolvedId = await this.resolveBrowserAudioDeviceId(
+        'audiooutput',
+        deviceIdOrLabel
+      );
+      await ctxWithSink.setSinkId(resolvedId ?? '');
+    } catch {
+      // Ignore if browser does not permit sink switching
+    }
+  }
+
   public async startMicrophone(deviceId?: string): Promise<void> {
     this.stopMicrophone();
 
@@ -62,15 +154,21 @@ export class OpusVoiceEngine {
     if (this.audioCtx.state === 'suspended') {
       await this.audioCtx.resume();
     }
+    await this.applyOutputSinkDevice(this.preferredOutputDevice);
+
+    const resolvedInputId = await this.resolveBrowserAudioDeviceId(
+      'audioinput',
+      deviceId ?? this.preferredInputDevice
+    );
 
     this.micStream = await navigator.mediaDevices.getUserMedia({
       audio: {
-        deviceId: deviceId ? { exact: deviceId } : undefined,
+        ...(resolvedInputId ? { deviceId: { ideal: resolvedInputId } } : {}),
         sampleRate: 48000,
         channelCount: 2,
-        echoCancellation: true,
-        noiseSuppression: true,
-        autoGainControl: true,
+        echoCancellation: this.echoCancellation,
+        noiseSuppression: this.noiseSuppression,
+        autoGainControl: this.autoGainControl,
       },
       video: false,
     });
