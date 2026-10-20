@@ -674,6 +674,54 @@ pub async fn handle_webrtc_action(
                     &iv_struct_clone,
                 )
                 .await;
+
+                // Announce any already-active broadcasts in the TeaSpeak client's channel once WebRTC is ready
+                let active_bcast_cmd = {
+                    let rt = runtime_clone.lock().unwrap();
+                    let client_cid = rt
+                        .store
+                        .online_clients
+                        .get(&client_id)
+                        .map(|c| c.channel_id)
+                        .unwrap_or(1);
+                    let parts: Vec<String> = rt
+                        .store
+                        .active_broadcasts
+                        .values()
+                        .filter(|b| {
+                            b.server_id == server_id
+                                && b.channel_id == client_cid
+                                && (b.broadcast_type == 0 || b.broadcast_type == 1)
+                        })
+                        .map(|b| {
+                            format!(
+                                "cid={} bid={} sclid={} scl={} clid={} bt={} ssrc={}",
+                                b.channel_id,
+                                b.broadcaster_client_id,
+                                b.broadcaster_client_id,
+                                b.broadcaster_client_id,
+                                b.broadcaster_client_id,
+                                b.broadcast_type,
+                                b.ssrc
+                            )
+                        })
+                        .collect();
+                    if parts.is_empty() {
+                        None
+                    } else {
+                        Some(format!("notifybroadcastvideo {}", parts.join("|")))
+                    }
+                };
+                if let Some(bcast_cmd) = active_bcast_cmd {
+                    super::wire_formatting::send_teaspeak_command_with_packet_id(
+                        &bcast_cmd,
+                        &server_packet_id_mutex,
+                        addr_clone,
+                        &socket_clone,
+                        &iv_struct_clone,
+                    )
+                    .await;
+                }
             });
         }
         session.rtc_describe_buffer.clear();

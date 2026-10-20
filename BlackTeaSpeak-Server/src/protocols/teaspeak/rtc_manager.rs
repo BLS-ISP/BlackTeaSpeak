@@ -21,6 +21,7 @@ pub struct ViewerVideoSlot {
 pub struct RtcBroadcastManager {
     pub peer_connections: RwLock<HashMap<SocketAddr, Arc<RTCPeerConnection>>>,
     pub client_peer_connections: RwLock<HashMap<u64, Arc<RTCPeerConnection>>>,
+    pub stream_peer_connections: RwLock<HashMap<(u64, u32), Arc<RTCPeerConnection>>>,
     pub viewer_slots: RwLock<HashMap<u64, Vec<ViewerVideoSlot>>>,
     pub incoming_ssrc_types: RwLock<HashMap<(u64, u32), u32>>,
     pub incoming_track_ssrcs: RwLock<HashMap<(u64, u32), u32>>,
@@ -39,6 +40,7 @@ impl RtcBroadcastManager {
         Self {
             peer_connections: RwLock::new(HashMap::new()),
             client_peer_connections: RwLock::new(HashMap::new()),
+            stream_peer_connections: RwLock::new(HashMap::new()),
             viewer_slots: RwLock::new(HashMap::new()),
             incoming_ssrc_types: RwLock::new(HashMap::new()),
             incoming_track_ssrcs: RwLock::new(HashMap::new()),
@@ -63,6 +65,41 @@ impl RtcBroadcastManager {
             .insert(client_id, pc);
     }
 
+    pub fn register_stream_connection(
+        &self,
+        broadcaster_client_id: u64,
+        bt: u32,
+        pc: Arc<RTCPeerConnection>,
+    ) {
+        self.stream_peer_connections
+            .write()
+            .unwrap()
+            .insert((broadcaster_client_id, bt), Arc::clone(&pc));
+        self.client_peer_connections
+            .write()
+            .unwrap()
+            .insert(broadcaster_client_id, pc);
+    }
+
+    pub fn remove_stream_connection(&self, broadcaster_client_id: u64, bt: u32) {
+        self.stream_peer_connections
+            .write()
+            .unwrap()
+            .remove(&(broadcaster_client_id, bt));
+    }
+
+    pub fn get_stream_connection(
+        &self,
+        broadcaster_client_id: u64,
+        bt: u32,
+    ) -> Option<Arc<RTCPeerConnection>> {
+        self.stream_peer_connections
+            .read()
+            .unwrap()
+            .get(&(broadcaster_client_id, bt))
+            .cloned()
+    }
+
     pub fn remove_connection(&self, addr: SocketAddr) {
         self.peer_connections.write().unwrap().remove(&addr);
     }
@@ -77,6 +114,57 @@ impl RtcBroadcastManager {
             .unwrap()
             .get(&client_id)
             .cloned()
+    }
+
+    pub fn upsert_ts6_viewer_slot(
+        &self,
+        viewer_client_id: u64,
+        broadcaster_client_id: u64,
+        bt: u32,
+        ssrc: u32,
+        track: Arc<TrackLocalStaticRTP>,
+    ) {
+        let mut lock = self.viewer_slots.write().unwrap();
+        let slots = lock.entry(viewer_client_id).or_default();
+        if let Some(existing) = slots
+            .iter_mut()
+            .find(|s| s.assigned_broadcast == Some((broadcaster_client_id, bt)))
+        {
+            existing.ssrc = ssrc;
+            existing.track = track;
+            return;
+        }
+        let next_idx = slots.len();
+        slots.push(ViewerVideoSlot {
+            slot_index: next_idx,
+            ssrc,
+            track,
+            seq_num: Arc::new(AtomicU16::new(1)),
+            assigned_broadcast: Some((broadcaster_client_id, bt)),
+        });
+    }
+
+    pub fn remove_ts6_viewer_slot(
+        &self,
+        viewer_client_id: u64,
+        broadcaster_client_id: Option<u64>,
+        bt: Option<u32>,
+    ) {
+        let mut lock = self.viewer_slots.write().unwrap();
+        if let Some(slots) = lock.get_mut(&viewer_client_id) {
+            slots.retain(|slot| {
+                if let Some((bid, slot_bt)) = slot.assigned_broadcast {
+                    let match_bid = broadcaster_client_id.is_none_or(|target| target == bid);
+                    let match_bt = bt.is_none_or(|target| target == slot_bt);
+                    !(match_bid && match_bt)
+                } else {
+                    false
+                }
+            });
+            if slots.is_empty() {
+                lock.remove(&viewer_client_id);
+            }
+        }
     }
 
     pub fn set_viewer_slots(&self, client_id: u64, mut slots: Vec<ViewerVideoSlot>) {
@@ -310,7 +398,9 @@ impl RtcBroadcastManager {
     }
 
     pub async fn request_keyframe(&self, broadcaster_client_id: u64, bt: u32) {
-        let pc_opt = self.get_client_connection(broadcaster_client_id);
+        let pc_opt = self
+            .get_stream_connection(broadcaster_client_id, bt)
+            .or_else(|| self.get_client_connection(broadcaster_client_id));
         let ssrc_opt = self.get_incoming_track_ssrc(broadcaster_client_id, bt);
         if let (Some(pc), Some(media_ssrc)) = (pc_opt, ssrc_opt) {
             let _ = pc
@@ -416,7 +506,33 @@ impl RtcBroadcastManager {
             return;
         }
         if let Ok(handle) = tokio::runtime::Handle::try_current() {
-            handle.block_on(self.forward_web_vp8_frame(broadcaster_client_id, bt, btea_payload));
+            if handle.runtime_flavor() == tokio::runtime::RuntimeFlavor::MultiThread {
+                tokio::task::block_in_place(|| {
+                    handle.block_on(self.forward_web_vp8_frame(
+                        broadcaster_client_id,
+                        bt,
+                        btea_payload,
+                    ));
+                });
+            } else {
+                std::thread::scope(|s| {
+                    s.spawn(|| {
+                        static BOT_RTP_RT: std::sync::OnceLock<tokio::runtime::Runtime> =
+                            std::sync::OnceLock::new();
+                        let rt = BOT_RTP_RT.get_or_init(|| {
+                            tokio::runtime::Builder::new_current_thread()
+                                .enable_all()
+                                .build()
+                                .expect("failed to build bot RTP runtime")
+                        });
+                        rt.block_on(self.forward_web_vp8_frame(
+                            broadcaster_client_id,
+                            bt,
+                            btea_payload,
+                        ));
+                    });
+                });
+            }
         } else {
             static BOT_RTP_RT: std::sync::OnceLock<tokio::runtime::Runtime> =
                 std::sync::OnceLock::new();

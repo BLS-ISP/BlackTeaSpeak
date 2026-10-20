@@ -173,6 +173,16 @@ pub async fn send_ts6_command(
     socket: &Arc<UdpSocket>,
     iv_struct: &[u8],
 ) {
+    send_ts6_command_with_packet_id(cmd, &session.server_packet_id, addr, socket, iv_struct).await;
+}
+
+pub async fn send_ts6_command_with_packet_id(
+    cmd: &str,
+    server_packet_id: &Arc<std::sync::Mutex<u16>>,
+    addr: SocketAddr,
+    socket: &Arc<UdpSocket>,
+    iv_struct: &[u8],
+) {
     let payload_bytes = cmd.as_bytes();
     let chunk_size = 400; // TS3/TS6 UDP fragment limit
     let chunks: Vec<&[u8]> = payload_bytes.chunks(chunk_size).collect();
@@ -184,7 +194,7 @@ pub async fn send_ts6_command(
             flags |= 0x10; // Fragmented
         }
         let out_packet_id = {
-            let mut lock = session.server_packet_id.lock().unwrap();
+            let mut lock = server_packet_id.lock().unwrap();
             let val = *lock;
             *lock = lock.wrapping_add(1);
             val

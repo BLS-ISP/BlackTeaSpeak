@@ -9,6 +9,18 @@ use tokio::net::UdpSocket;
 
 static NEXT_TS6_STREAM_SEQ: AtomicU64 = AtomicU64::new(1);
 
+/// Maps TS6 `stream_type` enum (`1` = `CAMERA`, `2` = `SCREEN`, `3` = `WINDOW`)
+/// to BlackTeaSpeak/TeaSpeak broadcast type (`0` = Camera, `1` = Screen).
+pub fn ts6_stream_type_to_bt(stream_type: u32) -> u32 {
+    if stream_type == 1 { 0 } else { 1 }
+}
+
+/// Maps BlackTeaSpeak/TeaSpeak broadcast type (`0` = Camera, `1` = Screen)
+/// to TS6 `stream_type` enum (`1` = `CAMERA`, `2` = `SCREEN`).
+pub fn bt_to_ts6_stream_type(bt: u32) -> u32 {
+    if bt == 0 { 1 } else { 2 }
+}
+
 #[derive(Debug, Clone)]
 pub struct Ts6StreamEntry {
     pub id: String,
@@ -16,11 +28,12 @@ pub struct Ts6StreamEntry {
     pub channel_id: u32,
     pub clid: u64,
     pub name: String,
-    /// `0` = Desktop / Screen Share, `1` = Camera / Video (or TS6 stream type enum)
+    /// TS6 stream type enum: `1` = `CAMERA`, `2` = `SCREEN`, `3` = `WINDOW` (`0` = `NONE`)
     pub stream_type: u32,
     pub bitrate: u64,
+    /// TS6 stream accessibility enum: `1` = `PUBLIC`, `2` = `CONTACTS_ONLY`, `3` = `PRIVATE` (`0` = `NONE`)
     pub accessibility: u32,
-    /// `1` = P2P WebRTC (`STREAM_P2P`), `2` = SFU
+    /// TS6 stream mode enum: `1` = `P2P` (`STREAM_P2P`), `2` = `SFU` (`0` = `NONE`)
     pub mode: u32,
     pub viewer_limit: u32,
     pub audio: u32,
@@ -32,13 +45,14 @@ pub struct Ts6StreamEntry {
 impl Ts6StreamEntry {
     pub fn render_notifystreamstarted(&self, return_code: Option<&str>) -> String {
         let mut cmd = format!(
-            "notifystreamstarted clid={} id={} name={} type={} access={} accessibility={} mode={} bitrate={} viewer_limit={} audio={} sfu_endpoint={} sfu_user_id={}",
+            "notifystreamstarted clid={} id={} name={} type={} access={} accessibility={} viewer={} mode={} bitrate={} viewer_limit={} audio={} sfu_endpoint={} sfu_user_id={}",
             self.clid,
             ts6_escape(&self.id),
             ts6_escape(&self.name),
             self.stream_type,
             self.accessibility,
             self.accessibility,
+            self.attendees.len(),
             self.mode,
             self.bitrate,
             self.viewer_limit,
@@ -54,13 +68,14 @@ impl Ts6StreamEntry {
 
     pub fn render_notifystreamupdated(&self, return_code: Option<&str>) -> String {
         let mut cmd = format!(
-            "notifystreamupdated clid={} id={} name={} type={} access={} accessibility={} mode={} bitrate={} viewer_limit={} audio={}",
+            "notifystreamupdated clid={} id={} name={} type={} access={} accessibility={} viewer={} mode={} bitrate={} viewer_limit={} audio={}",
             self.clid,
             ts6_escape(&self.id),
             ts6_escape(&self.name),
             self.stream_type,
             self.accessibility,
             self.accessibility,
+            self.attendees.len(),
             self.mode,
             self.bitrate,
             self.viewer_limit,
@@ -105,7 +120,7 @@ pub struct Ts6StreamRegistry {
 pub static TS6_STREAM_REGISTRY: LazyLock<Mutex<Ts6StreamRegistry>> =
     LazyLock::new(|| Mutex::new(Ts6StreamRegistry::default()));
 
-/// Returns true if the given client currently has at least one active TS6 stream on `server_id`.
+/// Returns true if the given client currently has at least one active TS6 or non-TS6 stream on `server_id`.
 pub fn is_client_streaming_ts6(server_id: u32, clid: u64) -> bool {
     let reg = TS6_STREAM_REGISTRY.lock().unwrap();
     reg.streams
@@ -123,7 +138,145 @@ pub fn active_ts6_streams_for_server(server_id: u32) -> Vec<Ts6StreamEntry> {
         .collect()
 }
 
-/// Syncs the client's `client_is_streaming` and `ActiveMediaBroadcast` state into `BaselineRuntime`
+/// Synchronizes non-TS6 broadcasts (`rt.store.active_broadcasts` from TeaSpeak clients, BTEA Desktop/Web clients,
+/// and MusicBots) into `TS6_STREAM_REGISTRY` as synthetic `ts6-bridge-<clid>-<bt>` entries and returns the TS6
+/// notification commands (`notifyclientupdated`, `notifystreamstarted`, `notifystreamstopped`) to send to TS6 peers.
+pub fn sync_non_ts6_broadcasts_to_ts6(
+    runtime: &Arc<Mutex<crate::runtime::BaselineRuntime>>,
+    server_id: u32,
+) -> Vec<String> {
+    let mut ts6_cmds = Vec::new();
+    let mut streams_to_close = Vec::new();
+
+    let active_snapshot: Vec<(u64, u32, u32, String)> = {
+        let rt = runtime.lock().unwrap();
+        rt.store
+            .active_broadcasts
+            .values()
+            .filter(|b| b.server_id == server_id && (b.broadcast_type == 0 || b.broadcast_type == 1))
+            .map(|b| {
+                let nick = rt
+                    .store
+                    .online_clients
+                    .get(&b.broadcaster_client_id)
+                    .map(|c| c.nickname.clone())
+                    .unwrap_or_else(|| format!("Client {}", b.broadcaster_client_id));
+                (
+                    b.broadcaster_client_id,
+                    b.broadcast_type,
+                    b.channel_id,
+                    nick,
+                )
+            })
+            .collect()
+    };
+
+    let mut started_clids = BTreeSet::new();
+    let mut stopped_check_clids = BTreeSet::new();
+
+    {
+        let mut reg = TS6_STREAM_REGISTRY.lock().unwrap();
+
+        // 1. Remove synthetic `ts6-bridge-` streams whose underlying `active_broadcasts` entry ended
+        let stale_ids: Vec<String> = reg
+            .streams
+            .values()
+            .filter(|s| {
+                s.server_id == server_id
+                    && s.id.starts_with("ts6-bridge-")
+                    && !active_snapshot.iter().any(|&(clid, bt, _, _)| {
+                        clid == s.clid && bt == ts6_stream_type_to_bt(s.stream_type)
+                    })
+            })
+            .map(|s| s.id.clone())
+            .collect();
+
+        for id in stale_ids {
+            if let Some(removed) = reg.streams.remove(&id) {
+                ts6_cmds.push(format!(
+                    "notifystreamstopped clid={} id={} reason=0",
+                    removed.clid,
+                    ts6_escape(&removed.id)
+                ));
+                stopped_check_clids.insert(removed.clid);
+                streams_to_close.push(removed.id);
+            }
+        }
+
+        // 2. Add synthetic `ts6-bridge-` streams for any active broadcast not yet in `TS6_STREAM_REGISTRY`
+        for (clid, bt, channel_id, nick) in active_snapshot {
+            let already_registered = reg.streams.values().any(|s| {
+                s.server_id == server_id
+                    && s.clid == clid
+                    && ts6_stream_type_to_bt(s.stream_type) == bt
+            });
+            if !already_registered {
+                let stream_id = format!("ts6-bridge-{}-{}", clid, bt);
+                let stream_name = if bt == 0 {
+                    format!("{} - Camera", nick)
+                } else {
+                    format!("{} - Screen", nick)
+                };
+                let entry = Ts6StreamEntry {
+                    id: stream_id.clone(),
+                    server_id,
+                    channel_id,
+                    clid,
+                    name: stream_name,
+                    stream_type: bt_to_ts6_stream_type(bt), // 1 = CAMERA, 2 = SCREEN
+                    bitrate: 2_500_000,
+                    accessibility: 1, // 1 = PUBLIC
+                    mode: 1,          // 1 = P2P
+                    viewer_limit: 20,
+                    audio: 0,
+                    sfu_endpoint: String::new(),
+                    sfu_user_id: String::new(),
+                    attendees: BTreeSet::new(),
+                };
+                started_clids.insert(clid);
+                ts6_cmds.push(entry.render_notifystreamstarted(None));
+                reg.streams.insert(stream_id, entry);
+            }
+        }
+    }
+
+    for stream_id in streams_to_close {
+        super::webrtc_bridge::close_all_ts6_bridges_for_stream(&stream_id, runtime);
+    }
+
+    if !started_clids.is_empty() || !stopped_check_clids.is_empty() {
+        let mut rt = runtime.lock().unwrap();
+        for clid in started_clids {
+            if let Some(online) = rt.store.online_clients.get_mut(&clid) {
+                online
+                    .extra_properties
+                    .insert(String::from("client_is_streaming"), String::from("1"));
+            }
+            ts6_cmds.insert(
+                0,
+                format!("notifyclientupdated clid={} client_is_streaming=1", clid),
+            );
+        }
+        for clid in stopped_check_clids {
+            let still_streaming = is_client_streaming_ts6(server_id, clid);
+            if !still_streaming {
+                if let Some(online) = rt.store.online_clients.get_mut(&clid) {
+                    online
+                        .extra_properties
+                        .insert(String::from("client_is_streaming"), String::from("0"));
+                }
+                ts6_cmds.push(format!(
+                    "notifyclientupdated clid={} client_is_streaming=0",
+                    clid
+                ));
+            }
+        }
+    }
+
+    ts6_cmds
+}
+
+/// Syncs a TS6 client's `client_is_streaming` and `ActiveMediaBroadcast` state into `BaselineRuntime`
 /// and broadcasts `ClientUpdated` + `VideoBroadcastChanged` notifications.
 fn sync_runtime_stream_state(
     runtime: &Arc<Mutex<crate::runtime::BaselineRuntime>>,
@@ -140,8 +293,12 @@ fn sync_runtime_stream_state(
     };
 
     let is_streaming = !client_streams.is_empty();
-    let has_video = client_streams.iter().any(|s| s.stream_type == 1);
-    let has_screen = client_streams.iter().any(|s| s.stream_type != 1);
+    let has_video = client_streams
+        .iter()
+        .any(|s| ts6_stream_type_to_bt(s.stream_type) == 0);
+    let has_screen = client_streams
+        .iter()
+        .any(|s| ts6_stream_type_to_bt(s.stream_type) == 1);
 
     let mut rt = runtime.lock().unwrap();
     let before_snap = rt.online_client_snapshot(server_id, clid);
@@ -179,8 +336,14 @@ fn sync_runtime_stream_state(
         );
     }
 
-    // Keep `active_broadcasts` in sync so BTEA Desktop & TeaSpeak clients also see TS6 streams
+    // Keep `active_broadcasts` in sync so BTEA Desktop/Web & TeaSpeak clients also see TS6 streams
     if has_video {
+        let existing_joined = rt
+            .store
+            .active_broadcasts
+            .get(&(server_id, clid, 0))
+            .map(|b| b.joined_client_ids.clone())
+            .unwrap_or_default();
         rt.store.active_broadcasts.insert(
             (server_id, clid, 0),
             ActiveMediaBroadcast {
@@ -189,7 +352,7 @@ fn sync_runtime_stream_state(
                 broadcaster_client_id: clid,
                 broadcast_type: 0,
                 ssrc: (clid as u32).wrapping_mul(10).wrapping_add(1),
-                joined_client_ids: BTreeSet::new(),
+                joined_client_ids: existing_joined,
             },
         );
     } else {
@@ -197,6 +360,12 @@ fn sync_runtime_stream_state(
     }
 
     if has_screen {
+        let existing_joined = rt
+            .store
+            .active_broadcasts
+            .get(&(server_id, clid, 1))
+            .map(|b| b.joined_client_ids.clone())
+            .unwrap_or_default();
         rt.store.active_broadcasts.insert(
             (server_id, clid, 1),
             ActiveMediaBroadcast {
@@ -205,7 +374,7 @@ fn sync_runtime_stream_state(
                 broadcaster_client_id: clid,
                 broadcast_type: 1,
                 ssrc: (clid as u32).wrapping_mul(10).wrapping_add(2),
-                joined_client_ids: BTreeSet::new(),
+                joined_client_ids: existing_joined,
             },
         );
     } else {
@@ -237,6 +406,8 @@ pub fn cleanup_client_streams(
     clid: u64,
     runtime: &Arc<Mutex<crate::runtime::BaselineRuntime>>,
 ) {
+    super::webrtc_bridge::close_all_ts6_bridges_for_client(clid, runtime);
+
     let mut stopped_streams = Vec::new();
     let mut left_streams = Vec::new();
 
@@ -319,14 +490,21 @@ pub async fn handle_ts6_stream_command(
     // 1. setupstream: Client starts a new video or screen-share stream
     if payload_str.starts_with("setupstream") {
         let rc = get_ts6_return_code(payload_str);
-        let name = parse_ts6_argument(payload_str, "name").unwrap_or_else(|| String::from("Stream"));
-        let stream_type = parse_ts6_argument_u32(payload_str, "type").unwrap_or(0);
+        let name =
+            parse_ts6_argument(payload_str, "name").unwrap_or_else(|| String::from("Stream"));
+        // TS6 stream type enum: 1 = CAMERA, 2 = SCREEN, 3 = WINDOW (0 = NONE)
+        let raw_type = parse_ts6_argument_u32(payload_str, "type").unwrap_or(2);
+        let stream_type = if raw_type == 0 { 2 } else { raw_type };
+        let bt = ts6_stream_type_to_bt(stream_type);
+
         let bitrate = parse_ts6_argument_u64(payload_str, "bitrate").unwrap_or(2_500_000);
-        let accessibility = parse_ts6_argument_u32(payload_str, "accessibility")
+        // Force PUBLIC (1) if 0 (NONE) so TS6 auto-accepts our server's virtual WebRTC bridge viewer
+        let raw_access = parse_ts6_argument_u32(payload_str, "accessibility")
             .or_else(|| parse_ts6_argument_u32(payload_str, "access"))
-            .unwrap_or(0);
+            .unwrap_or(1);
+        let accessibility = if raw_access == 0 { 1 } else { raw_access };
         // TS6 supports mode=1 (P2P WebRTC) and mode=2 (SFU). Since we advertise STREAM_P2P,
-        // default to mode=1 (P2P) so clients establish direct WebRTC media via `streamsignaling`.
+        // default to mode=1 (P2P) so clients establish WebRTC media via `streamsignaling`.
         let requested_mode = parse_ts6_argument_u32(payload_str, "mode").unwrap_or(1);
         let mode = if requested_mode == 0 { 1 } else { requested_mode };
         let viewer_limit = parse_ts6_argument_u32(payload_str, "viewer_limit").unwrap_or(10);
@@ -361,9 +539,27 @@ pub async fn handle_ts6_stream_command(
             attendees: BTreeSet::new(),
         };
 
-        {
+        let replaced_ids: Vec<String> = {
             let mut reg = TS6_STREAM_REGISTRY.lock().unwrap();
+            let old_ids: Vec<String> = reg
+                .streams
+                .values()
+                .filter(|s| {
+                    s.server_id == server_id
+                        && s.clid == clid
+                        && ts6_stream_type_to_bt(s.stream_type) == bt
+                })
+                .map(|s| s.id.clone())
+                .collect();
+            for old_id in &old_ids {
+                reg.streams.remove(old_id);
+            }
             reg.streams.insert(stream_id.clone(), entry.clone());
+            old_ids
+        };
+
+        for old_id in replaced_ids {
+            super::webrtc_bridge::close_all_ts6_bridges_for_stream(&old_id, runtime);
         }
 
         // Send notifystreamstarted to initiator (with return_code if present)
@@ -392,6 +588,29 @@ pub async fn handle_ts6_stream_command(
 
         // Update runtime `client_is_streaming` and `active_broadcasts`
         sync_runtime_stream_state(runtime, server_id, clid);
+
+        // Auto-join the TS6 stream from the server's virtual WebRTC bridge viewer so the server
+        // receives the TS6 VP8 RTP stream and bridges it to TeaSpeak & BTEA Desktop/Web clients!
+        let virtual_viewer_clid = super::webrtc_bridge::virtual_bridge_viewer_clid_for_bt(bt);
+        let pid_clone = Arc::clone(&session.server_packet_id);
+        let sock_clone = Arc::clone(socket);
+        let iv_clone = iv_struct.to_vec();
+        let stream_id_clone = stream_id.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(150)).await;
+            let join_req_cmd = format!(
+                "notifyjoinstreamrequest clid={} id={} msg= is_remove=0",
+                virtual_viewer_clid,
+                ts6_escape(&stream_id_clone)
+            );
+            send_ts6_command_with_packet_id(&join_req_cmd, &pid_clone, addr, &sock_clone, &iv_clone)
+                .await;
+            println!(
+                "Sent TS6 auto-join request (virtual viewer clid={}) for stream_id={} to streamer clid={}",
+                virtual_viewer_clid, stream_id_clone, clid
+            );
+        });
+
         return true;
     }
 
@@ -413,7 +632,9 @@ pub async fn handle_ts6_stream_command(
                 if let Some(name) = parse_ts6_argument(payload_str, "name") {
                     entry.name = name;
                 }
-                if let Some(st) = parse_ts6_argument_u32(payload_str, "type") {
+                if let Some(st) = parse_ts6_argument_u32(payload_str, "type")
+                    && st != 0
+                {
                     entry.stream_type = st;
                 }
                 if let Some(br) = parse_ts6_argument_u64(payload_str, "bitrate") {
@@ -421,10 +642,13 @@ pub async fn handle_ts6_stream_command(
                 }
                 if let Some(acc) = parse_ts6_argument_u32(payload_str, "accessibility")
                     .or_else(|| parse_ts6_argument_u32(payload_str, "access"))
+                    && acc != 0
                 {
                     entry.accessibility = acc;
                 }
-                if let Some(m) = parse_ts6_argument_u32(payload_str, "mode") {
+                if let Some(m) = parse_ts6_argument_u32(payload_str, "mode")
+                    && m != 0
+                {
                     entry.mode = m;
                 }
                 if let Some(vl) = parse_ts6_argument_u32(payload_str, "viewer_limit") {
@@ -490,6 +714,8 @@ pub async fn handle_ts6_stream_command(
         };
 
         for entry in &removed_entries {
+            super::webrtc_bridge::close_all_ts6_bridges_for_stream(&entry.id, runtime);
+
             let mut self_cmd = format!(
                 "notifystreamstopped clid={} id={} reason={}",
                 entry.clid,
@@ -532,6 +758,8 @@ pub async fn handle_ts6_stream_command(
     if payload_str.starts_with("requeststreaminfo") {
         let rc = get_ts6_return_code(payload_str);
         let target_clid = parse_ts6_argument_u64(payload_str, "clid").unwrap_or(0);
+
+        let _ = sync_non_ts6_broadcasts_to_ts6(runtime, server_id);
 
         let matching_streams: Vec<Ts6StreamEntry> = {
             let reg = TS6_STREAM_REGISTRY.lock().unwrap();
@@ -579,19 +807,75 @@ pub async fn handle_ts6_stream_command(
     // 5. joinstreamrequest: Viewer requests to join (or cancel joining) a streamer's P2P stream
     if payload_str.starts_with("joinstreamrequest") {
         let rc = get_ts6_return_code(payload_str);
-        let stream_id = parse_ts6_argument(payload_str, "id").unwrap_or_default();
-        let target_streamer_clid = parse_ts6_argument_u64(payload_str, "clid").unwrap_or_else(|| {
-            let reg = TS6_STREAM_REGISTRY.lock().unwrap();
-            reg.streams.get(&stream_id).map(|s| s.clid).unwrap_or(0)
-        });
+        let _ = sync_non_ts6_broadcasts_to_ts6(runtime, server_id);
+
+        let parsed_id = parse_ts6_argument(payload_str, "id").unwrap_or_default();
+        let parsed_clid = parse_ts6_argument_u64(payload_str, "clid").unwrap_or(0);
         let msg = parse_ts6_argument(payload_str, "msg").unwrap_or_default();
         let is_remove = parse_ts6_argument_u32(payload_str, "is_remove").unwrap_or(0);
 
-        if is_remove != 0 {
-            let mut reg = TS6_STREAM_REGISTRY.lock().unwrap();
-            if let Some(stream) = reg.streams.get_mut(&stream_id) {
-                stream.attendees.remove(&clid);
+        let resolved_entry: Option<Ts6StreamEntry> = {
+            let reg = TS6_STREAM_REGISTRY.lock().unwrap();
+            if !parsed_id.is_empty() {
+                reg.streams.get(&parsed_id).cloned()
+            } else if parsed_clid != 0 {
+                reg.streams
+                    .values()
+                    .find(|s| s.server_id == server_id && s.clid == parsed_clid)
+                    .cloned()
+            } else {
+                None
             }
+        };
+
+        let stream_id = resolved_entry
+            .as_ref()
+            .map(|e| e.id.clone())
+            .unwrap_or(parsed_id);
+        let target_streamer_clid = resolved_entry
+            .as_ref()
+            .map(|e| e.clid)
+            .unwrap_or(parsed_clid);
+
+        if let Some(rc_val) = &rc {
+            let ack = format!("error id=0 msg=ok return_code={}", ts6_escape(rc_val));
+            send_ts6_command(&ack, session, addr, socket, iv_struct).await;
+        }
+
+        if is_remove != 0 {
+            {
+                let mut reg = TS6_STREAM_REGISTRY.lock().unwrap();
+                if let Some(stream) = reg.streams.get_mut(&stream_id) {
+                    stream.attendees.remove(&clid);
+                }
+            }
+            super::webrtc_bridge::close_ts6_outbound_viewer(&stream_id, clid, runtime);
+        }
+
+        // Check if this stream is a bridged non-TS6 broadcast (TeaSpeak, BTEA Desktop/Web, or MusicBot)
+        if stream_id.starts_with("ts6-bridge-") {
+            if is_remove == 0 && let Some(entry) = resolved_entry {
+                {
+                    let mut reg = TS6_STREAM_REGISTRY.lock().unwrap();
+                    if let Some(stream) = reg.streams.get_mut(&stream_id) {
+                        stream.attendees.insert(clid);
+                    }
+                }
+                let bt = ts6_stream_type_to_bt(entry.stream_type);
+                super::webrtc_bridge::start_ts6_outbound_bridge(
+                    stream_id,
+                    server_id,
+                    entry.clid,
+                    clid,
+                    bt,
+                    Arc::clone(&session.server_packet_id),
+                    addr,
+                    Arc::clone(socket),
+                    iv_struct.to_vec(),
+                    Arc::clone(runtime),
+                );
+            }
+            return true;
         }
 
         if target_streamer_clid != 0 {
@@ -613,11 +897,6 @@ pub async fn handle_ts6_stream_command(
                 },
             );
         }
-
-        if let Some(rc_val) = &rc {
-            let ack = format!("error id=0 msg=ok return_code={}", ts6_escape(rc_val));
-            send_ts6_command(&ack, session, addr, socket, iv_struct).await;
-        }
         return true;
     }
 
@@ -629,6 +908,55 @@ pub async fn handle_ts6_stream_command(
         let msg = parse_ts6_argument(payload_str, "msg").unwrap_or_default();
         let offer = parse_ts6_argument(payload_str, "offer").unwrap_or_default();
         let decision = parse_ts6_argument_u32(payload_str, "decision").unwrap_or(1);
+
+        if let Some(rc_val) = &rc {
+            let ack = format!("error id=0 msg=ok return_code={}", ts6_escape(rc_val));
+            send_ts6_command(&ack, session, addr, socket, iv_struct).await;
+        }
+
+        // Check if this is the response to our server's virtual WebRTC bridge viewer (`65530` / `65531`)
+        if super::webrtc_bridge::is_virtual_bridge_viewer_clid(viewer_clid) {
+            if decision != 0 {
+                let joined_cmd = format!(
+                    "notifystreamclientjoined clid={} id={}",
+                    viewer_clid,
+                    ts6_escape(&stream_id)
+                );
+                send_ts6_command(&joined_cmd, session, addr, socket, iv_struct).await;
+
+                if !offer.is_empty() {
+                    let bt = {
+                        let reg = TS6_STREAM_REGISTRY.lock().unwrap();
+                        reg.streams
+                            .get(&stream_id)
+                            .map(|s| ts6_stream_type_to_bt(s.stream_type))
+                            .unwrap_or_else(|| {
+                                if viewer_clid
+                                    == super::webrtc_bridge::VIRTUAL_BRIDGE_VIEWER_SCREEN_CLID
+                                {
+                                    1
+                                } else {
+                                    0
+                                }
+                            })
+                    };
+                    super::webrtc_bridge::start_ts6_inbound_bridge(
+                        stream_id,
+                        server_id,
+                        clid,
+                        viewer_clid,
+                        bt,
+                        offer,
+                        Arc::clone(&session.server_packet_id),
+                        addr,
+                        Arc::clone(socket),
+                        iv_struct.to_vec(),
+                        Arc::clone(runtime),
+                    );
+                }
+            }
+            return true;
+        }
 
         if decision != 0 && viewer_clid != 0 {
             let mut reg = TS6_STREAM_REGISTRY.lock().unwrap();
@@ -675,11 +1003,6 @@ pub async fn handle_ts6_stream_command(
                 );
             }
         }
-
-        if let Some(rc_val) = &rc {
-            let ack = format!("error id=0 msg=ok return_code={}", ts6_escape(rc_val));
-            send_ts6_command(&ack, session, addr, socket, iv_struct).await;
-        }
         return true;
     }
 
@@ -690,7 +1013,20 @@ pub async fn handle_ts6_stream_command(
         let target_clid = parse_ts6_argument_u64(payload_str, "clid").unwrap_or(0);
         let json_payload = parse_ts6_argument(payload_str, "json").unwrap_or_default();
 
-        if target_clid != 0 {
+        if let Some(rc_val) = &rc {
+            let ack = format!("error id=0 msg=ok return_code={}", ts6_escape(rc_val));
+            send_ts6_command(&ack, session, addr, socket, iv_struct).await;
+        }
+
+        let handled_by_bridge = super::webrtc_bridge::handle_ts6_bridge_signaling(
+            &stream_id,
+            clid,
+            target_clid,
+            &json_payload,
+            runtime,
+        );
+
+        if !handled_by_bridge && target_clid != 0 {
             let sig_cmd = format!(
                 "notifystreamsignaling clid={} id={} json={}",
                 clid,
@@ -707,11 +1043,6 @@ pub async fn handle_ts6_stream_command(
                     command: sig_cmd,
                 },
             );
-        }
-
-        if let Some(rc_val) = &rc {
-            let ack = format!("error id=0 msg=ok return_code={}", ts6_escape(rc_val));
-            send_ts6_command(&ack, session, addr, socket, iv_struct).await;
         }
         return true;
     }
@@ -731,6 +1062,7 @@ pub async fn handle_ts6_stream_command(
                 stream.attendees.remove(&target_clid);
             }
         }
+        super::webrtc_bridge::close_ts6_outbound_viewer(&stream_id, target_clid, runtime);
 
         let left_cmd = format!(
             "notifystreamclientleft clid={} id={} reason={}",
@@ -809,9 +1141,9 @@ mod tests {
             channel_id: 1,
             clid: 101,
             name: String::from("Desktop Share"),
-            stream_type: 0,
+            stream_type: 2,
             bitrate: 4_000_000,
-            accessibility: 0,
+            accessibility: 1,
             mode: 1,
             viewer_limit: 10,
             audio: 1,
@@ -825,16 +1157,26 @@ mod tests {
         assert!(started.contains("clid=101"));
         assert!(started.contains("id=ts6-stream-101-1"));
         assert!(started.contains("name=Desktop\\sShare"));
-        assert!(started.contains("access=0"));
-        assert!(started.contains("accessibility=0"));
+        assert!(started.contains("type=2"));
+        assert!(started.contains("access=1"));
+        assert!(started.contains("accessibility=1"));
+        assert!(started.contains("viewer=1"));
         assert!(started.contains("mode=1"));
         assert!(started.contains("return_code=1:42"));
 
         let info_row = entry.render_notifystreaminfo_row(Some("1:43"));
         assert!(info_row.contains("viewer=1"));
-        assert!(info_row.contains("accessibility=0"));
-        assert!(info_row.contains("access=0"));
+        assert!(info_row.contains("accessibility=1"));
+        assert!(info_row.contains("access=1"));
         assert!(info_row.contains("return_code=1:43"));
     }
-}
 
+    #[test]
+    fn ts6_stream_type_and_bt_mapping_roundtrips_camera_and_screen() {
+        assert_eq!(bt_to_ts6_stream_type(0), 1); // Camera -> 1 (CAMERA)
+        assert_eq!(bt_to_ts6_stream_type(1), 2); // Screen -> 2 (SCREEN)
+        assert_eq!(ts6_stream_type_to_bt(1), 0); // 1 (CAMERA) -> bt=0
+        assert_eq!(ts6_stream_type_to_bt(2), 1); // 2 (SCREEN) -> bt=1
+        assert_eq!(ts6_stream_type_to_bt(3), 1); // 3 (WINDOW) -> bt=1
+    }
+}

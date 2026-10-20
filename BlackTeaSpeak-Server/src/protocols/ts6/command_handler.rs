@@ -178,6 +178,10 @@ pub async fn handle_ts6_command(
         let init_platform = parse_ts6_argument(payload_str, "client_platform")
             .unwrap_or_else(|| String::from("Windows"));
 
+        // Ensure any non-TS6 active broadcasts (TeaSpeak, BTEA Desktop/Web, MusicBot) are synced
+        // into `TS6_STREAM_REGISTRY` before building peer enter rows and initial stream notifications.
+        let _ = super::stream_manager::sync_non_ts6_broadcasts_to_ts6(runtime, server_id);
+
         let (
             bootstrap,
             peer_enter_cmds,

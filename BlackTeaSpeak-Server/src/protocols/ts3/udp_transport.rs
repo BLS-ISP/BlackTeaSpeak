@@ -201,6 +201,11 @@ impl TeaSpeakTransportServer {
                                     continue;
                                 }
                             }
+                            let ts6_bridge_cmds = if let crate::transport::TransportNotification::VideoBroadcastChanged { server_id: b_sid, .. } = &notif {
+                                crate::protocols::ts6::stream_manager::sync_non_ts6_broadcasts_to_ts6(&self.runtime, *b_sid)
+                            } else {
+                                Vec::new()
+                            };
                             for (peer_addr, peer_session) in sessions.iter() {
                                 if peer_session.client_nickname.is_empty() || !peer_session.is_active.load(Ordering::SeqCst) {
                                     continue;
@@ -468,6 +473,26 @@ impl TeaSpeakTransportServer {
                                         )
                                     }
                                     crate::transport::TransportNotification::VideoBroadcastChanged { server_id: b_sid, channel_id } => {
+                                        if peer_session.is_ts6_client {
+                                            if !ts6_bridge_cmds.is_empty() {
+                                                let iv_struct = crate::desktop_crypto::derive_iv_struct(
+                                                    &peer_session.shared_secret,
+                                                    &peer_session.seed_client,
+                                                    &peer_session.seed_server,
+                                                );
+                                                for ts6_cmd in &ts6_bridge_cmds {
+                                                    crate::protocols::ts6::wire_formatting::send_ts6_command(
+                                                        ts6_cmd,
+                                                        peer_session,
+                                                        *peer_addr,
+                                                        &socket,
+                                                        &iv_struct,
+                                                    )
+                                                    .await;
+                                                }
+                                            }
+                                            continue;
+                                        }
                                         if !peer_session.is_teaspeak_client {
                                             continue;
                                         }

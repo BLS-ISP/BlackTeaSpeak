@@ -32,6 +32,7 @@ async fn test_ts3_compat_udp_commands() {
         command_fragment_active: false,
         is_active: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true)),
         is_teaspeak_client: false,
+        is_ts6_client: false,
     };
     
     let iv_struct = [0u8; 20];
@@ -232,6 +233,7 @@ async fn test_three_protocols_unified_interoperability() {
         command_fragment_active: false,
         is_active: std::sync::Arc::new(std::sync::atomic::AtomicBool::new(true)),
         is_teaspeak_client: false,
+        is_ts6_client: false,
     };
     let iv_struct = [0u8; 20];
     let ok = blackteaspeak_server::teaspeak_ts3::handle_ts3_command(
@@ -1379,6 +1381,7 @@ async fn all_client_protocols_can_query_and_modify_permissions_when_authorized()
         command_fragment_active: false,
         is_active: Arc::new(AtomicBool::new(true)),
         is_teaspeak_client: false,
+        is_ts6_client: false,
     };
     let iv_struct = blackteaspeak_server::desktop_crypto::derive_iv_struct(
         &ts3_session.shared_secret,

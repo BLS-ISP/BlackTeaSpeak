@@ -482,6 +482,10 @@ impl BlackTeaWebSessionHandler {
             &visible_channel_ids,
         ));
         frames.push(command_frame("notifycliententerview", visible_clients)?);
+        let bcast_rows = runtime.active_broadcast_rows(server_id, None);
+        if !bcast_rows.is_empty() {
+            frames.push(command_frame("notifybroadcasts", bcast_rows)?);
+        }
         frames.push(command_frame("channellistfinished", Vec::new())?);
         Ok(frames)
     }
