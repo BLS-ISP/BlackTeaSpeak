@@ -829,7 +829,7 @@ pub(crate) async fn handle_channel_and_runtime_command(
             } else if payload_str.starts_with("servergetvariables") {
                 let server_uid_escaped = ts3_escape(&session.server_uid);
                 let notify_cmd = format!(
-                    "notifyserverupdated virtualserver_name=BlackTeaSpeak virtualserver_welcomemessage=Welcome! virtualserver_maxclients=32 virtualserver_clientsonline=1 virtualserver_channelsonline=1 virtualserver_created=1494921612 virtualserver_uptime=33245 virtualserver_unique_identifier={} virtualserver_platform=Windows virtualserver_version=3.5.6 virtualserver_status=online",
+                    "notifyserverupdated virtualserver_name=BlackTeaSpeak virtualserver_welcomemessage=Welcome! virtualserver_maxclients=32 virtualserver_clientsonline=1 virtualserver_channelsonline=1 virtualserver_created=1494921612 virtualserver_uptime=33245 virtualserver_unique_identifier={} virtualserver_platform=Windows virtualserver_version=3.13.7\\s[Build:\\s1655727713] virtualserver_status=online",
                     server_uid_escaped
                 );
                 send_command(&notify_cmd, session, addr, socket, iv_struct).await;

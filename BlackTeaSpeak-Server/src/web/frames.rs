@@ -1041,7 +1041,7 @@ pub(crate) fn build_initserver_row(
         ("virtualserver_created", "1494921612".to_string()),
         ("virtualserver_uptime", "33245".to_string()),
         ("virtualserver_platform", "Windows".to_string()),
-        ("virtualserver_version", "3.5.6".to_string()),
+        ("virtualserver_version", "3.13.7 [Build: 1655727713]".to_string()),
         ("virtualserver_status", "online".to_string()),
         ("virtualserver_codec_encryption_mode", "0".to_string()),
         ("virtualserver_default_server_group", "8".to_string()),
