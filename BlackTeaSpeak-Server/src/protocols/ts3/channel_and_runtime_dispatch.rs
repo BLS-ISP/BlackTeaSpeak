@@ -717,9 +717,29 @@ pub(crate) async fn handle_channel_and_runtime_command(
     let is_ts3_var_or_sub_cmd = payload_str.starts_with("servergetvariables")
         || payload_str.starts_with("connectioninfoautoupdate")
         || payload_str.starts_with("clientgetvariables")
-        || payload_str.starts_with("channelsubscribeball");
+        || payload_str.starts_with("channelsubscribeball")
+        || payload_str.starts_with("channelsubscribeall");
 
     if is_ts3_var_or_sub_cmd {
+        if payload_str.starts_with("channelsubscribeball")
+            || payload_str.starts_with("channelsubscribeall")
+        {
+            let sub_cmd = {
+                let rt = runtime.lock().unwrap();
+                let mut parts = Vec::new();
+                if let Some(channels) = rt.store.channels.get(&server_id) {
+                    for ch in channels {
+                        parts.push(format!("cid={}", ch.id));
+                    }
+                }
+                if parts.is_empty() {
+                    String::from("notifychannelsubscribed cid=1")
+                } else {
+                    format!("notifychannelsubscribed {}", parts.join("|"))
+                }
+            };
+            send_command(&sub_cmd, session, addr, socket, iv_struct).await;
+        }
         // In Official TS3, ONLY send error id=0 msg=ok if return_code (or rt-) was requested!
         if let Some(rc_val) = get_return_code(payload_str) {
             let ack_cmd = format!("error id=0 msg=ok return_code={}", rc_val);
@@ -944,6 +964,7 @@ pub(crate) async fn handle_channel_and_runtime_command(
                     crate::transport::TransportNotification::ClientUpdated { .. }
                         | crate::transport::TransportNotification::ClientPoke { .. }
                         | crate::transport::TransportNotification::VideoBroadcastChanged { .. }
+                        | crate::transport::TransportNotification::Ts6StreamNotify { .. }
                 ) {
                     continue;
                 }

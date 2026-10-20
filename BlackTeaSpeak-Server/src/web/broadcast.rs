@@ -583,7 +583,8 @@ pub(crate) fn frame_broadcasts_from_transport_notifications(
                 }],
                 _ => Vec::new(),
             },
-            TransportNotification::VideoBroadcastChanged { .. } => Vec::new(),
+            TransportNotification::VideoBroadcastChanged { .. }
+            | TransportNotification::Ts6StreamNotify { .. } => Vec::new(),
         };
         frames.append(&mut notification_frames);
     }

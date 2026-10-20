@@ -379,6 +379,7 @@ pub fn render_notification(notification: &TransportNotification) -> String {
                 ("invokeruid", invoker_uid.clone()),
             ],
         ),
+        TransportNotification::Ts6StreamNotify { command, .. } => command.clone(),
         TransportNotification::VideoBroadcastChanged { channel_id, .. } => {
             render_message("notifybroadcastvideo", &[("cid", channel_id.to_string())])
         }
@@ -482,6 +483,7 @@ pub(crate) fn client_update_fields(
         "client_meta_data",
         "client_flag_avatar",
         "client_badges",
+        "client_is_streaming",
         "client_flag_video_broadcasting",
         "client_flag_screen_broadcasting",
         "player_state",

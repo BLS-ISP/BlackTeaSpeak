@@ -99,4 +99,10 @@ pub enum TransportNotification {
         server_id: u32,
         channel_id: u32,
     },
+    Ts6StreamNotify {
+        server_id: u32,
+        target_client_id: Option<u64>,
+        exclude_client_id: Option<u64>,
+        command: String,
+    },
 }

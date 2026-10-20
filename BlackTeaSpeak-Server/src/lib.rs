@@ -25,6 +25,8 @@ pub use protocols::teaspeak::webrtc_bridge as teaspeak_web_old;
 pub use protocols::ts3::command_handler as teaspeak_ts3;
 pub use protocols::ts3::tcp_transport as teaspeak_tcp_transport;
 pub use protocols::ts3::udp_transport as teaspeak_transport;
+pub use protocols::ts6::command_handler as teaspeak_ts6;
+pub use protocols::ts6::stream_manager as ts6_stream_manager;
 
 pub use protocols::serverquery::parser as query;
 pub use protocols::serverquery::ssh_and_telnet as ssh_query;

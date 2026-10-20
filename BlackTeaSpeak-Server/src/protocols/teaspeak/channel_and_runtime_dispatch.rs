@@ -1105,6 +1105,7 @@ pub(crate) async fn handle_teaspeak_channel_and_runtime_command(
             if matches!(
                 notif,
                 crate::transport::TransportNotification::VideoBroadcastChanged { .. }
+                    | crate::transport::TransportNotification::Ts6StreamNotify { .. }
                     | crate::transport::TransportNotification::ClientUpdated { .. }
                     | crate::transport::TransportNotification::ClientPoke { .. }
                     | crate::transport::TransportNotification::ClientEnterView { .. }

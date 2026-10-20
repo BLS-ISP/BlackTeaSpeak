@@ -787,6 +787,7 @@ pub(crate) fn wants_notification(session: &QuerySessionState, notification: &Tra
                     NotificationEventKind::Server | NotificationEventKind::Channel => false,
                 })
         }
+        TransportNotification::Ts6StreamNotify { .. } => false,
         TransportNotification::VideoBroadcastChanged { server_id, .. } => {
             session.selected_virtual_server_id == Some(*server_id)
         }

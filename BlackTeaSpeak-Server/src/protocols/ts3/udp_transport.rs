@@ -89,6 +89,8 @@ pub struct UdpSession {
     pub is_active: Arc<std::sync::atomic::AtomicBool>,
     // Distinguishes TeaSpeak clients from official TeamSpeak 3 clients
     pub is_teaspeak_client: bool,
+    // Distinguishes TeamSpeak 6 clients (with native TS6 STREAM_P2P video/desktop streaming chain)
+    pub is_ts6_client: bool,
 }
 
 pub struct TeaSpeakTransportServer {
@@ -223,6 +225,23 @@ impl TeaSpeakTransportServer {
                                     continue;
                                 }
                                 match &notif {
+                                    crate::transport::TransportNotification::Ts6StreamNotify {
+                                        target_client_id,
+                                        exclude_client_id,
+                                        ..
+                                    } => {
+                                        if !peer_session.is_ts6_client {
+                                            continue;
+                                        }
+                                        if *exclude_client_id == Some(peer_session.client_id) {
+                                            continue;
+                                        }
+                                        if let Some(tid) = target_client_id
+                                            && *tid != peer_session.client_id
+                                        {
+                                            continue;
+                                        }
+                                    }
                                     crate::transport::TransportNotification::ClientPoke { target_client_id, .. } => {
                                         if *target_client_id != peer_session.client_id {
                                             continue;
@@ -405,6 +424,13 @@ impl TeaSpeakTransportServer {
                                             } else {
                                                 String::from(" client_version=3.6.2 client_platform=Windows")
                                             }
+                                        } else if peer_session.is_ts6_client {
+                                            let is_str = if crate::protocols::ts6::stream_manager::is_client_streaming_ts6(self.server_id, presence.client_id) {
+                                                "1"
+                                            } else {
+                                                "0"
+                                            };
+                                            format!(" client_is_streaming={}", is_str)
                                         } else {
                                             String::new()
                                         };
@@ -483,7 +509,11 @@ impl TeaSpeakTransportServer {
                                 );
                                 if !peer_session.is_teaspeak_client {
                                     if !matches!(&notif, crate::transport::TransportNotification::ClientUpdated { .. }) || has_client_field_changes {
-                                        crate::teaspeak_ts3::send_command(&cmd_str, peer_session, *peer_addr, &socket, &iv_struct).await;
+                                        if peer_session.is_ts6_client {
+                                            crate::protocols::ts6::wire_formatting::send_ts6_command(&cmd_str, peer_session, *peer_addr, &socket, &iv_struct).await;
+                                        } else {
+                                            crate::teaspeak_ts3::send_command(&cmd_str, peer_session, *peer_addr, &socket, &iv_struct).await;
+                                        }
                                     }
                                 } else if let Some(payload) = &music_payload {
                                     if music_loaded_changed && payload.playlist_id > 0 {
@@ -808,6 +838,7 @@ impl TeaSpeakTransportServer {
                                                 client_nickname: String::new(),
                                                 is_active: Arc::new(std::sync::atomic::AtomicBool::new(true)),
                                                 is_teaspeak_client: true,
+                                                is_ts6_client: false,
                                             });
                                             
                                             let _ = socket.send_to(&encrypted_payload, addr).await;
@@ -998,6 +1029,7 @@ impl TeaSpeakTransportServer {
                                                      client_nickname: String::new(),
                                                      is_active: Arc::new(std::sync::atomic::AtomicBool::new(true)),
                                                      is_teaspeak_client: is_teaspeak,
+                                                     is_ts6_client: false,
                                                  });
                                                 
                                                 let ts3_escape = |s: &str| -> String {
@@ -1213,6 +1245,20 @@ impl TeaSpeakTransportServer {
 
                                                         if payload_str.starts_with("handshakebegin ") {
                                                             session.is_teaspeak_client = true;
+                                                        } else if !session.is_teaspeak_client
+                                                            && (payload_str.contains("client_version=6.")
+                                                                || payload_str.contains("client_version=5.")
+                                                                || payload_str.starts_with("setupstream")
+                                                                || payload_str.starts_with("updatestream")
+                                                                || payload_str.starts_with("stopstream")
+                                                                || payload_str.starts_with("requeststreaminfo")
+                                                                || payload_str.starts_with("joinstreamrequest")
+                                                                || payload_str.starts_with("respondjoinstreamrequest")
+                                                                || payload_str.starts_with("streamsignaling")
+                                                                || payload_str.starts_with("removeclientfromstream")
+                                                                || payload_str.starts_with("requestsfuaccessinfo"))
+                                                        {
+                                                            session.is_ts6_client = true;
                                                         }
 
                                                         if session.is_teaspeak_client {
@@ -1259,6 +1305,20 @@ impl TeaSpeakTransportServer {
                                                                 &iv_struct,
                                                                 &self.runtime,
                                                                 self.server_id,
+                                                            )
+                                                            .await;
+                                                        } else if session.is_ts6_client {
+                                                            // Official TeamSpeak 6 pipeline (src/protocols/ts6/)
+                                                            let _ = crate::protocols::ts6::command_handler::handle_ts6_command(
+                                                                &payload_str,
+                                                                &processed_decrypted,
+                                                                session,
+                                                                addr,
+                                                                &socket,
+                                                                &iv_struct,
+                                                                &self.runtime,
+                                                                self.server_id,
+                                                                packet_id,
                                                             )
                                                             .await;
                                                         } else {
