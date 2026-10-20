@@ -2,9 +2,6 @@
 .SYNOPSIS
 Starts both the BlackTeaSpeak Server and Client concurrently.
 
-.DESCRIPTION
-Configures, validates, and runs all parts of the BlackTeaSpeak ecosystem, providing a unified console experience.
-
 .PARAMETER Mode
 The mode to start the Client. 'Dev' (Default) or 'Prod'.
 .PARAMETER RebuildServer
@@ -27,23 +24,14 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location $ScriptDir
 
-# --- Styling Helpers ---
 function Write-Header ([string]$text) {
     Write-Host ""
     Write-Host "=== $text ===" -ForegroundColor Cyan
 }
 
-function Write-Success ([string]$text) {
-    Write-Host "[OK] $text" -ForegroundColor Green
-}
-
-function Write-Info ([string]$text) {
-    Write-Host "[INFO] $text" -ForegroundColor Gray
-}
-
-# --- ASCII Banner ---
 Clear-Host
-Write-Host "
+$Banner = @'
+
   ____  _             _    _____            ____                  _    
  |  _ \| |           | |  |_   _|          / ___|                | |   
  | |_) | | __ _  ___| | __  | | ___  __ _  \___ \ _ __   ___  __ _| | __
@@ -51,7 +39,8 @@ Write-Host "
  | |_) | | (_| | (__|   <   | |  __/ (_| | |____/| |_) |  __/ (_| |   < 
  |____/|_|\__,_|\___|_|\_\  |_|\___|\__,_|       | .__/ \___|\__,_|_|\_\
                                                  |_|                   
-" -ForegroundColor Yellow
+'@
+Write-Host $Banner -ForegroundColor Yellow
 
 Write-Host "=======================================================================" -ForegroundColor DarkCyan
 Write-Host "             BlackTeaSpeak Full Stack Control System                    " -ForegroundColor White -BackgroundColor DarkCyan
@@ -91,11 +80,11 @@ if ($Mode -eq "Dev") {
     Write-Host "   Client Application       | " -NoNewline; Write-Host "Desktop GUI (Production)" -ForegroundColor Cyan -NoNewline; Write-Host "    | Running" -ForegroundColor Green
 }
 
-Write-Host "   Desktop Voice Socket     | " -NoNewline; Write-Host "udp://localhost:9987" -ForegroundColor Cyan -NoNewline; Write-Host "      | Listening" -ForegroundColor Green
-Write-Host "   Web Transport Socket     | " -NoNewline; Write-Host "udp://localhost:9989" -ForegroundColor Cyan -NoNewline; Write-Host "      | Listening" -ForegroundColor Green
-Write-Host "   ServerQuery Interface    | " -NoNewline; Write-Host "tcp://localhost:10101" -ForegroundColor Cyan -NoNewline; Write-Host "     | Listening" -ForegroundColor Green
-Write-Host "   File Transfer Port       | " -NoNewline; Write-Host "tcp://localhost:30303" -ForegroundColor Cyan -NoNewline; Write-Host "     | Listening" -ForegroundColor Green
-Write-Host "   Web Client Web Interface | " -NoNewline; Write-Host "https://localhost:8081" -ForegroundColor Cyan -NoNewline; Write-Host "    | Listening" -ForegroundColor Green
+Write-Host "   Voice / Desktop Socket   | " -NoNewline; Write-Host "udp://localhost:9987" -ForegroundColor Cyan -NoNewline; Write-Host "          | Listening" -ForegroundColor Green
+Write-Host "   WebTransport QUIC Socket | " -NoNewline; Write-Host "udp://localhost:9989" -ForegroundColor Cyan -NoNewline; Write-Host "          | Listening" -ForegroundColor Green
+Write-Host "   ServerQuery (SSH/Telnet) | " -NoNewline; Write-Host "tcp://localhost:10022 / 10011" -ForegroundColor Cyan -NoNewline; Write-Host " | Listening" -ForegroundColor Green
+Write-Host "   File Transfer Port       | " -NoNewline; Write-Host "tcp://localhost:30303" -ForegroundColor Cyan -NoNewline; Write-Host "         | Listening" -ForegroundColor Green
+Write-Host "   Web Client (HTTPS/HTTP)  | " -NoNewline; Write-Host "https://localhost:8080 (8081)" -ForegroundColor Cyan -NoNewline; Write-Host " | Listening" -ForegroundColor Green
 Write-Host "=======================================================================" -ForegroundColor DarkCyan
 
 Write-Host ""

@@ -56,7 +56,7 @@ impl FoundationSpecs {
                 &workspace_root
                     .join("BlackTeaSpeak-1.5.6")
                     .join("buildVersion.txt"),
-            )?
+            ).unwrap_or(BuildVersion { build_name: String::from("BlackTeaSpeak"), build_version: String::from("1.5.6"), build_index: 0 })
         };
 
         let commands = commands_list

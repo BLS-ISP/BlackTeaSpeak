@@ -15,11 +15,11 @@ Set-Location $ScriptDir
 
 # Sane Default Port Configuration (matching start-server.ps1)
 $Config = @{
-    QueryPort = 10101
-    WebPort = 9987
+    QueryPort = 10022
+    WebPort = 9989
     VoicePort = 9987
     FilePort = 30303
-    WebClientPort = 8081
+    WebClientPort = 8080
 }
 
 # --- GUI Color Palette (Premium Cyber Dark Theme) ---
@@ -130,8 +130,8 @@ $ConfigCard.Controls.Add($ConfigTitle)
 # Helper to build rows
 $Rows = @(
     @{ Name = "Voice/Desktop UDP Socket"; Port = $Config.VoicePort; Protocol = "UDP"; Bind = "0.0.0.0" },
-    @{ Name = "Web Transport TCP Socket"; Port = $Config.WebPort; Protocol = "TCP"; Bind = "0.0.0.0" },
-    @{ Name = "ServerQuery TCP Interface"; Port = $Config.QueryPort; Protocol = "TCP"; Bind = "0.0.0.0" },
+    @{ Name = "WebTransport QUIC UDP Socket"; Port = $Config.WebPort; Protocol = "UDP"; Bind = "0.0.0.0" },
+    @{ Name = "ServerQuery SSH Interface"; Port = $Config.QueryPort; Protocol = "TCP"; Bind = "0.0.0.0" },
     @{ Name = "File Transfer TCP Port"; Port = $Config.FilePort; Protocol = "TCP"; Bind = "0.0.0.0" },
     @{ Name = "Web Client HTTPS Port"; Port = $Config.WebClientPort; Protocol = "TCP"; Bind = "0.0.0.0" }
 )
@@ -251,6 +251,9 @@ function Get-ServerState {
     $ServerProc = Get-Process -Name "blackteaspeak_server" -ErrorAction SilentlyContinue | Select-Object -First 1
     
     $PortStates = @{}
+    $IpProps = [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties()
+    $TcpPorts = @($IpProps.GetActiveTcpListeners() | ForEach-Object { $_.Port })
+    $UdpPorts = @($IpProps.GetActiveUdpListeners() | ForEach-Object { $_.Port })
     
     foreach ($Row in $Rows) {
         $Port = $Row.Port
@@ -258,21 +261,11 @@ function Get-ServerState {
         $Key = "$Proto-$Port"
         
         if ($Proto -eq "TCP") {
-            $Conn = Get-NetTCPConnection -LocalPort $Port -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($Conn) {
-                $PortStates[$Key] = [PSCustomObject]@{ Active = $true; PID = $Conn.OwningProcess }
-            } else {
-                $PortStates[$Key] = [PSCustomObject]@{ Active = $false; PID = $null }
-            }
+            $IsActive = $TcpPorts -contains $Port
         } else {
-            # UDP
-            $Conn = Get-NetUDPEndpoint -LocalPort $Port -ErrorAction SilentlyContinue | Select-Object -First 1
-            if ($Conn) {
-                $PortStates[$Key] = [PSCustomObject]@{ Active = $true; PID = $Conn.OwningProcess }
-            } else {
-                $PortStates[$Key] = [PSCustomObject]@{ Active = $false; PID = $null }
-            }
+            $IsActive = $UdpPorts -contains $Port
         }
+        $PortStates[$Key] = [PSCustomObject]@{ Active = $IsActive }
     }
     
     return [PSCustomObject]@{
@@ -338,7 +331,7 @@ $BtnStart.add_Click({
     
     # Execute start-server.ps1 in a new window
     Write-Output "Starting server via start-server.ps1..."
-    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptDir\start-server.ps1`"" -WorkingDirectory $ScriptDir -NoNewWindow:$false
+    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptDir\start-server.ps1`" -Force" -WorkingDirectory $ScriptDir -NoNewWindow:$false
 })
 
 # Stop Button Click (Explicit Shutdown)
@@ -367,7 +360,7 @@ $BtnRestart.add_Click({
     
     # Call stop, then start
     Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptDir\stop-server.ps1`"" -WorkingDirectory $ScriptDir -WindowStyle Hidden -Wait
-    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptDir\start-server.ps1`"" -WorkingDirectory $ScriptDir
+    Start-Process -FilePath "powershell.exe" -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$ScriptDir\start-server.ps1`" -Force" -WorkingDirectory $ScriptDir
     
     Start-Sleep -Seconds 1
     $BtnRestart.Enabled = $true

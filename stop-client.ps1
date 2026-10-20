@@ -1,16 +1,12 @@
 <#
 .SYNOPSIS
 Stops the BlackTeaSpeak Client and kills any dev server processes.
-
-.DESCRIPTION
-Stops running Client windows and safely targets the Vite developer server on port 1420.
 #>
 
-$ErrorActionPreference = "Continue" # Don't halt on single process failures
+$ErrorActionPreference = "Continue"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location $ScriptDir
 
-# --- Styling Helpers ---
 function Write-Header ([string]$text) {
     Write-Host ""
     Write-Host "=== $text ===" -ForegroundColor Cyan
@@ -32,46 +28,68 @@ Write-Host "=============================================" -ForegroundColor Dark
 Write-Host "   BlackTeaSpeak Client Stopping...          " -ForegroundColor Red -BackgroundColor Black
 Write-Host "=============================================" -ForegroundColor DarkRed
 
+# 0. Check saved Client Dev PID file if present
+$StoppedCount = 0
+$PidFile = Join-Path $ScriptDir ".client.pid"
+if (Test-Path $PidFile) {
+    $SavedPid = (Get-Content $PidFile -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()
+    if ($SavedPid -match '^\d+$') {
+        $SavedProc = Get-Process -Id ([int]$SavedPid) -ErrorAction SilentlyContinue
+        if ($SavedProc) {
+            Write-Info "Terminating tracked Client process tree (PID $SavedPid)..."
+            & taskkill /F /T /PID $SavedPid 2>&1 | Out-Null
+            Stop-Process -Id ([int]$SavedPid) -Force -ErrorAction SilentlyContinue
+            $StoppedCount++
+        }
+    }
+    Remove-Item $PidFile -Force -ErrorAction SilentlyContinue
+}
+
 # 1. Kill Client GUI Processes
 Write-Header "Stopping Client Windows"
 $TargetBinaries = @("tauri-app", "BlackTeaSpeak-Client")
-$StoppedCount = 0
 
 foreach ($BinName in $TargetBinaries) {
     $Procs = Get-Process -Name $BinName -ErrorAction SilentlyContinue
     if ($Procs) {
         foreach ($Proc in $Procs) {
             Write-Info "Terminating process '$BinName' (PID: $($Proc.Id))..."
-            Stop-Process -Id $Proc.Id -Force
+            & taskkill /F /T /PID $Proc.Id 2>&1 | Out-Null
+            Stop-Process -Id $Proc.Id -Force -ErrorAction SilentlyContinue
             $StoppedCount++
         }
     }
 }
 
-if ($StoppedCount -gt 0) {
-    Write-Success "Stopped $StoppedCount client GUI process(es)."
-} else {
-    Write-Info "No active Client GUI processes found."
-}
-
-# 2. Target Dev Server Port
+# 2. Target Dev Server Port 1420
 Write-Header "Terminating Frontend Dev Server"
 $DevPort = 1420
-$ViteConn = Get-NetTCPConnection -LocalPort $DevPort -ErrorAction SilentlyContinue | Select-Object -First 1
+$ViteConns = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue | Where-Object { $_.LocalPort -eq $DevPort }
 
-if ($ViteConn) {
-    $Pid = $ViteConn.OwningProcess
-    if ($Pid -ne $PID -and $Pid -ne 0 -and $Pid -ne 4) {
-        $Proc = Get-Process -Id $Pid -ErrorAction SilentlyContinue
-        $ProcName = if ($Proc) { $Proc.Name } else { "Unknown" }
-        
-        Write-Warn "Found active Dev Server port ($DevPort) held by PID $Pid ($ProcName)."
-        Write-Info "Terminating Dev Server process..."
-        Stop-Process -Id $Pid -Force
-        Write-Success "Dev server stopped."
+if ($ViteConns) {
+    foreach ($Conn in $ViteConns) {
+        $OwnerPid = $Conn.OwningProcess
+        if ($OwnerPid -and $OwnerPid -ne $PID -and $OwnerPid -ne 0 -and $OwnerPid -ne 4) {
+            $Proc = Get-Process -Id $OwnerPid -ErrorAction SilentlyContinue
+            if ($Proc) {
+                $ProcName = $Proc.Name
+                Write-Warn "Found active Dev Server port ($DevPort) held by PID $OwnerPid ($ProcName)."
+                Write-Info "Terminating Dev Server process tree..."
+                & taskkill /F /T /PID $OwnerPid 2>&1 | Out-Null
+                Stop-Process -Id $OwnerPid -Force -ErrorAction SilentlyContinue
+                $StoppedCount++
+                Write-Success "Dev server stopped."
+            }
+        }
     }
 } else {
     Write-Info "No dev server running on port $DevPort."
+}
+
+if ($StoppedCount -gt 0) {
+    Write-Success "Stopped $StoppedCount client process(es)."
+} else {
+    Write-Info "No active Client GUI processes found."
 }
 
 Write-Host ""

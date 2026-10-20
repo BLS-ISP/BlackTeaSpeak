@@ -17,10 +17,7 @@ Write-Host "=============================================" -ForegroundColor Dark
 Write-Host "   BlackTeaSpeak Full Stop Cleanup           " -ForegroundColor Red -BackgroundColor Black
 Write-Host "=============================================" -ForegroundColor DarkRed
 
-# Stop Client
 & $StopClientPath
-
-# Stop Server
 & $StopServerPath
 
 Write-Host "`n=============================================" -ForegroundColor DarkRed

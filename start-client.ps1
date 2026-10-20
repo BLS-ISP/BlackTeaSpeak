@@ -2,9 +2,6 @@
 .SYNOPSIS
 Starts the BlackTeaSpeak Client in development or production mode.
 
-.DESCRIPTION
-Checks prerequisites (Node/NPM), installs dependencies if missing, and launches the Tauri desktop client.
-
 .PARAMETER Mode
 Specify the launch mode. Options: 'Dev' or 'Prod'. Default: Dev
 .PARAMETER Build
@@ -27,7 +24,6 @@ $ErrorActionPreference = "Stop"
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition
 Set-Location $ScriptDir
 
-# --- Styling Helpers ---
 function Write-Header ([string]$text) {
     Write-Host ""
     Write-Host "=== $text ===" -ForegroundColor Cyan
@@ -49,7 +45,6 @@ function Write-Err ([string]$text) {
     Write-Host "[FAIL] $text" -ForegroundColor Red
 }
 
-# --- Banner ---
 Write-Host "=============================================" -ForegroundColor DarkGreen
 Write-Host "   BlackTeaSpeak Client Control Center       " -ForegroundColor Green -BackgroundColor Black
 Write-Host "=============================================" -ForegroundColor DarkGreen
@@ -79,12 +74,13 @@ $NodeModulesDir = Join-Path $ClientDir "node_modules"
 if (-not (Test-Path $NodeModulesDir)) {
     Write-Warn "Client node_modules folder is missing. Installing dependencies..."
     try {
-        Set-Location $ClientDir
+        Push-Location $ClientDir
         & npm install
+        Pop-Location
         Write-Success "Dependencies installed successfully!"
-        Set-Location $ScriptDir
     }
     catch {
+        Pop-Location
         Write-Err "Failed to install dependencies: $_"
         Exit 1
     }
@@ -95,92 +91,83 @@ if (-not (Test-Path $NodeModulesDir)) {
 # 3. Kill existing client if Force is enabled
 if ($Force) {
     Write-Header "Cleaning up Existing Clients"
-    Write-Info "Terminating running client instances..."
-    
-    # Kill Tauri Client binaries
-    Get-Process -Name "tauri-app" -ErrorAction SilentlyContinue | Stop-Process -Force
-    Get-Process -Name "BlackTeaSpeak-Client" -ErrorAction SilentlyContinue | Stop-Process -Force
-    
-    # Kill Vite Dev server on port 1420
-    $ViteConn = Get-NetTCPConnection -LocalPort 1420 -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($ViteConn) {
-        $Pid = $ViteConn.OwningProcess
-        Write-Info "Stopping Vite dev server process (PID: $Pid)..."
-        Stop-Process -Id $Pid -Force
-    }
-    Start-Sleep -Seconds 1
-    Write-Success "Clean sweep completed."
+    & (Join-Path $ScriptDir "stop-client.ps1")
+    Start-Sleep -Milliseconds 600
 }
 
 # 4. Mode-specific operations
 if ($Mode -eq "Dev") {
     Write-Header "Launching Client (Development Mode)"
-    
-    # Check port 1420 conflict
-    $ViteConn = Get-NetTCPConnection -LocalPort 1420 -ErrorAction SilentlyContinue | Select-Object -First 1
+
+    $ViteConn = Get-NetTCPConnection -LocalPort 1420 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($ViteConn) {
-        $Pid = $ViteConn.OwningProcess
-        $Proc = Get-Process -Id $Pid -ErrorAction SilentlyContinue
+        $OwnerPid = $ViteConn.OwningProcess
+        $Proc = Get-Process -Id $OwnerPid -ErrorAction SilentlyContinue
         $ProcName = if ($Proc) { $Proc.Name } else { "Unknown" }
-        Write-Warn "Port 1420 (Vite Dev Server) is already in use by process '$ProcName' (PID: $Pid)."
-        Write-Info "Use 'stop-client.ps1' or start with '-Force' parameter to terminate it."
+        Write-Warn "Port 1420 (Vite Dev Server) is already in use by process '$ProcName' (PID: $OwnerPid)."
+        Write-Info "Use 'stop-client.bat' or start with '-Force' parameter to terminate it."
         Exit 1
     }
 
-    Write-Info "Starting Vite dev server and Tauri developer runner..."
-    Write-Info "Client will open automatically in a window once Vite compiles."
+    Write-Info "Starting Vite dev server and Tauri Desktop runner..."
+    Write-Info "Client window will open automatically once compiled."
 
     if ($NoNewWindow) {
         Set-Location $ClientDir
-        & npx tauri dev
+        & npm run tauri dev
     } else {
-        # Launch tauri dev in a new cmd window
-        # Run npm run tauri dev inside the client directory
-        Start-Process -FilePath "cmd.exe" -ArgumentList "/c npm run tauri dev" -WorkingDirectory $ClientDir -NoNewWindow:$false
+        $DevProc = Start-Process -FilePath "cmd.exe" -ArgumentList "/k npm run tauri dev" -WorkingDirectory $ClientDir -PassThru
+        if ($DevProc) {
+            Set-Content -Path (Join-Path $ScriptDir ".client.pid") -Value $DevProc.Id -ErrorAction SilentlyContinue
+        }
         Write-Success "Tauri dev runner started in a separate console window."
     }
 }
 else {
     Write-Header "Launching Client (Production/Release Mode)"
-    
-    # Target executable path checking both possible release names
+
     $ReleaseDir = Join-Path $ClientDir "src-tauri\target\release"
     $TauriAppExe = Join-Path $ReleaseDir "tauri-app.exe"
     $ProductExe = Join-Path $ReleaseDir "BlackTeaSpeak-Client.exe"
-    
-    $ClientExe = if (Test-Path $ProductExe) { $ProductExe } else { $TauriAppExe }
-    $ExeExists = Test-Path $ClientExe
 
-    if (-not $ExeExists -or $Build) {
-        if ($Build) {
-            Write-Info "Rebuild forced."
-        } else {
-            Write-Warn "Production binary not found."
+    $ClientExe = if (Test-Path $ProductExe) { $ProductExe } else { $TauriAppExe }
+    $NeedsBuild = $Build -or (-not (Test-Path $ClientExe))
+
+    if (-not $NeedsBuild) {
+        $ExeTime = (Get-Item $ClientExe).LastWriteTimeUtc
+        $NewestSource = Get-ChildItem -Path (Join-Path $ClientDir "src"), (Join-Path $ClientDir "src-tauri\src") -Recurse -File -ErrorAction SilentlyContinue |
+            Sort-Object LastWriteTimeUtc -Descending |
+            Select-Object -First 1
+        if ($NewestSource -and $NewestSource.LastWriteTimeUtc -gt $ExeTime) {
+            Write-Warn "Client source '$($NewestSource.Name)' is newer than release binary. Rebuilding..."
+            $NeedsBuild = $true
         }
-        
-        Write-Info "Building production Tauri client (this might take a few minutes)..."
+    }
+
+    if ($NeedsBuild) {
+        Write-Info "Building production Tauri client..."
         try {
-            Set-Location $ClientDir
-            & npm run tauri build
-            Set-Location $ScriptDir
-            
-            # Recalculate Exe
+            Push-Location $ClientDir
+            & npm run build
+            & cargo build --release --manifest-path src-tauri\Cargo.toml
+            Pop-Location
+
             $ClientExe = if (Test-Path $ProductExe) { $ProductExe } else { $TauriAppExe }
             if (Test-Path $ClientExe) {
                 Write-Success "Production client built successfully!"
             } else {
-                Write-Err "Tauri build completed but could not locate the output executable."
+                Write-Err "Build completed but could not locate the output executable."
                 Exit 1
             }
         }
         catch {
+            Pop-Location
             Write-Err "Build failed: $_"
             Exit 1
         }
     }
 
-    Write-Info "Starting production client..."
-    Write-Info "Running: $ClientExe"
+    Write-Info "Starting production client: $ClientExe"
     Start-Process -FilePath $ClientExe -WorkingDirectory $ReleaseDir
     Write-Success "Production client launched successfully."
 }
